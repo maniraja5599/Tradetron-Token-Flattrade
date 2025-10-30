@@ -1,0 +1,13 @@
+# Railway configuration
+# This file helps Railway understand your Next.js app
+
+[build]
+  builder = "nixpacks"
+  buildCommand = "npm run playwright:install && npm run build"
+  startCommand = "npm start"
+
+[deploy]
+  startCommand = "npm start"
+  restartPolicyType = "on_failure"
+  restartPolicyMaxRetries = 10
+
