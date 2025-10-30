@@ -25,6 +25,8 @@ A secure, multi-user web application for automating daily TradeTron broker token
 chmod +x install.sh && ./install.sh
 ```
 
+🍎 **Mac users:** See [MAC_INSTALLATION.md](./MAC_INSTALLATION.md) for detailed Mac-specific instructions
+
 The script will automatically:
 - Check prerequisites
 - Install all dependencies
