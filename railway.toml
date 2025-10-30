@@ -6,7 +6,7 @@
   buildCommand = "npm run playwright:install && npm run build"
 
 [deploy]
-  startCommand = "npm start"
+  startCommand = "node server.js"
   restartPolicyType = "on_failure"
   restartPolicyMaxRetries = 10
   healthcheckPath = "/api/health"
