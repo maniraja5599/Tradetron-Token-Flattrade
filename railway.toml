@@ -4,10 +4,11 @@
 [build]
   builder = "nixpacks"
   buildCommand = "npm run playwright:install && npm run build"
-  startCommand = "npm start"
 
 [deploy]
   startCommand = "npm start"
   restartPolicyType = "on_failure"
   restartPolicyMaxRetries = 10
+  healthcheckPath = "/api/health"
+  healthcheckTimeout = 100
 
