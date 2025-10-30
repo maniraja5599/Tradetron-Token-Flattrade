@@ -12,7 +12,28 @@ A secure, multi-user web application for automating daily TradeTron broker token
 - 📊 **Dashboard**: Real-time status monitoring and run logs
 - 🎯 **Flexible Selectors**: Customizable selectors for different broker pages
 
-## Quick Start
+## Installation
+
+### 🚀 One-Click Installation (Recommended)
+
+**Windows:**
+- Double-click `install.bat` or run `install.ps1`
+- PowerShell: `powershell -ExecutionPolicy Bypass -File install.ps1`
+
+**Mac/Linux:**
+```bash
+chmod +x install.sh && ./install.sh
+```
+
+The script will automatically:
+- Check prerequisites
+- Install all dependencies
+- Setup environment configuration
+- Verify installation
+
+### Manual Installation
+
+📖 **For detailed step-by-step instructions, see [INSTALLATION.md](./INSTALLATION.md)**
 
 ### Prerequisites
 
