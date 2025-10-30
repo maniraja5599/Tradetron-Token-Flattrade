@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { format } from 'date-fns'
 import Link from 'next/link'
 import { User, RunLog } from '@/types'
 
-export default function UsersManagement() {
+function UsersManagementContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const filterParam = searchParams.get('filter') as 'all' | 'success' | 'fail' | null
@@ -290,6 +290,20 @@ export default function UsersManagement() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function UsersManagement() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-20">Loading...</div>
+        </div>
+      </div>
+    }>
+      <UsersManagementContent />
+    </Suspense>
   )
 }
 

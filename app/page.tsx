@@ -69,6 +69,24 @@ export default function Dashboard() {
     }
   }
 
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user?')) {
+      return
+    }
+    try {
+      const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' })
+      if (res.ok) {
+        alert('User deleted successfully')
+        loadData()
+      } else {
+        const error = await res.json()
+        alert(`Failed to delete user: ${error.error}`)
+      }
+    } catch (error) {
+      alert('Failed to delete user')
+    }
+  }
+
   const handleRunFilteredUsers = async () => {
     if (resultFilter === 'all') {
       alert('Please select either "Success" or "Unsuccess" filter to run specific users.')
