@@ -1,11 +1,11 @@
-// server.js - Custom Next.js server using PORT environment variable
+// server.js - Custom Next.js server for localhost development
 const { createServer } = require('http')
 const { parse } = require('url')
 const next = require('next')
 
 const dev = process.env.NODE_ENV !== 'production'
-const hostname = '0.0.0.0'
-const port = parseInt(process.env.PORT || '3000', 10)
+const hostname = 'localhost'
+const port = 3000
 
 console.log(`Starting server on ${hostname}:${port}`)
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`)

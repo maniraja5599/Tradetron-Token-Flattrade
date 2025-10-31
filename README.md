@@ -81,28 +81,14 @@ npm run dev
 
 Visit http://localhost:3000
 
-### Production
+### Production (Local)
 
 ```bash
 npm run build
 npm start
 ```
 
-## Docker
-
-```bash
-# Build and run with Docker Compose
-docker-compose up -d
-```
-
-## 🌐 Deployment
-
-🚀 **Deploy to free hosting platforms:** See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed instructions
-
-**Recommended free platforms:**
-- **Render** (reliable) - https://render.com
-- **Fly.io** (Docker-based) - https://fly.io
-- **Vercel** (Next.js optimized) - https://vercel.com
+Visit http://localhost:3000
 
 ## Usage
 
@@ -141,7 +127,6 @@ docker-compose up -d
 - All passwords and 2FA secrets are encrypted at rest using AES-256-GCM
 - Sensitive data is never logged or exposed in API responses
 - Environment variables for all secrets
-- HTTPS recommended for production
 
 ## License
 
