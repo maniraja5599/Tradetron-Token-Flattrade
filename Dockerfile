@@ -2,7 +2,7 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install Playwright dependencies
+# Install Playwright dependencies and Chromium
 RUN apk add --no-cache \
     chromium \
     nss \
@@ -11,16 +11,28 @@ RUN apk add --no-cache \
     ca-certificates \
     ttf-freefont \
     udev \
-    ttf-opensans
+    ttf-opensans \
+    dbus \
+    ttf-dejavu \
+    font-noto-emoji
 
-# Verify Chromium installation and set path
-RUN which chromium || which chromium-browser || ls -la /usr/bin/chromium* || ls -la /usr/lib/chromium*
+# Find and verify Chromium installation
+RUN CHROMIUM_PATH=$(which chromium || which chromium-browser || find /usr -name chromium 2>/dev/null | head -1) && \
+    if [ -z "$CHROMIUM_PATH" ]; then \
+      echo "ERROR: Chromium not found!" && \
+      ls -la /usr/bin/chromium* || ls -la /usr/lib/chromium* || true; \
+    else \
+      echo "Found Chromium at: $CHROMIUM_PATH" && \
+      ls -la "$CHROMIUM_PATH" && \
+      "$CHROMIUM_PATH" --version || true; \
+    fi
 
-# Set environment variable to use system Chromium
-# Alpine Chromium can be at different paths - we'll try /usr/bin/chromium first
+# Set environment variables
+# Alpine Chromium is typically at /usr/bin/chromium
 ENV CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-ENV PLAYWRIGHT_BROWSERS_PATH=/usr/bin
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
+ENV PLAYWRIGHT_BROWSERS_PATH=0
 
 # Copy package files
 COPY package*.json ./
@@ -28,7 +40,7 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci
 
-# Copy source code (do this after npm install for better caching)
+# Copy source code
 COPY . .
 
 # Build Next.js app

@@ -86,6 +86,30 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
+        '--disable-software-rasterizer',
+        '--disable-extensions',
+        '--disable-background-networking',
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-breakpad',
+        '--disable-client-side-phishing-detection',
+        '--disable-default-apps',
+        '--disable-features=TranslateUI',
+        '--disable-hang-monitor',
+        '--disable-ipc-flooding-protection',
+        '--disable-popup-blocking',
+        '--disable-prompt-on-repost',
+        '--disable-renderer-backgrounding',
+        '--disable-sync',
+        '--disable-translate',
+        '--disable-web-resources',
+        '--metrics-recording-only',
+        '--mute-audio',
+        '--no-first-run',
+        '--safebrowsing-disable-auto-update',
+        '--enable-automation',
+        '--password-store=basic',
+        '--use-mock-keychain',
         '--single-process'
       ],
     }
@@ -94,25 +118,30 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
     if (chromiumExecutablePath) {
       try {
         const fs = require('fs')
+        const path = require('path')
+        
         // Try multiple possible paths for Alpine Chromium
         const possiblePaths = [
           chromiumExecutablePath,
           '/usr/bin/chromium',
           '/usr/bin/chromium-browser',
-          '/usr/lib/chromium/chromium'
+          '/usr/lib/chromium/chromium',
+          '/usr/lib/chromium/chromium-browser'
         ]
         
         let foundPath: string | null = null
-        for (const path of possiblePaths) {
+        for (const testPath of possiblePaths) {
           try {
-            if (fs.existsSync(path)) {
+            if (fs.existsSync(testPath)) {
               // Check if it's executable
-              fs.accessSync(path, fs.constants.X_OK)
-              foundPath = path
+              fs.accessSync(testPath, fs.constants.X_OK)
+              foundPath = testPath
+              console.log(`[LoginFlow] ✅ Found system Chromium at: ${foundPath}`)
               break
             }
           } catch (e) {
             // Continue to next path
+            continue
           }
         }
         
@@ -120,16 +149,25 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
           launchOptions.executablePath = foundPath
           console.log(`[LoginFlow] Using system Chromium: ${foundPath}`)
         } else {
-          console.warn(`[LoginFlow] System Chromium not found at any path. Tried: ${possiblePaths.join(', ')}`)
-          console.warn(`[LoginFlow] Falling back to Playwright's browser (may fail in Docker)`)
+          console.error(`[LoginFlow] ❌ System Chromium not found at any path!`)
+          console.error(`[LoginFlow] Tried: ${possiblePaths.join(', ')}`)
+          console.error(`[LoginFlow] This will likely fail. Check Dockerfile Chromium installation.`)
+          // Don't set executablePath - let Playwright try its own browser
+          // This will fail but at least we'll get a clear error
         }
       } catch (error) {
         console.error(`[LoginFlow] Error checking Chromium path:`, error)
-        console.warn(`[LoginFlow] Falling back to Playwright's browser`)
+        console.error(`[LoginFlow] Falling back to Playwright's browser (will likely fail)`)
       }
     } else {
-      console.log(`[LoginFlow] CHROMIUM_EXECUTABLE_PATH not set, using default`)
+      console.warn(`[LoginFlow] ⚠️ CHROMIUM_EXECUTABLE_PATH not set, using default (may fail in Docker)`)
     }
+    
+    console.log(`[LoginFlow] Launching browser with options:`, {
+      headless: launchOptions.headless,
+      executablePath: launchOptions.executablePath || 'default',
+      argsCount: launchOptions.args.length
+    })
     
     browser = await chromium.launch(launchOptions)
 
