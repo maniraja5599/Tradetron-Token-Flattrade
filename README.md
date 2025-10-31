@@ -100,16 +100,9 @@ docker-compose up -d
 🚀 **Deploy to free hosting platforms:** See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed instructions
 
 **Recommended free platforms:**
-- **Railway** (easiest) - https://railway.app
 - **Render** (reliable) - https://render.com
 - **Fly.io** (Docker-based) - https://fly.io
-
-Quick start with Railway:
-1. Sign up at https://railway.app
-2. Click "New Project" → "Deploy from GitHub repo"
-3. Select your repository
-4. Add environment variables
-5. Deploy! 🎉
+- **Vercel** (Next.js optimized) - https://vercel.com
 
 ## Usage
 

@@ -110,7 +110,6 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
         '--enable-automation',
         '--password-store=basic',
         '--use-mock-keychain',
-        '--single-process'
       ],
     }
     
@@ -119,25 +118,42 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
       try {
         const fs = require('fs')
         const path = require('path')
+        const isWindows = process.platform === 'win32'
         
-        // Try multiple possible paths for Alpine Chromium
-        const possiblePaths = [
-          chromiumExecutablePath,
-          '/usr/bin/chromium',
-          '/usr/bin/chromium-browser',
-          '/usr/lib/chromium/chromium',
-          '/usr/lib/chromium/chromium-browser'
-        ]
+        // Try multiple possible paths
+        // On Windows: only check the provided path
+        // On Linux/Alpine: check Linux paths
+        const possiblePaths = isWindows 
+          ? [chromiumExecutablePath]
+          : [
+              chromiumExecutablePath,
+              '/usr/bin/chromium',
+              '/usr/bin/chromium-browser',
+              '/usr/lib/chromium/chromium',
+              '/usr/lib/chromium/chromium-browser'
+            ]
         
         let foundPath: string | null = null
         for (const testPath of possiblePaths) {
           try {
             if (fs.existsSync(testPath)) {
-              // Check if it's executable
-              fs.accessSync(testPath, fs.constants.X_OK)
-              foundPath = testPath
-              console.log(`[LoginFlow] ✅ Found system Chromium at: ${foundPath}`)
-              break
+              // On Windows, just check if file exists
+              // On Linux, also check if executable
+              if (isWindows) {
+                foundPath = testPath
+                console.log(`[LoginFlow] ✅ Found system Chromium at: ${foundPath}`)
+                break
+              } else {
+                try {
+                  fs.accessSync(testPath, fs.constants.X_OK)
+                  foundPath = testPath
+                  console.log(`[LoginFlow] ✅ Found system Chromium at: ${foundPath}`)
+                  break
+                } catch (e) {
+                  // Not executable, continue
+                  continue
+                }
+              }
             }
           } catch (e) {
             // Continue to next path
@@ -151,36 +167,72 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
         } else {
           console.error(`[LoginFlow] ❌ System Chromium not found at any path!`)
           console.error(`[LoginFlow] Tried: ${possiblePaths.join(', ')}`)
-          console.error(`[LoginFlow] This will likely fail. Check Dockerfile Chromium installation.`)
+          console.error(`[LoginFlow] This will likely fail. Check Chromium installation.`)
           // Don't set executablePath - let Playwright try its own browser
-          // This will fail but at least we'll get a clear error
         }
       } catch (error) {
         console.error(`[LoginFlow] Error checking Chromium path:`, error)
-        console.error(`[LoginFlow] Falling back to Playwright's browser (will likely fail)`)
+        console.error(`[LoginFlow] Falling back to Playwright's browser`)
       }
     } else {
-      console.warn(`[LoginFlow] ⚠️ CHROMIUM_EXECUTABLE_PATH not set, using default (may fail in Docker)`)
+      console.log(`[LoginFlow] CHROMIUM_EXECUTABLE_PATH not set, using Playwright's default browser`)
     }
     
     console.log(`[LoginFlow] Launching browser with options:`, {
       headless: launchOptions.headless,
       executablePath: launchOptions.executablePath || 'default',
-      argsCount: launchOptions.args.length
+      argsCount: launchOptions.args.length,
+      platform: process.platform
     })
     
-    browser = await chromium.launch(launchOptions)
+    try {
+      browser = await chromium.launch(launchOptions)
+      console.log(`[LoginFlow] ✅ Browser launched successfully`)
+    } catch (launchError: any) {
+      console.error(`[LoginFlow] ❌ Failed to launch browser:`, launchError)
+      console.error(`[LoginFlow] Launch error details:`, {
+        message: launchError.message,
+        stack: launchError.stack,
+        executablePath: launchOptions.executablePath,
+        headless: launchOptions.headless
+      })
+      throw new Error(`Browser launch failed: ${launchError.message}`)
+    }
 
-    context = await browser.newContext({
-      viewport: { width: 1280, height: 720 },
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-    })
+    try {
+      context = await browser.newContext({
+        viewport: { width: 1280, height: 720 },
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      })
+      console.log(`[LoginFlow] ✅ Browser context created`)
+    } catch (contextError: any) {
+      console.error(`[LoginFlow] ❌ Failed to create browser context:`, contextError)
+      throw new Error(`Browser context creation failed: ${contextError.message}`)
+    }
 
-    page = await context.newPage()
+    try {
+      page = await context.newPage()
+      console.log(`[LoginFlow] ✅ New page created`)
+    } catch (pageError: any) {
+      console.error(`[LoginFlow] ❌ Failed to create new page:`, pageError)
+      throw new Error(`Page creation failed: ${pageError.message}`)
+    }
 
     // Navigate to Tradetron Auth URL (will redirect to Flatrade)
     console.log(`[LoginFlow] Navigating to ${loginUrl}`)
-    await page.goto(loginUrl, { waitUntil: 'networkidle', timeout: 30000 })
+    try {
+      await page.goto(loginUrl, { waitUntil: 'networkidle', timeout: 30000 })
+      console.log(`[LoginFlow] ✅ Page navigation completed`)
+    } catch (navError: any) {
+      console.error(`[LoginFlow] ❌ Navigation failed:`, navError)
+      console.error(`[LoginFlow] Navigation error details:`, {
+        message: navError.message,
+        url: loginUrl,
+        browserConnected: browser?.isConnected(),
+        contextClosed: context?.browser() === null
+      })
+      throw new Error(`Navigation failed: ${navError.message}`)
+    }
     await page.waitForTimeout(5000) // Wait for redirect and page to fully load
 
     // Wait for login form to be visible
@@ -442,18 +494,53 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
     }
   } catch (error: any) {
     console.error(`[LoginFlow] Error:`, error)
+    console.error(`[LoginFlow] Error details:`, {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      browserConnected: browser?.isConnected() ?? false,
+      contextExists: context !== null,
+      pageExists: page !== null
+    })
     
     // Save artifacts on failure
     try {
       await fs.mkdir(artifactDir, { recursive: true })
       
-      if (page) {
-        const screenshot = await page.screenshot({ fullPage: true })
-        await fs.writeFile(path.join(artifactDir, 'screenshot.png'), screenshot)
-        
-        const html = await page.content()
-        await fs.writeFile(path.join(artifactDir, 'page.html'), html)
+      if (page && !page.isClosed()) {
+        try {
+          const screenshot = await page.screenshot({ fullPage: true }).catch(() => null)
+          if (screenshot) {
+            await fs.writeFile(path.join(artifactDir, 'screenshot.png'), screenshot)
+          }
+          
+          const html = await page.content().catch(() => null)
+          if (html) {
+            await fs.writeFile(path.join(artifactDir, 'page.html'), html)
+          }
+        } catch (pageError) {
+          console.error(`[LoginFlow] Failed to capture page artifacts:`, pageError)
+        }
       }
+      
+      // Save error log
+      const errorLog = {
+        timestamp: new Date().toISOString(),
+        error: {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        },
+        browser: {
+          connected: browser?.isConnected() ?? false,
+          contextExists: context !== null,
+          pageExists: page !== null
+        }
+      }
+      await fs.writeFile(
+        path.join(artifactDir, 'error.json'), 
+        JSON.stringify(errorLog, null, 2)
+      )
     } catch (artifactError) {
       console.error(`[LoginFlow] Failed to save artifacts:`, artifactError)
     }
@@ -464,8 +551,27 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
       artifactDir,
     }
   } finally {
-    if (context) await context.close()
-    if (browser) await browser.close()
+    try {
+      if (context && !context.browser()?.isConnected()) {
+        console.log(`[LoginFlow] Context already closed`)
+      } else if (context) {
+        await context.close()
+        console.log(`[LoginFlow] Context closed`)
+      }
+    } catch (e) {
+      console.error(`[LoginFlow] Error closing context:`, e)
+    }
+    
+    try {
+      if (browser && browser.isConnected()) {
+        await browser.close()
+        console.log(`[LoginFlow] Browser closed`)
+      } else {
+        console.log(`[LoginFlow] Browser already closed or disconnected`)
+      }
+    } catch (e) {
+      console.error(`[LoginFlow] Error closing browser:`, e)
+    }
   }
 }
 

@@ -1,4 +1,4 @@
-// server.js - Explicitly use Railway's PORT environment variable
+// server.js - Custom Next.js server using PORT environment variable
 const { createServer } = require('http')
 const { parse } = require('url')
 const next = require('next')
@@ -17,12 +17,12 @@ const handle = app.getRequestHandler()
 // Handle uncaught errors
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err)
-  // Don't exit, let Railway handle it
+  // Log error but don't exit immediately
 })
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason)
-  // Don't exit, let Railway handle it
+  // Log error but don't exit immediately
 })
 
 app.prepare().then(() => {

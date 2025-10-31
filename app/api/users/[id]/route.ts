@@ -68,7 +68,11 @@ export async function PATCH(
       const isDOBValue = isDOB !== undefined ? isDOB : /^\d{8}$/.test(totpSecretOrDOB)
       updated.encryptedTotpSecret = encrypt(totpSecretOrDOB)
       updated.isDOB = isDOBValue
+    } else if (isDOB !== undefined) {
+      // Preserve isDOB flag even if not changing TOTP/DOB value
+      updated.isDOB = isDOB
     }
+    // If isDOB is not provided, keep existing value (already preserved in spread operator)
 
       await saveUser(updated)
 

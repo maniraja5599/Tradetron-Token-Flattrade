@@ -61,6 +61,8 @@ export default function EditUserPage() {
         tradetronUsername: formData.tradetronUsername,
         selectors: formData.selectors || undefined,
         active: formData.active,
+        // Always send isDOB to preserve it even if not changing TOTP/DOB
+        isDOB: formData.isDOB,
       }
 
       if (changePassword && formData.password) {
@@ -68,7 +70,6 @@ export default function EditUserPage() {
       }
       if (changeTotp && formData.totpSecretOrDOB) {
         payload.totpSecretOrDOB = formData.totpSecretOrDOB
-        payload.isDOB = formData.isDOB
       }
 
       const res = await fetch(`/api/users/${userId}`, {

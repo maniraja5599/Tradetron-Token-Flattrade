@@ -16,7 +16,7 @@ This guide covers deploying your application to free hosting platforms.
 
 ## 🚀 Recommended Free Hosting Platforms
 
-### Option 1: Railway (Recommended) ⭐
+### Option 1: Render ⭐
 
 **Best for:** Applications needing persistent storage and cron jobs
 
@@ -29,7 +29,7 @@ This guide covers deploying your application to free hosting platforms.
 **Deployment Steps:**
 
 1. **Sign up:**
-   - Visit: https://railway.app
+   - Visit: https://render.com
    - Sign up with GitHub (free)
 
 2. **Create New Project:**
@@ -38,7 +38,7 @@ This guide covers deploying your application to free hosting platforms.
    - Choose your repository: `maniraja5599/Tradetron-Token-Flattrade`
 
 3. **Configure Environment Variables:**
-   - In Railway dashboard → Variables tab
+   - In Render dashboard → Variables tab
    - Add these variables:
      ```
      ENCRYPTION_KEY=your_secret_key_min_32_chars_long
@@ -48,7 +48,7 @@ This guide covers deploying your application to free hosting platforms.
      ```
 
 4. **Configure Build Settings:**
-   - Railway auto-detects Next.js
+   - Render auto-detects Next.js
    - Build Command: `npm run build`
    - Start Command: `npm start`
    - Port: `3000`
@@ -62,10 +62,10 @@ This guide covers deploying your application to free hosting platforms.
      ```
 
 6. **Deploy:**
-   - Railway automatically deploys on git push
+   - Render automatically deploys on git push
    - Or click "Deploy Now" in dashboard
 
-**Get your URL:** Railway provides a free `.railway.app` domain
+**Get your URL:** Render provides a free `.onrender.com` domain
 
 ---
 
@@ -120,7 +120,7 @@ This guide covers deploying your application to free hosting platforms.
 
 ---
 
-### Option 3: Fly.io ⭐
+### Option 2: Fly.io ⭐
 
 **Best for:** Docker-based deployments
 
@@ -199,7 +199,7 @@ This guide covers deploying your application to free hosting platforms.
 
 ---
 
-### Option 4: Vercel (Limited Support)
+### Option 3: Vercel (Limited Support)
 
 **⚠️ Note:** Vercel is serverless and has limitations:
 - ❌ No persistent file storage (data/ folder won't persist)
@@ -296,22 +296,6 @@ Create `vercel.json`:
 
 ## 🚀 Quick Deploy Commands
 
-### Railway (CLI)
-
-```bash
-# Install Railway CLI
-npm i -g @railway/cli
-
-# Login
-railway login
-
-# Initialize
-railway init
-
-# Deploy
-railway up
-```
-
 ### Render (CLI)
 
 ```bash
@@ -338,12 +322,11 @@ fly deploy
 
 | Platform | Free Tier | Storage | Cron Jobs | Browser Support | Ease |
 |----------|-----------|---------|-----------|-----------------|------|
-| **Railway** | ⭐⭐⭐⭐⭐ | ✅ | ✅ | ✅ | ⭐⭐⭐⭐⭐ |
 | **Render** | ⭐⭐⭐⭐ | ✅ | ✅ | ✅ | ⭐⭐⭐⭐ |
 | **Fly.io** | ⭐⭐⭐⭐ | ✅ | ✅ | ✅ | ⭐⭐⭐ |
 | **Vercel** | ⭐⭐⭐⭐⭐ | ❌ | Limited | ⚠️ | ⭐⭐⭐⭐⭐ |
 
-**Recommendation:** Use **Railway** or **Render** for best compatibility.
+**Recommendation:** Use **Render** or **Fly.io** for best compatibility.
 
 ---
 
@@ -393,7 +376,6 @@ All platforms support automatic deployment:
 **Solutions:**
 
 1. **Use Platform Persistent Storage:**
-   - Railway: Automatic
    - Render: Enable Persistent Disk
    - Fly.io: Use volumes
 
@@ -442,7 +424,6 @@ All platforms support automatic deployment:
 
 ## 📚 Additional Resources
 
-- Railway Docs: https://docs.railway.app
 - Render Docs: https://render.com/docs
 - Fly.io Docs: https://fly.io/docs
 - Vercel Docs: https://vercel.com/docs
@@ -451,10 +432,10 @@ All platforms support automatic deployment:
 
 ## 🎯 Recommended Setup
 
-**For beginners:** Railway ⭐
-- Easiest setup
-- Great free tier
-- Automatic everything
+**For beginners:** Render ⭐
+- Easy setup
+- Good free tier
+- Reliable service
 
 **For Docker users:** Fly.io
 - More control
@@ -468,15 +449,4 @@ All platforms support automatic deployment:
 
 ---
 
-## ⚡ Quick Start (Railway - Recommended)
-
-1. Go to https://railway.app
-2. Sign up with GitHub
-3. Click "New Project" → "Deploy from GitHub repo"
-4. Select your repository
-5. Add environment variables
-6. Click "Deploy"
-7. Done! 🎉
-
-Your app will be live in 5-10 minutes!
 
