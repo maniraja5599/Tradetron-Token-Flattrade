@@ -81,22 +81,54 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
     
     const launchOptions: any = {
       headless: headful ? false : (process.env.HEADLESS !== 'false'),
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      args: [
+        '--no-sandbox', 
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--single-process'
+      ],
     }
     
-    // Only use custom path if it exists and is valid
+    // Use system Chromium if path is provided
     if (chromiumExecutablePath) {
       try {
         const fs = require('fs')
-        if (fs.existsSync(chromiumExecutablePath)) {
-          launchOptions.executablePath = chromiumExecutablePath
-          console.log(`[LoginFlow] Using custom Chromium: ${chromiumExecutablePath}`)
+        // Try multiple possible paths for Alpine Chromium
+        const possiblePaths = [
+          chromiumExecutablePath,
+          '/usr/bin/chromium',
+          '/usr/bin/chromium-browser',
+          '/usr/lib/chromium/chromium'
+        ]
+        
+        let foundPath: string | null = null
+        for (const path of possiblePaths) {
+          try {
+            if (fs.existsSync(path)) {
+              // Check if it's executable
+              fs.accessSync(path, fs.constants.X_OK)
+              foundPath = path
+              break
+            }
+          } catch (e) {
+            // Continue to next path
+          }
+        }
+        
+        if (foundPath) {
+          launchOptions.executablePath = foundPath
+          console.log(`[LoginFlow] Using system Chromium: ${foundPath}`)
         } else {
-          console.log(`[LoginFlow] Custom Chromium path not found, using default: ${chromiumExecutablePath}`)
+          console.warn(`[LoginFlow] System Chromium not found at any path. Tried: ${possiblePaths.join(', ')}`)
+          console.warn(`[LoginFlow] Falling back to Playwright's browser (may fail in Docker)`)
         }
       } catch (error) {
-        console.log(`[LoginFlow] Error checking Chromium path, using default`)
+        console.error(`[LoginFlow] Error checking Chromium path:`, error)
+        console.warn(`[LoginFlow] Falling back to Playwright's browser`)
       }
+    } else {
+      console.log(`[LoginFlow] CHROMIUM_EXECUTABLE_PATH not set, using default`)
     }
     
     browser = await chromium.launch(launchOptions)

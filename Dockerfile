@@ -9,7 +9,18 @@ RUN apk add --no-cache \
     freetype \
     harfbuzz \
     ca-certificates \
-    ttf-freefont
+    ttf-freefont \
+    udev \
+    ttf-opensans
+
+# Verify Chromium installation and set path
+RUN which chromium || which chromium-browser || ls -la /usr/bin/chromium* || ls -la /usr/lib/chromium*
+
+# Set environment variable to use system Chromium
+# Alpine Chromium can be at different paths - we'll try /usr/bin/chromium first
+ENV CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV PLAYWRIGHT_BROWSERS_PATH=/usr/bin
 
 # Copy package files
 COPY package*.json ./
@@ -19,9 +30,6 @@ RUN npm ci
 
 # Copy source code (do this after npm install for better caching)
 COPY . .
-
-# Install Playwright browsers
-RUN npm run playwright:install
 
 # Build Next.js app
 RUN npm run build
