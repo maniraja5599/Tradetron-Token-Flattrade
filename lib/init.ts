@@ -257,10 +257,22 @@ export async function initializeApp() {
   try {
     await ensureDirectories()
     
-    // Ensure Playwright browsers are installed (non-blocking)
-    ensurePlaywrightBrowsers().catch((error) => {
-      console.error('[Init] ⚠️ Playwright browser check failed (non-critical):', error.message)
-    })
+    // Ensure Playwright browsers are installed (with timeout to prevent blocking too long)
+    try {
+      await Promise.race([
+        ensurePlaywrightBrowsers(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Browser installation timeout')), 120000) // 2 min timeout
+        )
+      ])
+    } catch (error: any) {
+      if (error.message === 'Browser installation timeout') {
+        console.error('[Init] ⚠️ Browser installation timed out - continuing anyway')
+        console.error('[Init] 💡 Browsers may install in background, but login jobs may fail initially')
+      } else {
+        console.error('[Init] ⚠️ Playwright browser check failed:', error.message)
+      }
+    }
     
     // Check if this is first run (no users exist)
     const users = await getUsers()
