@@ -4,7 +4,9 @@ const { parse } = require('url')
 const next = require('next')
 
 const dev = process.env.NODE_ENV !== 'production'
-const hostname = process.env.HOSTNAME || '0.0.0.0'
+// Always bind to 0.0.0.0 in production (required for Render/Railway/etc)
+// In development, use localhost for security
+const hostname = dev ? (process.env.HOSTNAME || 'localhost') : '0.0.0.0'
 const port = parseInt(process.env.PORT || '3000', 10)
 
 console.log(`Starting server on ${hostname}:${port}`)
