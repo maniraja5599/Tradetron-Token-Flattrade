@@ -112,10 +112,17 @@ async function autoSyncFromGoogleSheets() {
     // Parse headers (first row)
     const headers = values[0].map(h => h?.trim().toLowerCase() || '')
     
-    // Find column indices
+    // Find column indices (case-insensitive matching)
     const nameCol = headers.findIndex(h => h.includes('name') || h.includes('user'))
     const tradetronCol = headers.findIndex(h => h.includes('tradetron') || h.includes('tt id') || h.includes('tradetron id'))
-    const brokerCol = headers.findIndex(h => h.includes('broker') || h.includes('username') || h.includes('user id'))
+    const brokerCol = headers.findIndex(h => 
+      h.includes('broker') || 
+      h.includes('username') || 
+      h.includes('user id') ||
+      h.includes('flattrade') ||
+      h.includes('flattrade id') ||
+      (h.includes('id') && !h.includes('tradetron') && !h.includes('tt'))
+    )
     const passwordCol = headers.findIndex(h => h.includes('password') || h.includes('pwd'))
     const dobCol = headers.findIndex(h => h.includes('dob') || h.includes('date of birth') || h.includes('birth'))
     const totpCol = headers.findIndex(h => h.includes('totp') || h.includes('otp') || h.includes('2fa') || h.includes('secret'))
