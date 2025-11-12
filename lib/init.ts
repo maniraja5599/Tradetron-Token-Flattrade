@@ -70,7 +70,8 @@ async function autoSyncFromGoogleSheets() {
           : path.join(process.cwd(), serviceAccountKeyPath)
         const keyContent = await fs.readFile(keyPath, 'utf-8')
         credentials = JSON.parse(keyContent)
-      } else {
+      } else if (serviceAccountKey) {
+        // TypeScript guard: serviceAccountKey is definitely defined here
         try {
           credentials = JSON.parse(serviceAccountKey)
         } catch {
