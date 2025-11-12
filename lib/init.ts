@@ -7,6 +7,7 @@ import { saveUser, saveGoogleSheetsConfig } from '@/lib/db'
 import { encrypt } from '@/lib/crypto'
 import { v4 as uuidv4 } from 'uuid'
 import { User } from '@/types'
+import { execSync } from 'child_process'
 
 async function ensureDirectories() {
   const dirs = ['data', 'artifacts']
@@ -18,6 +19,39 @@ async function ensureDirectories() {
       await fs.mkdir(dirPath, { recursive: true })
       console.log(`Created directory: ${dir}`)
     }
+  }
+}
+
+// Ensure Playwright browsers are installed (for Render/deployment environments)
+async function ensurePlaywrightBrowsers() {
+  try {
+    const { chromium } = require('playwright')
+    // Try to get the executable path - if it fails, browsers aren't installed
+    const executablePath = chromium.executablePath()
+    if (executablePath) {
+      try {
+        await fs.access(executablePath)
+        console.log('[Init] ✅ Playwright browsers are installed')
+        return
+      } catch {
+        // Executable path exists but file doesn't - need to install
+      }
+    }
+  } catch (error) {
+    // Browsers not installed or path not found
+  }
+
+  // Browsers not found - install them
+  console.log('[Init] ⚠️ Playwright browsers not found - installing...')
+  try {
+    execSync('npx playwright install chromium --with-deps', {
+      stdio: 'inherit',
+      cwd: process.cwd(),
+    })
+    console.log('[Init] ✅ Playwright browsers installed successfully')
+  } catch (error: any) {
+    console.error('[Init] ⚠️ Failed to install Playwright browsers:', error.message)
+    console.error('[Init] 💡 This may cause login automation to fail')
   }
 }
 
@@ -222,6 +256,11 @@ async function autoSyncFromGoogleSheets() {
 export async function initializeApp() {
   try {
     await ensureDirectories()
+    
+    // Ensure Playwright browsers are installed (non-blocking)
+    ensurePlaywrightBrowsers().catch((error) => {
+      console.error('[Init] ⚠️ Playwright browser check failed (non-critical):', error.message)
+    })
     
     // Check if this is first run (no users exist)
     const users = await getUsers()
