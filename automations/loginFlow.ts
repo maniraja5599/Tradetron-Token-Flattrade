@@ -467,31 +467,294 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
     // Wait for navigation to complete and redirect back to Tradetron
     await page.waitForLoadState('networkidle', { timeout: 20000 })
     await page.waitForTimeout(3000) // Wait for Tradetron redirect
+    
+    // Check if there's another redirect (some pages redirect again after showing error)
+    try {
+      await page.waitForLoadState('networkidle', { timeout: 5000 })
+      await page.waitForTimeout(2000) // Wait a bit more for any final redirects
+    } catch (e) {
+      // Timeout is okay, page might be stable
+    }
 
     const finalUrl = page.url()
     const pageContent = await page.content()
     const pageText = await page.textContent('body') || ''
+    const pageTitle = await page.title().catch(() => '')
+    const lowerPageText = pageText.toLowerCase()
+    const lowerPageContent = pageContent.toLowerCase()
+    const lowerPageTitle = pageTitle.toLowerCase()
 
-    // Check success - Tradetron redirect means token was generated
-    const isSuccess = 
-      finalUrl.includes('tradetron.tech') ||
-      finalUrl.includes('tradetron') ||
-      selectors.successHints.some(hint => 
-        pageText.toLowerCase().includes(hint.toLowerCase()) ||
-        pageContent.toLowerCase().includes(hint.toLowerCase())
-      )
-
-    if (isSuccess) {
-      console.log(`[LoginFlow] Success! Final URL: ${finalUrl}`)
-      return {
-        status: 'success',
-        message: 'Token generated successfully',
-        finalUrl,
-        tokenGenerated: true,
+    console.log(`[LoginFlow] Final URL: ${finalUrl}`)
+    console.log(`[LoginFlow] Page title: ${pageTitle}`)
+    console.log(`[LoginFlow] Page text length: ${pageText.length} chars`)
+    console.log(`[LoginFlow] Page text sample: ${pageText.substring(0, 300)}...`)
+    
+    // Check for visible error messages on the page (not just in text)
+    let visibleErrors: string[] = []
+    try {
+      const errorSelectors = [
+        '.error:visible',
+        '.error-message:visible',
+        '.alert-danger:visible',
+        '[role="alert"]:visible',
+        '.message.error:visible',
+        '#error:visible',
+        '.invalid-feedback:visible',
+        '.text-danger:visible',
+        '[class*="error"]:visible',
+        '[class*="invalid"]:visible',
+      ]
+      for (const selector of errorSelectors) {
+        try {
+          const elements = await page.locator(selector).all()
+          for (const element of elements) {
+            const text = await element.textContent()
+            if (text && text.trim()) {
+              visibleErrors.push(text.trim())
+            }
+          }
+        } catch (e) {
+          continue
+        }
       }
-    } else {
-      throw new Error('Login verification failed - URL or content did not match success criteria')
+      if (visibleErrors.length > 0) {
+        console.log(`[LoginFlow] Found visible error messages: ${visibleErrors.join('; ')}`)
+      }
+    } catch (e) {
+      // Could not check for visible errors
     }
+
+    // IMPORTANT: Check for SUCCESS indicators FIRST before checking for errors
+    // This prevents false negatives where success pages have error-related words
+    
+    // Check for explicit success messages in page content (highest priority)
+    // Also check if page text contains just "Success" (common on success pages)
+    const hasExplicitSuccessText = 
+      lowerPageText.includes('token generated successfully') ||
+      (lowerPageText.includes('success') && (lowerPageText.includes('token') || lowerPageText.includes('generated'))) ||
+      lowerPageContent.includes('token generated successfully') ||
+      (pageText.includes('Success') && (pageText.includes('Token') || pageText.includes('generated'))) ||
+      // Check if page shows just "Success" and we're on a tradetron/auth URL with sid
+      // OR if page text is primarily just "Success" (common on success pages)
+      (pageText.trim().toLowerCase().includes('success') && finalUrl.includes('sid=')) ||
+      (pageText.trim().toLowerCase() === 'success' || pageText.trim().toLowerCase().startsWith('success'))
+    
+    // Check for success URLs
+    const hasFinalSuccessUrl = 
+      (finalUrl.includes('tradetron.tech') && (finalUrl.includes('/success') || finalUrl.includes('token=') || finalUrl.includes('sid='))) ||
+      (finalUrl.includes('flattrade.broker.tradetron.tech') && finalUrl.includes('/success')) ||
+      (finalUrl.includes('tradetron') && finalUrl.includes('success'))
+    
+    const hasSuccessUrl = hasFinalSuccessUrl ||
+      (finalUrl.includes('auth.flattrade.in') && finalUrl.includes('sid=') && (hasExplicitSuccessText || pageText.trim().toLowerCase().includes('success')))
+    
+    // If we have strong success indicators, treat as success immediately
+    if (hasExplicitSuccessText || hasSuccessUrl) {
+      console.log(`[LoginFlow] ✅ Strong success indicators detected!`)
+      console.log(`[LoginFlow] - Explicit success text: ${hasExplicitSuccessText}`)
+      console.log(`[LoginFlow] - Success URL: ${hasSuccessUrl}`)
+      console.log(`[LoginFlow] - Final URL: ${finalUrl}`)
+      console.log(`[LoginFlow] - Page text sample: ${pageText.substring(0, 200)}`)
+      
+      // Verify we're NOT still on the login page (no sid= or token=)
+      const isStillOnLoginPage = 
+        finalUrl.includes('auth') && 
+        (finalUrl.includes('flattrade') || finalUrl.includes('login')) &&
+        !finalUrl.includes('sid=') &&
+        !finalUrl.includes('token=')
+      
+      // If we have sid= in URL and success text, it's definitely a success
+      // OR if we have success URL pattern, it's a success
+      const hasSessionId = finalUrl.includes('sid=')
+      const hasToken = finalUrl.includes('token=')
+      
+      // Return success if:
+      // 1. We have a session ID or token in URL AND success text, OR
+      // 2. We have a final success URL, OR
+      // 3. We're not on login page and have explicit success text
+      if (hasFinalSuccessUrl || 
+          (hasSessionId && hasExplicitSuccessText) ||
+          (hasToken && hasExplicitSuccessText) ||
+          (!isStillOnLoginPage && hasExplicitSuccessText && (hasSessionId || hasToken || finalUrl.includes('tradetron')))) {
+        console.log(`[LoginFlow] ✅ Returning success!`)
+        console.log(`[LoginFlow] - hasFinalSuccessUrl: ${hasFinalSuccessUrl}`)
+        console.log(`[LoginFlow] - hasSessionId: ${hasSessionId}, hasToken: ${hasToken}`)
+        console.log(`[LoginFlow] - isStillOnLoginPage: ${isStillOnLoginPage}`)
+        return {
+          status: 'success',
+          message: 'Token generated successfully',
+          finalUrl,
+          tokenGenerated: true,
+        }
+      } else {
+        console.log(`[LoginFlow] ⚠️ Success indicators found but conditions not met`)
+        console.log(`[LoginFlow] - isStillOnLoginPage: ${isStillOnLoginPage}`)
+        console.log(`[LoginFlow] - hasSessionId: ${hasSessionId}`)
+        console.log(`[LoginFlow] - hasExplicitSuccessText: ${hasExplicitSuccessText}`)
+      }
+    }
+    
+    // Now check for ERROR messages (only if we didn't find strong success indicators)
+    // Filter out success messages that might be in error-styled elements
+    const realVisibleErrors = visibleErrors.filter(err => {
+      const lowerErr = err.toLowerCase()
+      // Don't treat success messages as errors
+      return !lowerErr.includes('token generated successfully') && 
+             !(lowerErr.includes('success') && (lowerErr.includes('token') || lowerErr.includes('generated'))) &&
+             !lowerErr.includes('success')
+    })
+    
+    if (realVisibleErrors.length > 0) {
+      const errorMessage = realVisibleErrors[0] || 'Authentication failed - Error detected on page'
+      console.log(`[LoginFlow] ❌ Visible error detected: ${errorMessage}`)
+      throw new Error(errorMessage)
+    }
+    
+    // Check for error hints in page content
+    const hasErrorHints = selectors.errorHints.some(hint => {
+      const lowerHint = hint.toLowerCase()
+      return lowerPageText.includes(lowerHint) ||
+             lowerPageContent.includes(lowerHint) ||
+             lowerPageTitle.includes(lowerHint) ||
+             finalUrl.toLowerCase().includes('error') ||
+             finalUrl.toLowerCase().includes('fail')
+    })
+    
+    // Only treat as error if we have error hints AND no success indicators
+    // CRITICAL: If page shows "Success" text, NEVER treat it as an error
+    if (hasErrorHints && !hasExplicitSuccessText && !hasSuccessUrl) {
+      // Double-check: if page text is primarily "Success", don't treat as error
+      const pageTextTrimmed = pageText.trim().toLowerCase()
+      if (pageTextTrimmed === 'success' || 
+          pageTextTrimmed.startsWith('success') ||
+          (pageTextTrimmed.includes('success') && finalUrl.includes('sid='))) {
+        console.log(`[LoginFlow] ⚠️ Error hints found but page shows "Success" - treating as success`)
+        // Even if we have error hints, if page shows Success with sid=, it's a success
+        if (finalUrl.includes('sid=') || finalUrl.includes('token=')) {
+          return {
+            status: 'success',
+            message: 'Token generated successfully',
+            finalUrl,
+            tokenGenerated: true,
+          }
+        }
+      }
+      
+      console.log(`[LoginFlow] ❌ Error detected in page content!`)
+      // Try to extract the actual error message
+      let errorMessage = 'Authentication failed - Error detected on page'
+      try {
+        // Look for common error message selectors
+        const errorSelectors = [
+          '.error',
+          '.error-message',
+          '.alert-danger',
+          '[role="alert"]',
+          '.message.error',
+          '#error',
+          '.invalid-feedback',
+          '.text-danger',
+        ]
+        for (const selector of errorSelectors) {
+          try {
+            const errorElement = await page.locator(selector).first()
+            if (await errorElement.count() > 0) {
+              const errorText = await errorElement.textContent()
+              if (errorText && errorText.trim()) {
+                // Don't use success messages as error messages
+                const lowerErrorText = errorText.toLowerCase().trim()
+                // If the error text is just "Success" or starts with "Success", ignore it
+                if (lowerErrorText === 'success' || 
+                    lowerErrorText.startsWith('success') ||
+                    lowerErrorText.includes('token generated successfully')) {
+                  console.log(`[LoginFlow] ⚠️ Ignoring "Success" text found in error element`)
+                  continue // Skip this error text, look for a real error
+                }
+                if (!lowerErrorText.includes('success') && 
+                    !lowerErrorText.includes('token generated')) {
+                  errorMessage = errorText.trim()
+                  console.log(`[LoginFlow] Found error message: ${errorMessage}`)
+                  break
+                }
+              }
+            }
+          } catch (e) {
+            continue
+          }
+        }
+      } catch (e) {
+        // Could not extract specific error, use generic message
+      }
+      
+      // Final check: if error message is just "Success", don't throw error
+      if (errorMessage.trim().toLowerCase() === 'success' ||
+          errorMessage.trim().toLowerCase().startsWith('success')) {
+        console.log(`[LoginFlow] ⚠️ Error message is "Success" - this is likely a false positive`)
+        // If we have sid= in URL, treat as success
+        if (finalUrl.includes('sid=') || finalUrl.includes('token=')) {
+          return {
+            status: 'success',
+            message: 'Token generated successfully',
+            finalUrl,
+            tokenGenerated: true,
+          }
+        }
+        // Otherwise, use generic error message instead of "Success"
+        errorMessage = 'Authentication failed - Could not verify success'
+      }
+      
+      throw new Error(errorMessage)
+    }
+
+    // If we got here, we didn't find strong success indicators and no errors were thrown
+    // This means we're in an ambiguous state - check if we're on intermediate auth page
+    const isIntermediateAuthPage = 
+      finalUrl.includes('auth.flattrade.in') && 
+      finalUrl.includes('sid=') &&
+      !finalUrl.includes('tradetron.tech')
+    
+    // Additional check: If we're on intermediate auth page, wait a bit more to see if we get final redirect
+    // (hasFinalSuccessUrl is already checked above, so if we're here it wasn't a final success URL)
+    if (isIntermediateAuthPage) {
+      console.log(`[LoginFlow] On intermediate auth page, waiting for final redirect...`)
+      try {
+        await page.waitForTimeout(3000) // Wait for potential redirect
+        const updatedUrl = page.url()
+        if (updatedUrl !== finalUrl && updatedUrl.includes('tradetron.tech')) {
+          console.log(`[LoginFlow] Got final redirect to: ${updatedUrl}`)
+          // Re-check with updated URL
+          const updatedPageText = await page.textContent('body') || ''
+          const updatedHasError = selectors.errorHints.some(hint => 
+            updatedPageText.toLowerCase().includes(hint.toLowerCase())
+          )
+          if (!updatedHasError && updatedUrl.includes('tradetron.tech')) {
+            return {
+              status: 'success',
+              message: 'Token generated successfully',
+              finalUrl: updatedUrl,
+              tokenGenerated: true,
+            }
+          }
+        }
+      } catch (e) {
+        // Redirect didn't happen, continue with original check
+      }
+    }
+
+    // If we reach here, we couldn't determine success or failure definitively
+    // Check if we're still on the login page (credentials might be wrong)
+    const isStillOnLoginPage = 
+      finalUrl.includes('auth') && 
+      (finalUrl.includes('flattrade') || finalUrl.includes('login')) &&
+      !finalUrl.includes('sid=') &&
+      !finalUrl.includes('token=')
+    
+    if (isStillOnLoginPage) {
+      throw new Error('Authentication failed - Still on login page. Check username, password, or DOB.')
+    }
+    
+    // Default to failure if we can't determine success
+    throw new Error('Login verification failed - URL or content did not match success criteria')
   } catch (error: any) {
     console.error(`[LoginFlow] Error:`, error)
     console.error(`[LoginFlow] Error details:`, {

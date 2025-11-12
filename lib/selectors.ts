@@ -73,6 +73,25 @@ export const defaultSelectors = {
     "xpath=//button[@type='submit']",
   ],
   successHints: ["token", "generated", "success", "logged in", "dashboard", "tradetron"],
+  errorHints: [
+    "invalid",
+    "incorrect",
+    "wrong",
+    "error",
+    "failed",
+    "authentication failed",
+    "login failed",
+    "invalid credentials",
+    "wrong password",
+    "wrong dob",
+    "invalid dob",
+    "invalid date of birth",
+    "dob is incorrect",
+    "please enter correct",
+    "try again",
+    "unauthorized",
+    "access denied",
+  ],
 } as const
 
 export function mergeSelectors(
@@ -86,6 +105,7 @@ export function mergeSelectors(
     totp: userSelectors.totp ?? defaultSelectors.totp,
     submit: userSelectors.submit ?? defaultSelectors.submit,
     successHints: userSelectors.successHints ?? defaultSelectors.successHints,
+    errorHints: userSelectors.errorHints ?? defaultSelectors.errorHints,
   }
 }
 

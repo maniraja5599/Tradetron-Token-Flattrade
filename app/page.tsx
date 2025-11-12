@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import Link from 'next/link'
@@ -14,13 +14,54 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [editingSchedule, setEditingSchedule] = useState(false)
   const [scheduleTime, setScheduleTime] = useState({ hour: 8, minute: 30 })
+  const editingScheduleRef = useRef(false)
   const [resultFilter, setResultFilter] = useState<'all' | 'success' | 'fail'>('all')
+  const [showSyncModal, setShowSyncModal] = useState(false)
+  const [syncLoading, setSyncLoading] = useState(false)
+  const [sheetUrl, setSheetUrl] = useState('https://docs.google.com/spreadsheets/d/1W7i5AQ77-pklRv0BkDRkFILSkjq4bkvN5vTCQU7YrLA/edit?gid=0#gid=0')
+  const [sheetRange, setSheetRange] = useState('Users!A:Z')
+  const [updateExisting, setUpdateExisting] = useState(true)
+  const [timeRemaining, setTimeRemaining] = useState<string>('')
 
   useEffect(() => {
     loadData()
     const interval = setInterval(loadData, 5000)
     return () => clearInterval(interval)
   }, [])
+
+  // Calculate and update remaining time every second
+  useEffect(() => {
+    const updateTimeRemaining = () => {
+      if (health?.scheduler?.nextRun) {
+        const nextRun = new Date(health.scheduler.nextRun)
+        const now = new Date()
+        const diff = nextRun.getTime() - now.getTime()
+
+        if (diff <= 0) {
+          setTimeRemaining('Due now')
+          return
+        }
+
+        const hours = Math.floor(diff / (1000 * 60 * 60))
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000)
+
+        if (hours > 0) {
+          setTimeRemaining(`${hours}h ${minutes}m ${seconds}s`)
+        } else if (minutes > 0) {
+          setTimeRemaining(`${minutes}m ${seconds}s`)
+        } else {
+          setTimeRemaining(`${seconds}s`)
+        }
+      } else {
+        setTimeRemaining('')
+      }
+    }
+
+    updateTimeRemaining()
+    const interval = setInterval(updateTimeRemaining, 1000)
+    return () => clearInterval(interval)
+  }, [health?.scheduler?.nextRun])
 
   const loadData = async () => {
     try {
@@ -34,8 +75,8 @@ export default function Dashboard() {
       if (healthRes.ok) {
         const healthData = await healthRes.json()
         setHealth(healthData)
-        // Set schedule time from health data
-        if (healthData.scheduler?.schedule) {
+        // Set schedule time from health data only when NOT editing
+        if (healthData.scheduler?.schedule && !editingScheduleRef.current) {
           setScheduleTime({
             hour: healthData.scheduler.schedule.hour,
             minute: healthData.scheduler.schedule.minute,
@@ -130,6 +171,7 @@ export default function Dashboard() {
         }),
       })
       if (res.ok) {
+        editingScheduleRef.current = false
         setEditingSchedule(false)
         loadData()
         alert('Schedule updated successfully!')
@@ -142,35 +184,89 @@ export default function Dashboard() {
     }
   }
 
+  const handleSyncFromSheet = async () => {
+    if (!sheetUrl.trim()) {
+      alert('Please enter a Google Sheets URL or ID')
+      return
+    }
+
+    setSyncLoading(true)
+    try {
+      const res = await fetch('/api/users/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sheetUrlOrId: sheetUrl.trim(),
+          range: sheetRange.trim() || 'Users!A:Z',
+          updateExisting,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        alert(`Sync completed!\n${data.message}\n\nCreated: ${data.results.created}\nUpdated: ${data.results.updated}\nSkipped: ${data.results.skipped}\n\n✅ Google Sheets auto-update enabled!\nResults will be written back to the sheet after each run.${data.results.errors.length > 0 ? `\n\nErrors:\n${data.results.errors.slice(0, 5).join('\n')}` : ''}`)
+        setShowSyncModal(false)
+        setSheetUrl('')
+        loadData()
+      } else {
+        alert(`Sync failed: ${data.error}`)
+      }
+    } catch (error: any) {
+      alert(`Failed to sync: ${error.message}`)
+    } finally {
+      setSyncLoading(false)
+    }
+  }
+
   const getLastRun = (userId: string) => {
     const userRuns = runs.filter(r => r.userId === userId)
-    // Only show runs from today (reset status daily)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    if (userRuns.length === 0) return null
+    
+    // Get today's date in local timezone for comparison
+    const now = new Date()
+    const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    
+    // Filter runs from today (using local date, not UTC)
     const todayRuns = userRuns.filter(r => {
       const runDate = new Date(r.startedAt)
-      runDate.setHours(0, 0, 0, 0)
-      return runDate.getTime() === today.getTime()
+      const runDateLocal = new Date(runDate.getFullYear(), runDate.getMonth(), runDate.getDate())
+      return runDateLocal.getTime() === todayLocal.getTime()
     })
-    return todayRuns.length > 0 ? todayRuns[0] : null
+    
+    // Sort by startedAt descending to get the MOST RECENT run from today
+    if (todayRuns.length > 0) {
+      // Sort in descending order (most recent first)
+      const sorted = [...todayRuns].sort((a, b) => 
+        new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
+      )
+      return sorted[0] // Return the most recent run from today
+    }
+    return null
+  }
+
+  // Check if OAuth/login was successful (token generated)
+  const isOAuthSuccessful = (run: RunLog | null): boolean => {
+    return run !== null && run.status === 'success' && run.tokenGenerated === true
   }
 
   const filteredUsers = users.filter(user => {
     if (resultFilter === 'all') return true
     const lastRun = getLastRun(user.id)
     if (!lastRun) return resultFilter === 'fail' // Show users with no run today as "unsuccessful"
-    return resultFilter === 'success' ? lastRun.status === 'success' : lastRun.status === 'fail'
+    const oauthSuccess = isOAuthSuccessful(lastRun)
+    return resultFilter === 'success' ? oauthSuccess : !oauthSuccess
   })
 
-  // Calculate verification stats
+  // Calculate verification stats - only count OAuth successful (token generated)
   const successVerifications = users.filter(user => {
     const lastRun = getLastRun(user.id)
-    return lastRun && lastRun.status === 'success'
+    return isOAuthSuccessful(lastRun)
   }).length
 
   const pendingVerifications = users.filter(user => {
     const lastRun = getLastRun(user.id)
-    return !lastRun || lastRun.status !== 'success'
+    return !isOAuthSuccessful(lastRun)
   }).length
 
   const activeUsers = users.filter(u => u.active)
@@ -216,51 +312,84 @@ export default function Dashboard() {
             {health?.scheduler?.schedule ? (
               <>
                 {editingSchedule ? (
-                  <div className="mt-2 space-y-2">
-                    <div className="flex gap-2 items-center">
-                      <input
-                        type="number"
-                        min="0"
-                        max="23"
-                        value={scheduleTime.hour}
-                        onChange={(e) => setScheduleTime({ ...scheduleTime, hour: parseInt(e.target.value) || 0 })}
-                        className="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
-                        placeholder="HH"
-                      />
-                      <span className="text-gray-600">:</span>
-                      <input
-                        type="number"
-                        min="0"
-                        max="59"
-                        value={scheduleTime.minute}
-                        onChange={(e) => setScheduleTime({ ...scheduleTime, minute: parseInt(e.target.value) || 0 })}
-                        className="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
-                        placeholder="MM"
-                      />
-                      <div className="flex gap-1">
+                  <div className="mt-3 space-y-3">
+                    <div className="flex flex-col gap-3 items-center">
+                      <div className="flex items-center gap-2 bg-white rounded-lg px-4 py-3 border-2 border-purple-400 shadow-md">
+                        <input
+                          type="number"
+                          min="0"
+                          max="23"
+                          value={scheduleTime.hour}
+                          onChange={(e) => setScheduleTime({ ...scheduleTime, hour: parseInt(e.target.value) || 0 })}
+                          className="w-16 px-3 py-2 border-0 text-center text-xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 rounded"
+                          placeholder="HH"
+                        />
+                        <span className="text-gray-700 text-2xl font-bold">:</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max="59"
+                          value={scheduleTime.minute}
+                          onChange={(e) => setScheduleTime({ ...scheduleTime, minute: parseInt(e.target.value) || 0 })}
+                          className="w-16 px-3 py-2 border-0 text-center text-xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 rounded"
+                          placeholder="MM"
+                        />
+                      </div>
+                      <div className="flex gap-2 w-full justify-center">
                         <button
                           onClick={handleUpdateSchedule}
-                          className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
+                          className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-semibold text-sm flex items-center gap-1.5 min-w-[100px] justify-center"
+                          title="Save schedule"
                         >
-                          ✓
+                          <span>✓</span>
+                          <span>Save</span>
                         </button>
                         <button
-                          onClick={() => setEditingSchedule(false)}
-                          className="text-xs bg-gray-300 text-gray-700 px-2 py-1 rounded hover:bg-gray-400"
+                          onClick={() => {
+                            editingScheduleRef.current = false
+                            setEditingSchedule(false)
+                          }}
+                          className="bg-red-500 text-white px-5 py-2 rounded-lg hover:bg-red-600 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-semibold text-sm flex items-center gap-1.5 min-w-[100px] justify-center"
+                          title="Cancel editing"
                         >
-                          ✗
+                          <span>✗</span>
+                          <span>Cancel</span>
                         </button>
                       </div>
                     </div>
+                    <div className="text-xs text-center text-gray-600 italic">Editing schedule time</div>
                   </div>
                 ) : (
                   <>
-                    <div className="text-3xl font-bold mt-1 text-gray-900 cursor-pointer hover:opacity-80" onClick={() => setEditingSchedule(true)}>
+                    <div className="text-3xl font-bold mt-1 text-gray-900 cursor-pointer hover:opacity-80" onClick={() => {
+                      if (health.scheduler?.schedule) {
+                        setScheduleTime({
+                          hour: health.scheduler.schedule.hour,
+                          minute: health.scheduler.schedule.minute,
+                        })
+                      }
+                      editingScheduleRef.current = true
+                      setEditingSchedule(true)
+                    }}>
                       {health.scheduler.schedule.timeString}
                     </div>
                     <div className="text-sm text-gray-600 mt-1">{health.scheduler.running ? 'Running' : 'Scheduled'}</div>
+                    {timeRemaining && (
+                      <div className="text-xs text-purple-600 font-semibold mt-1 bg-purple-50 px-2 py-1 rounded">
+                        ⏱️ {timeRemaining}
+                      </div>
+                    )}
                       <button
-                        onClick={() => setEditingSchedule(true)}
+                        onClick={() => {
+                          if (health.scheduler?.schedule) {
+                            setScheduleTime({
+                              hour: health.scheduler.schedule.hour,
+                              minute: health.scheduler.schedule.minute,
+                            })
+                          }
+                          editingScheduleRef.current = true
+                          setEditingSchedule(true)
+                        }}
                         className="text-xs bg-purple-300 bg-opacity-60 hover:bg-opacity-80 px-2 py-1 rounded mt-1 transition-all text-gray-700 font-medium"
                       >
                         Edit
@@ -327,6 +456,12 @@ export default function Dashboard() {
           >
             Add User
           </Link>
+          <button
+            onClick={() => setShowSyncModal(true)}
+            className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-purple-800 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold"
+          >
+            Sync from Google Sheets
+          </button>
         </div>
 
         {/* Users Table */}
@@ -409,13 +544,13 @@ export default function Dashboard() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {lastRun ? (
-                          lastRun.status === 'success' ? (
-                            <span className="text-green-600 font-medium">✓</span>
+                          isOAuthSuccessful(lastRun) ? (
+                            <span className="text-green-600 font-medium" title="OAuth successful - Token generated">✓</span>
                           ) : (
-                            <span className="text-red-600 font-medium">✗</span>
+                            <span className="text-red-600 font-medium" title="OAuth failed or token not generated">✗</span>
                           )
                         ) : (
-                          <span className="text-gray-400">-</span>
+                          <span className="text-gray-400" title="No run today">-</span>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
@@ -446,6 +581,25 @@ export default function Dashboard() {
                             className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-1 rounded text-sm font-semibold transition-all duration-150"
                           >
                             Run
+                          </button>
+                          <button
+                            onClick={async () => {
+                              try {
+                                const res = await fetch(`/api/test-user/${user.id}`)
+                                const data = await res.json()
+                                if (res.ok) {
+                                  alert(`User: ${data.user.name}\n\nCredentials Check:\n- Password: ${data.credentials.password} (length: ${data.credentials.passwordLength})\n- DOB/TOTP: ${data.credentials.dob} (length: ${data.credentials.dobLength})\n- DOB Format: ${data.credentials.dobFormat}\n\nValidation:\n- Password Valid: ${data.validation.passwordValid ? '✓' : '✗'}\n- DOB/TOTP Valid: ${data.validation.dobValid ? '✓' : '✗'}\n- All Valid: ${data.validation.allValid ? '✓' : '✗'}`)
+                                } else {
+                                  alert(`Error: ${data.error}`)
+                                }
+                              } catch (error: any) {
+                                alert(`Failed to check credentials: ${error.message}`)
+                              }
+                            }}
+                            className="text-purple-600 hover:text-purple-800 hover:bg-purple-50 px-3 py-1 rounded text-sm font-semibold transition-all duration-150"
+                            title="Check credentials format"
+                          >
+                            Check
                           </button>
                           <Link
                             href={`/users/${user.id}/edit`}
@@ -488,16 +642,18 @@ export default function Dashboard() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {runs.map((run) => (
-                  <tr key={run.id} className={run.status === 'success' ? 'hover:bg-green-50 transition-colors duration-150' : 'hover:bg-red-50 transition-colors duration-150'}>
+                  <tr key={run.id} className={run.status === 'success' && run.tokenGenerated ? 'hover:bg-green-50 transition-colors duration-150' : 'hover:bg-red-50 transition-colors duration-150'}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                       {format(new Date(run.startedAt), 'MMM d, HH:mm:ss')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-gray-900 font-medium">{run.userName}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {run.status === 'success' ? (
-                        <span className="text-green-600 font-medium">✓ Success</span>
+                      {run.status === 'success' && run.tokenGenerated ? (
+                        <span className="text-green-600 font-medium" title="OAuth successful - Token generated">✓ Success</span>
+                      ) : run.status === 'success' && !run.tokenGenerated ? (
+                        <span className="text-orange-600 font-medium" title="Login completed but token not generated">⚠ Partial</span>
                       ) : (
-                        <span className="text-red-600 font-medium">✗ Failed</span>
+                        <span className="text-red-600 font-medium" title="OAuth failed">✗ Failed</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700 max-w-md truncate">
@@ -546,6 +702,109 @@ export default function Dashboard() {
           </p>
         </footer>
       </div>
+
+      {/* Sync Modal */}
+      {showSyncModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold mb-4 text-gray-800">Sync from Google Sheets</h2>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Google Sheets URL or ID *
+                </label>
+                <input
+                  type="text"
+                  value={sheetUrl}
+                  onChange={(e) => setSheetUrl(e.target.value)}
+                  placeholder="https://docs.google.com/spreadsheets/d/SHEET_ID/edit or just SHEET_ID"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Paste the full Google Sheets URL or just the Sheet ID
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sheet Range (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={sheetRange}
+                  onChange={(e) => setSheetRange(e.target.value)}
+                  placeholder="Users!A:Z"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Default: Users!A:Z (entire Users sheet). Format: SheetName!A1:Z100
+                </p>
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="updateExisting"
+                  checked={updateExisting}
+                  onChange={(e) => setUpdateExisting(e.target.checked)}
+                  className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                />
+                <label htmlFor="updateExisting" className="ml-2 block text-sm text-gray-700">
+                  Update existing users (based on Tradetron Username)
+                </label>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm font-semibold text-blue-900 mb-2">Expected Sheet Format:</p>
+                <p className="text-xs text-blue-800 mb-1">
+                  The first row should contain headers. Required columns (case-insensitive):
+                </p>
+                <ul className="text-xs text-blue-800 list-disc list-inside space-y-1">
+                  <li><strong>NAME</strong> or <strong>Name</strong> - User name</li>
+                  <li><strong>TRADETRON ID</strong> or <strong>TradetronUsername</strong> - Tradetron ID (e.g., 1967985)</li>
+                  <li><strong>FLATTRADE ID</strong> or <strong>BrokerUsername</strong> - FlatTrade/Broker ID (e.g., FZ07651)</li>
+                  <li><strong>PASSWORD</strong> or <strong>Password</strong> - User password</li>
+                  <li><strong>DOB</strong> or <strong>TOTPSecretOrDOB</strong> - Date of birth (8 digits: MMDDYYYY or DDMMYYYY) or TOTP secret</li>
+                  <li><strong>IsDOB</strong> (optional) - Auto-detected if DOB column exists, or true/false</li>
+                  <li><strong>Active</strong> (optional) - true/false, defaults to true</li>
+                </ul>
+                <p className="text-xs text-blue-700 mt-2 font-medium">
+                  📋 Example format: NAME | TRADETRON ID | FLATTRADE ID | PASSWORD | DOB
+                </p>
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <p className="text-sm font-semibold text-yellow-900 mb-2">Authentication:</p>
+                <p className="text-xs text-yellow-800">
+                  Set either <code className="bg-yellow-100 px-1 rounded">GOOGLE_SHEETS_API_KEY</code> (for public sheets) or <code className="bg-yellow-100 px-1 rounded">GOOGLE_SERVICE_ACCOUNT_KEY</code> (for private sheets) in your environment variables.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={handleSyncFromSheet}
+                disabled={syncLoading || !sheetUrl.trim()}
+                className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-purple-800 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                {syncLoading ? 'Syncing...' : 'Sync Now'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowSyncModal(false)
+                  setSheetUrl('https://docs.google.com/spreadsheets/d/1W7i5AQ77-pklRv0BkDRkFILSkjq4bkvN5vTCQU7YrLA/edit?gid=0#gid=0')
+                  setSheetRange('Users!A:Z')
+                }}
+                disabled={syncLoading}
+                className="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

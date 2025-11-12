@@ -2,6 +2,8 @@ import { User, RunLog } from '@/types'
 import { getUserById } from './db'
 import { saveRun } from './db'
 import { loginFlow } from '@/automations/loginFlow'
+import { updateSheetWithRunResult } from '@/lib/googleSheets'
+import { getGoogleSheetsConfig } from './db'
 
 type Job = {
   userId: string
@@ -106,6 +108,33 @@ class JobQueue {
 
       await saveRun(runLog)
       console.log(`[Job] Completed login for user: ${user.name} - ${status}`)
+      
+      // Update Google Sheet with run results (if enabled and configured)
+      try {
+        const googleSheetsConfig = await getGoogleSheetsConfig()
+        if (!googleSheetsConfig.sheetUrlOrId) {
+          console.log(`[Job] ⚠️ Google Sheets URL not configured. Skipping sheet update for user: ${user.name}`)
+          console.log(`[Job] 💡 To enable auto-updates: Sync from Google Sheets or set GOOGLE_SHEETS_URL in .env.local`)
+        } else if (!googleSheetsConfig.updateEnabled) {
+          console.log(`[Job] ⚠️ Google Sheets update is disabled. Skipping sheet update for user: ${user.name}`)
+        } else {
+          console.log(`[Job] 📝 Attempting to update Google Sheet for user: ${user.name}`)
+          const updated = await updateSheetWithRunResult(
+            googleSheetsConfig.sheetUrlOrId,
+            runLog,
+            googleSheetsConfig.range
+          )
+          if (updated) {
+            console.log(`[Job] ✅ Updated Google Sheet for user: ${user.name}`)
+          } else {
+            console.log(`[Job] ⚠️ Google Sheet update returned false for user: ${user.name} (check logs above for details)`)
+          }
+        }
+      } catch (error: any) {
+        // Don't fail the job if sheet update fails - just log the error
+        console.error(`[Job] ❌ Failed to update Google Sheet for user ${user.name}:`, error.message)
+        console.error(`[Job] Error details:`, error)
+      }
     }
   }
 

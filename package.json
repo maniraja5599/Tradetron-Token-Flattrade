@@ -7,32 +7,35 @@
     "build": "next build",
     "start": "node server.js",
     "playwright:install": "npx playwright install chromium",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "test:arun": "tsx scripts/test-arun.ts",
+    "setup:google-sheets": "tsx scripts/setup-google-sheets-config.ts",
+    "check:google-sheets": "tsx scripts/check-google-sheets-setup.ts"
   },
   "dependencies": {
-    "next": "^14.2.0",
-    "react": "^18.3.0",
-    "react-dom": "^18.3.0",
-    "playwright": "^1.44.0",
-    "node-cron": "^3.0.3",
-    "otplib": "^12.0.1",
-    "uuid": "^9.0.1",
     "archiver": "^7.0.1",
     "date-fns": "^3.3.1",
-    "lucide-react": "^0.344.0"
+    "googleapis": "^165.0.0",
+    "lucide-react": "^0.344.0",
+    "next": "^14.2.0",
+    "node-cron": "^3.0.3",
+    "otplib": "^12.0.1",
+    "playwright": "^1.44.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "@types/archiver": "^6.0.2",
     "@types/node": "^20.11.0",
+    "@types/node-cron": "^3.0.11",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
-    "@types/node-cron": "^3.0.11",
     "@types/uuid": "^9.0.7",
-    "@types/archiver": "^6.0.2",
-    "typescript": "^5.3.3",
-    "tailwindcss": "^3.4.1",
-    "postcss": "^8.4.35",
     "autoprefixer": "^10.4.17",
-    "tsx": "^4.7.1"
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
   }
 }
-
