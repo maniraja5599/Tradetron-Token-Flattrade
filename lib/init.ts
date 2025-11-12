@@ -213,18 +213,29 @@ async function autoSyncFromGoogleSheets() {
 }
 
 export async function initializeApp() {
-  await ensureDirectories()
-  
-  // Check if this is first run (no users exist)
-  const users = await getUsers()
-  if (users.length === 0) {
-    console.log('[Init] 🚀 First run detected - no users found')
-    console.log('[Init] 🔄 Attempting automatic sync from Google Sheets...')
-    await autoSyncFromGoogleSheets()
-  } else {
-    console.log(`[Init] ✅ Found ${users.length} existing user(s) - skipping auto-sync`)
+  try {
+    await ensureDirectories()
+    
+    // Check if this is first run (no users exist)
+    const users = await getUsers()
+    if (users.length === 0) {
+      console.log('[Init] 🚀 First run detected - no users found')
+      console.log('[Init] 🔄 Attempting automatic sync from Google Sheets...')
+      // Run auto-sync in background (non-blocking) to prevent server startup delays
+      autoSyncFromGoogleSheets().catch((error) => {
+        console.error('[Init] ⚠️ Auto-sync failed (non-critical):', error.message)
+      })
+    } else {
+      console.log(`[Init] ✅ Found ${users.length} existing user(s) - skipping auto-sync`)
+    }
+    
+    await startScheduler()
+    console.log('[Init] ✅ Application initialized successfully')
+  } catch (error: any) {
+    console.error('[Init] ❌ Critical error during initialization:', error)
+    console.error('[Init] Stack:', error.stack)
+    // Don't throw - allow server to start even if init fails
+    // The app can still work without auto-sync
   }
-  
-  await startScheduler()
 }
 
