@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: tradetron-token-generator
+    env: node
+    plan: free
+    buildCommand: npm install && npm run playwright:install chromium
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
+        value: "0"
+    disk:
+      name: data-disk
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
+

@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "node server.js",
+    "start:prod": "NODE_ENV=production node server.js",
     "playwright:install": "npx playwright install chromium",
     "seed": "tsx scripts/seed.ts",
     "test:arun": "tsx scripts/test-arun.ts",
