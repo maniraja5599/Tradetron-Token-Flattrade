@@ -175,6 +175,13 @@ async function autoSyncFromGoogleSheets() {
         continue
       }
 
+      // Check if ENCRYPTION_KEY is available before encrypting
+      if (!process.env.ENCRYPTION_KEY) {
+        console.error('[Init] ❌ ENCRYPTION_KEY not set - cannot encrypt user data')
+        console.error('[Init] 💡 Please set ENCRYPTION_KEY environment variable to enable auto-sync')
+        return // Exit early if encryption key is not available
+      }
+
       const newUser: User = {
         id: uuidv4(),
         name,
