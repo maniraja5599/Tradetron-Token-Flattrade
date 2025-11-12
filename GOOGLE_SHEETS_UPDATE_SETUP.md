@@ -39,15 +39,36 @@ If you're currently using an API key, you need to set up a service account:
 
 7. **Add Service Account to Environment:**
    
-   **Option A: File Path (Recommended)**
+   **Option A: File Path (Recommended for local development)**
    ```env
    GOOGLE_SERVICE_ACCOUNT_KEY_PATH=./keys/service-account-key.json
    ```
    
-   **Option B: Environment Variable**
+   **Option B: Environment Variable (JSON string)**
    ```env
    GOOGLE_SERVICE_ACCOUNT_KEY={"type":"service_account","project_id":"...","private_key_id":"...","private_key":"-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n","client_email":"...","client_id":"...","auth_uri":"...","token_uri":"...","auth_provider_x509_cert_url":"...","client_x509_cert_url":"..."}
    ```
+   
+   **Option C: Base64 Encoded (Recommended for Render/Cloud deployments)**
+   
+   This is the safest way to store service account credentials in cloud platforms like Render:
+   
+   1. Encode your service account JSON file to base64:
+      ```bash
+      # Linux/Mac
+      cat service-account-key.json | base64 -w0
+      
+      # Windows PowerShell
+      [Convert]::ToBase64String([IO.File]::ReadAllBytes("service-account-key.json"))
+      ```
+   
+   2. Add the base64 string as an environment variable in Render:
+      - Key: `GSA_JSON_B64`
+      - Value: (paste the base64 string)
+   
+   3. The app will automatically decode it and set up `GOOGLE_APPLICATION_CREDENTIALS` at startup.
+   
+   **Why use base64?** It avoids issues with special characters, newlines, and JSON escaping that can occur when storing JSON directly in environment variables.
 
 ## Step 2: Configure Google Sheets URL
 

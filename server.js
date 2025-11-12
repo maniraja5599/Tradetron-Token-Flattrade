@@ -2,6 +2,23 @@
 const { createServer } = require('http')
 const { parse } = require('url')
 const next = require('next')
+const fs = require('fs')
+const path = require('path')
+const os = require('os')
+
+// Setup Google Service Account credentials from base64 env var (for Render)
+// This allows storing the service account JSON securely as an environment variable
+if (process.env.GSA_JSON_B64) {
+  try {
+    const json = Buffer.from(process.env.GSA_JSON_B64, 'base64').toString('utf8')
+    const tempPath = path.join(os.tmpdir(), 'gsa.json')
+    fs.writeFileSync(tempPath, json)
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = tempPath
+    console.log('[Server] ✅ Google Service Account credentials loaded from GSA_JSON_B64')
+  } catch (error) {
+    console.error('[Server] ⚠️ Failed to parse GSA_JSON_B64:', error.message)
+  }
+}
 
 const dev = process.env.NODE_ENV !== 'production'
 // Always bind to 0.0.0.0 in production (required for Render/Railway/etc)

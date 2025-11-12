@@ -32,26 +32,35 @@ async function ensurePlaywrightBrowsers() {
       try {
         await fs.access(executablePath)
         console.log('[Init] ✅ Playwright browsers are installed')
+        console.log(`[Init] Browser path: ${executablePath}`)
         return
-      } catch {
+      } catch (error) {
         // Executable path exists but file doesn't - need to install
+        console.log(`[Init] ⚠️ Browser path reported as: ${executablePath}, but file not found`)
       }
+    } else {
+      console.log('[Init] ⚠️ chromium.executablePath() returned null/undefined')
     }
-  } catch (error) {
+  } catch (error: any) {
     // Browsers not installed or path not found
+    console.log(`[Init] ⚠️ Error checking browser path: ${error.message}`)
   }
 
-  // Browsers not found - install them
+  // Browsers not found - install them (without --with-deps since we don't have root in runtime)
   console.log('[Init] ⚠️ Playwright browsers not found - installing...')
   try {
-    execSync('npx playwright install chromium --with-deps', {
+    // Try without --with-deps first (runtime environments typically don't have root access)
+    // System dependencies should be installed during build phase
+    execSync('npx playwright install chromium', {
       stdio: 'inherit',
       cwd: process.cwd(),
+      timeout: 120000, // 2 minute timeout
     })
     console.log('[Init] ✅ Playwright browsers installed successfully')
   } catch (error: any) {
     console.error('[Init] ⚠️ Failed to install Playwright browsers:', error.message)
     console.error('[Init] 💡 This may cause login automation to fail')
+    console.error('[Init] 💡 Browsers should be installed during build phase. Check build logs.')
   }
 }
 

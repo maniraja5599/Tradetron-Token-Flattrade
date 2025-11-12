@@ -109,7 +109,8 @@ class JobQueue {
       await saveRun(runLog)
       console.log(`[Job] Completed login for user: ${user.name} - ${status}`)
       
-      // Update Google Sheet with run results (if enabled and configured)
+      // Update Google Sheet with run results (ALWAYS updates for both success and failure)
+      // This runs in the finally block, so it executes regardless of login outcome
       try {
         const googleSheetsConfig = await getGoogleSheetsConfig()
         if (!googleSheetsConfig.sheetUrlOrId) {
@@ -118,21 +119,22 @@ class JobQueue {
         } else if (!googleSheetsConfig.updateEnabled) {
           console.log(`[Job] ⚠️ Google Sheets update is disabled. Skipping sheet update for user: ${user.name}`)
         } else {
-          console.log(`[Job] 📝 Attempting to update Google Sheet for user: ${user.name}`)
+          console.log(`[Job] 📝 Attempting to update Google Sheet for user: ${user.name} (Status: ${status})`)
           const updated = await updateSheetWithRunResult(
             googleSheetsConfig.sheetUrlOrId,
             runLog,
             googleSheetsConfig.range
           )
           if (updated) {
-            console.log(`[Job] ✅ Updated Google Sheet for user: ${user.name}`)
+            console.log(`[Job] ✅ Successfully updated Google Sheet for user: ${user.name} with status: ${status}`)
           } else {
-            console.log(`[Job] ⚠️ Google Sheet update returned false for user: ${user.name} (check logs above for details)`)
+            console.log(`[Job] ⚠️ Google Sheet update returned false for user: ${user.name} (Status: ${status}) - check logs above for details`)
           }
         }
       } catch (error: any) {
         // Don't fail the job if sheet update fails - just log the error
-        console.error(`[Job] ❌ Failed to update Google Sheet for user ${user.name}:`, error.message)
+        // This ensures the job completes even if Google Sheets update fails
+        console.error(`[Job] ❌ Failed to update Google Sheet for user ${user.name} (Status: ${status}):`, error.message)
         console.error(`[Job] Error details:`, error)
       }
     }

@@ -31,12 +31,27 @@ export async function getSheetsClient(): Promise<{
   const apiKey = process.env.GOOGLE_SHEETS_API_KEY
   const serviceAccountKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY
   const serviceAccountKeyPath = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH
+  const googleApplicationCredentials = process.env.GOOGLE_APPLICATION_CREDENTIALS
 
-  if (!apiKey && !serviceAccountKey && !serviceAccountKeyPath) {
-    throw new Error('Either GOOGLE_SHEETS_API_KEY, GOOGLE_SERVICE_ACCOUNT_KEY, or GOOGLE_SERVICE_ACCOUNT_KEY_PATH must be set')
+  if (!apiKey && !serviceAccountKey && !serviceAccountKeyPath && !googleApplicationCredentials) {
+    throw new Error('Either GOOGLE_SHEETS_API_KEY, GOOGLE_SERVICE_ACCOUNT_KEY, GOOGLE_SERVICE_ACCOUNT_KEY_PATH, or GOOGLE_APPLICATION_CREDENTIALS must be set')
   }
 
   const sheets = google.sheets({ version: 'v4' })
+
+  // Check for Application Default Credentials first (set by server.js from GSA_JSON_B64)
+  if (googleApplicationCredentials) {
+    try {
+      const auth = new google.auth.GoogleAuth({
+        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+      })
+      const authClient = await auth.getClient()
+      return { sheets, auth: authClient, hasWriteAccess: true }
+    } catch (error: any) {
+      console.error('[GoogleSheets] Failed to use Application Default Credentials:', error.message)
+      // Fall through to other auth methods
+    }
+  }
 
   if (serviceAccountKey || serviceAccountKeyPath) {
     // Use service account authentication (required for write access)
