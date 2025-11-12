@@ -64,12 +64,11 @@ export async function getSheetsClient(): Promise<{
       }
     }
     
-    const auth = new google.auth.JWT(
-      credentials.client_email,
-      undefined,
-      credentials.private_key,
-      ['https://www.googleapis.com/auth/spreadsheets'] // Full write access
-    )
+    const auth = new google.auth.JWT({
+      email: credentials.client_email,
+      key: credentials.private_key,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'], // Full write access
+    })
     
     return { sheets, auth, hasWriteAccess: true }
   } else {
