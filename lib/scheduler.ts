@@ -1,6 +1,6 @@
 import * as cron from 'node-cron'
 import { getUsers } from './db'
-import { enqueueJob } from './jobs'
+import { enqueueJob, startBatch } from './jobs'
 import { getScheduleConfig, saveScheduleConfig } from './db'
 import { ScheduleConfig, DEFAULT_SCHEDULE } from './scheduleConfig'
 
@@ -31,8 +31,15 @@ export async function startScheduler(): Promise<void> {
       const activeUsers = users.filter(u => u.active)
       console.log(`[Scheduler] Enqueuing ${activeUsers.length} active users`)
       
-      for (const user of activeUsers) {
-        enqueueJob({ userId: user.id })
+      if (activeUsers.length > 0) {
+        // Generate batch ID and start batch tracking
+        const batchId = `scheduled-batch-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        startBatch(batchId, activeUsers.length)
+        
+        // Enqueue all jobs with batch ID
+        for (const user of activeUsers) {
+          enqueueJob({ userId: user.id, batchId })
+        }
       }
     } catch (error) {
       console.error('[Scheduler] Error during scheduled run:', error)
@@ -123,8 +130,15 @@ export async function updateSchedule(hour: number, minute: number): Promise<void
         const activeUsers = users.filter(u => u.active)
         console.log(`[Scheduler] Enqueuing ${activeUsers.length} active users (immediate trigger)`)
         
-        for (const user of activeUsers) {
-          enqueueJob({ userId: user.id })
+        if (activeUsers.length > 0) {
+          // Generate batch ID and start batch tracking
+          const batchId = `scheduled-batch-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+          startBatch(batchId, activeUsers.length)
+          
+          // Enqueue all jobs with batch ID
+          for (const user of activeUsers) {
+            enqueueJob({ userId: user.id, batchId })
+          }
         }
       } catch (error) {
         console.error('[Scheduler] Error during immediate trigger run:', error)

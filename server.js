@@ -11,12 +11,35 @@ const os = require('os')
 if (process.env.GSA_JSON_B64) {
   try {
     const json = Buffer.from(process.env.GSA_JSON_B64, 'base64').toString('utf8')
+    
+    // Validate JSON before writing
+    try {
+      JSON.parse(json)
+    } catch (parseError) {
+      console.error('[Server] ⚠️ Invalid JSON in GSA_JSON_B64:', parseError.message)
+      console.error('[Server] 💡 Please check that GSA_JSON_B64 is properly base64-encoded')
+      throw parseError
+    }
+    
+    // Validate it's a service account JSON (check for required fields)
+    const parsed = JSON.parse(json)
+    if (!parsed.type || parsed.type !== 'service_account') {
+      console.warn('[Server] ⚠️ GSA_JSON_B64 does not appear to be a service account JSON')
+    }
+    if (!parsed.client_email || !parsed.private_key) {
+      console.warn('[Server] ⚠️ GSA_JSON_B64 missing required fields (client_email or private_key)')
+    }
+    
     const tempPath = path.join(os.tmpdir(), 'gsa.json')
-    fs.writeFileSync(tempPath, json)
+    fs.writeFileSync(tempPath, json, 'utf8')
     process.env.GOOGLE_APPLICATION_CREDENTIALS = tempPath
     console.log('[Server] ✅ Google Service Account credentials loaded from GSA_JSON_B64')
+    console.log(`[Server] Service account email: ${parsed.client_email || 'unknown'}`)
   } catch (error) {
-    console.error('[Server] ⚠️ Failed to parse GSA_JSON_B64:', error.message)
+    console.error('[Server] ⚠️ Failed to load GSA_JSON_B64:', error.message)
+    console.error('[Server] 💡 Falling back to GOOGLE_SERVICE_ACCOUNT_KEY or API Key')
+    // Don't set GOOGLE_APPLICATION_CREDENTIALS if GSA_JSON_B64 is invalid
+    delete process.env.GOOGLE_APPLICATION_CREDENTIALS
   }
 }
 

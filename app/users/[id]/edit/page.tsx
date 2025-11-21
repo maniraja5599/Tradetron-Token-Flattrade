@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import Header from '../../../components/Header'
 
 export default function EditUserPage() {
   const router = useRouter()
@@ -16,7 +17,6 @@ export default function EditUserPage() {
     password: '',
     totpSecretOrDOB: '',
     isDOB: false,
-    selectors: '',
     active: true,
   })
   const [changePassword, setChangePassword] = useState(false)
@@ -36,10 +36,9 @@ export default function EditUserPage() {
           name: user.name,
           brokerUsername: user.brokerUsername,
           tradetronUsername: user.tradetronUsername || '',
-          password: '',
-          totpSecretOrDOB: '',
+          password: user.password || '',
+          totpSecretOrDOB: user.totpSecretOrDOB || '',
           isDOB: user.isDOB || false,
-          selectors: user.selectors ? JSON.stringify(user.selectors, null, 2) : '',
           active: user.active,
         })
       }
@@ -59,18 +58,14 @@ export default function EditUserPage() {
         name: formData.name,
         brokerUsername: formData.brokerUsername,
         tradetronUsername: formData.tradetronUsername,
-        selectors: formData.selectors || undefined,
         active: formData.active,
         // Always send isDOB to preserve it even if not changing TOTP/DOB
         isDOB: formData.isDOB,
       }
 
-      if (changePassword && formData.password) {
-        payload.password = formData.password
-      }
-      if (changeTotp && formData.totpSecretOrDOB) {
-        payload.totpSecretOrDOB = formData.totpSecretOrDOB
-      }
+      // Always send password and TOTP/DOB
+      payload.password = formData.password
+      payload.totpSecretOrDOB = formData.totpSecretOrDOB
 
       const res = await fetch(`/api/users/${userId}`, {
         method: 'PATCH',
@@ -101,9 +96,19 @@ export default function EditUserPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Edit User</h1>
+    <div className="min-h-screen bg-geometric relative">
+      <Header />
+      <div className="p-8">
+      <div className="bg-geometric-shapes">
+        <div className="geometric-triangle triangle-1"></div>
+        <div className="geometric-triangle triangle-2"></div>
+        <div className="geometric-triangle triangle-3"></div>
+        <div className="geometric-triangle triangle-4"></div>
+        <div className="geometric-triangle triangle-5"></div>
+        <div className="geometric-triangle triangle-6"></div>
+      </div>
+      <div className="max-w-2xl mx-auto relative z-10">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Edit User</h1>
         
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow">
           <div className="space-y-4">
@@ -116,7 +121,7 @@ export default function EditUserPage() {
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
               />
             </div>
 
@@ -129,9 +134,9 @@ export default function EditUserPage() {
                 required
                 value={formData.tradetronUsername}
                 onChange={(e) => setFormData({ ...formData, tradetronUsername: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
               />
-              <p className="text-xs text-gray-500 mt-1">Used to generate login URL</p>
+              <p className="text-xs text-gray-700 mt-1">Used to generate login URL</p>
               {loginUrl && (
                 <p className="text-xs text-green-600 mt-1 font-semibold">
                   Login URL: {loginUrl}
@@ -148,84 +153,51 @@ export default function EditUserPage() {
                 required
                 value={formData.brokerUsername}
                 onChange={(e) => setFormData({ ...formData, brokerUsername: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
               />
-            </div>
-
-            <div>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={changePassword}
-                  onChange={(e) => setChangePassword(e.target.checked)}
-                />
-                <span className="text-sm font-medium text-gray-700">Change Password</span>
-              </label>
-              {changePassword && (
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="Enter new password"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md mt-2"
-                />
-              )}
-              {!changePassword && (
-                <p className="text-xs text-gray-500 mt-1">Password is encrypted and not displayed</p>
-              )}
-            </div>
-
-            <div>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={changeTotp}
-                  onChange={(e) => setChangeTotp(e.target.checked)}
-                />
-                <span className="text-sm font-medium text-gray-700">Change TOTP Secret or DOB</span>
-              </label>
-              {changeTotp && (
-                <>
-                  <div className="mb-2 mt-2">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={formData.isDOB}
-                        onChange={(e) => setFormData({ ...formData, isDOB: e.target.checked })}
-                      />
-                      <span className="text-sm">Use Date of Birth (DOB) instead of TOTP</span>
-                    </label>
-                  </div>
-                  <input
-                    type="text"
-                    value={formData.totpSecretOrDOB}
-                    onChange={(e) => setFormData({ ...formData, totpSecretOrDOB: e.target.value })}
-                    placeholder={formData.isDOB ? "DDMMYYYY (e.g., 17111992)" : "Base32 TOTP secret"}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md mt-2"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {formData.isDOB 
-                      ? "Enter DOB in DDMMYYYY format"
-                      : "Enter TOTP secret (base32)"}
-                  </p>
-                </>
-              )}
-              {!changeTotp && (
-                <p className="text-xs text-gray-500 mt-1">TOTP secret/DOB is encrypted and not displayed</p>
-              )}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Custom Selectors (JSON, optional)
+                Password *
               </label>
-              <textarea
-                value={formData.selectors}
-                onChange={(e) => setFormData({ ...formData, selectors: e.target.value })}
-                placeholder='{"username": ["input[name=\"username\"]"], "password": ["input[type=\"password\"]"]}'
-                rows={6}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
+              <input
+                type="text"
+                required
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                placeholder="Enter password"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                2FA Method *
+              </label>
+              <div className="mb-2">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.isDOB}
+                    onChange={(e) => setFormData({ ...formData, isDOB: e.target.checked })}
+                  />
+                  <span className="text-sm text-gray-700">Use Date of Birth (DOB) instead of TOTP</span>
+                </label>
+              </div>
+              <input
+                type="text"
+                required
+                value={formData.totpSecretOrDOB}
+                onChange={(e) => setFormData({ ...formData, totpSecretOrDOB: e.target.value })}
+                placeholder={formData.isDOB ? "DDMMYYYY (e.g., 17111992)" : "Base32 TOTP secret"}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+              />
+              <p className="text-xs text-gray-700 mt-1">
+                {formData.isDOB 
+                  ? "Enter DOB in DDMMYYYY format"
+                  : "Enter TOTP secret (base32)"}
+              </p>
             </div>
 
             <div>
@@ -237,7 +209,7 @@ export default function EditUserPage() {
                 />
                 <span className="text-sm font-medium text-gray-700">Active</span>
               </label>
-              <p className="text-xs text-gray-500 mt-1">Inactive users will not be included in scheduled runs</p>
+              <p className="text-xs text-gray-700 mt-1">Inactive users will not be included in scheduled runs</p>
             </div>
 
             <div className="flex gap-4 pt-4">
@@ -258,6 +230,7 @@ export default function EditUserPage() {
             </div>
           </div>
         </form>
+      </div>
       </div>
     </div>
   )

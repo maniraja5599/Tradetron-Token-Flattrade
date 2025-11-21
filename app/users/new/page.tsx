@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Header from '../../components/Header'
 
 export default function NewUserPage() {
   const router = useRouter()
@@ -54,9 +55,19 @@ export default function NewUserPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Add New User</h1>
+    <div className="min-h-screen bg-geometric relative">
+      <Header />
+      <div className="p-8">
+      <div className="bg-geometric-shapes">
+        <div className="geometric-triangle triangle-1"></div>
+        <div className="geometric-triangle triangle-2"></div>
+        <div className="geometric-triangle triangle-3"></div>
+        <div className="geometric-triangle triangle-4"></div>
+        <div className="geometric-triangle triangle-5"></div>
+        <div className="geometric-triangle triangle-6"></div>
+      </div>
+      <div className="max-w-2xl mx-auto relative z-10">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Add New User</h1>
         
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow">
           <div className="space-y-4">
@@ -70,7 +81,7 @@ export default function NewUserPage() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="My Flatrade Account"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
               />
             </div>
 
@@ -84,9 +95,9 @@ export default function NewUserPage() {
                 value={formData.tradetronUsername}
                 onChange={(e) => setFormData({ ...formData, tradetronUsername: e.target.value })}
                 placeholder="724700"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-700 mt-1">
                 Your Tradetron username (used in login URL)
               </p>
               {loginUrl && (
@@ -106,7 +117,7 @@ export default function NewUserPage() {
                 value={formData.brokerUsername}
                 onChange={(e) => setFormData({ ...formData, brokerUsername: e.target.value })}
                 placeholder="Your Flatrade username"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
               />
             </div>
 
@@ -119,7 +130,7 @@ export default function NewUserPage() {
                 required
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
               />
             </div>
 
@@ -143,9 +154,9 @@ export default function NewUserPage() {
                 value={formData.totpSecretOrDOB}
                 onChange={(e) => setFormData({ ...formData, totpSecretOrDOB: e.target.value })}
                 placeholder={formData.isDOB ? "DDMMYYYY (e.g., 17111992)" : "Base32 TOTP secret"}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-700 mt-1">
                 {formData.isDOB 
                   ? "Enter your Date of Birth in DDMMYYYY format (e.g., 17111992 for 17-Nov-1992)"
                   : "Enter TOTP secret (base32) from your authenticator app"}
@@ -161,9 +172,9 @@ export default function NewUserPage() {
                 onChange={(e) => setFormData({ ...formData, selectors: e.target.value })}
                 placeholder='{"username": ["input[name=\"username\"]"], "password": ["input[type=\"password\"]"]}'
                 rows={6}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm text-gray-900"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-700 mt-1">
                 Override default selectors if needed. Leave empty to use defaults.
               </p>
             </div>
@@ -186,6 +197,7 @@ export default function NewUserPage() {
             </div>
           </div>
         </form>
+      </div>
       </div>
     </div>
   )

@@ -42,13 +42,30 @@ export async function getSheetsClient(): Promise<{
   // Check for Application Default Credentials first (set by server.js from GSA_JSON_B64)
   if (googleApplicationCredentials) {
     try {
+      // Verify the credentials file exists and is valid
+      const credsPath = googleApplicationCredentials
+      try {
+        const credsContent = await fs.readFile(credsPath, 'utf-8')
+        // Validate JSON format
+        JSON.parse(credsContent)
+      } catch (fileError: any) {
+        console.error('[GoogleSheets] ⚠️ Invalid credentials file at GOOGLE_APPLICATION_CREDENTIALS:', fileError.message)
+        console.error('[GoogleSheets] 💡 Check that GSA_JSON_B64 is properly base64-encoded and complete')
+        throw fileError // Force fallback
+      }
+      
       const auth = new google.auth.GoogleAuth({
         scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+        keyFile: credsPath, // Explicitly specify the key file
       })
       const authClient = await auth.getClient()
       return { sheets, auth: authClient, hasWriteAccess: true }
     } catch (error: any) {
       console.error('[GoogleSheets] Failed to use Application Default Credentials:', error.message)
+      if (error.message?.includes('Unterminated string') || error.message?.includes('JSON')) {
+        console.error('[GoogleSheets] 💡 JSON parsing error - check that GSA_JSON_B64 is complete and properly base64-encoded')
+        console.error('[GoogleSheets] 💡 Tip: Ensure no line breaks or truncation in the base64 string')
+      }
       // Fall through to other auth methods
     }
   }

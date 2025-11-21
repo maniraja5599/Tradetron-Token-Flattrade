@@ -11,6 +11,11 @@ const config: Config = {
       colors: {
         background: 'var(--background)',
         foreground: 'var(--foreground)',
+        tradetron: {
+          coral: '#FF6B7A', // Coral/salmon from TradeTron logo
+          'coral-light': '#FF8A95',
+          'coral-dark': '#E55A6A',
+        },
       },
     },
   },

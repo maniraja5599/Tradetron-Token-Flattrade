@@ -133,10 +133,37 @@ function mapRowToUser(row: string[], headers: string[]): Partial<User> | null {
     return row[idx]?.trim()
   }
 
+  const getTOTPKey = () => {
+    // Prioritize "TOTP KEY" column, then other TOTP variations
+    const idx = headerMap['totp key'] ?? headerMap['totpkey'] ?? headerMap['totp'] ?? headerMap['totp secret'] ?? headerMap['totpsecret'] ?? headerMap['2fa'] ?? headerMap['otp'] ?? headerMap['otp key']
+    return idx !== undefined ? row[idx]?.trim() : ''
+  }
+
+  const getDOB = () => {
+    // Get DOB column
+    const idx = headerMap['dob'] ?? headerMap['date of birth'] ?? headerMap['birth'] ?? headerMap['birthdate']
+    return idx !== undefined ? row[idx]?.trim() : ''
+  }
+
   const getTOTPSecretOrDOB = () => {
-    // Prioritize "DOB" column, then other variations
-    const idx = headerMap['dob'] ?? headerMap['totpsecretordob'] ?? headerMap['totp secret or dob'] ?? headerMap['totp'] ?? headerMap['totp/dob'] ?? headerMap['date of birth'] ?? 4
-    return row[idx]?.trim()
+    // Get TOTP KEY first
+    const totpKey = getTOTPKey()
+    // Get DOB
+    const dob = getDOB()
+    
+    // Priority: TOTP KEY > DOB
+    // If both are filled, use TOTP KEY
+    if (totpKey) {
+      return totpKey
+    }
+    // If only DOB is filled, use DOB
+    if (dob) {
+      return dob
+    }
+    
+    // Fallback to old column names for backward compatibility
+    const idx = headerMap['totpsecretordob'] ?? headerMap['totp secret or dob'] ?? headerMap['totp/dob'] ?? 4
+    return row[idx]?.trim() || ''
   }
 
   const getIsDOB = () => {
@@ -147,26 +174,48 @@ function mapRowToUser(row: string[], headers: string[]): Partial<User> | null {
       return value === 'true' || value === '1' || value === 'yes' || value === 'y'
     }
     
-    // Auto-detect: if the column name is "DOB" or contains "DOB", it's definitely DOB
-    // Check headerMap keys for DOB-related column names
-    const hasDOBColumn = Object.keys(headerMap).some(key => {
-      return key === 'dob' || key.includes('dob') || key === 'date of birth'
-    })
+    // Get TOTP KEY and DOB values
+    const totpKey = getTOTPKey()
+    const dob = getDOB()
     
-    if (hasDOBColumn) {
-      return true // If there's a DOB column, it's definitely DOB
+    // If both are filled, prioritize TOTP KEY (isDOB = false)
+    if (totpKey && dob) {
+      return false // Use TOTP KEY when both are present
     }
     
-    // Fallback: if TOTPSecretOrDOB is 8 digits, it's likely DOB (MMDDYYYY or DDMMYYYY)
+    // If only TOTP KEY is filled, it's not DOB
+    if (totpKey) {
+      return false
+    }
+    
+    // If only DOB is filled, it's DOB
+    if (dob) {
+      return true
+    }
+    
+    // Fallback: check if the value looks like DOB (8 digits)
     const totpSecretOrDOB = getTOTPSecretOrDOB()
     return totpSecretOrDOB ? /^\d{8}$/.test(totpSecretOrDOB) : false
   }
 
   const getActive = () => {
-    const idx = headerMap['active'] ?? headerMap['enabled'] ?? 6
+    // Check STATUS column first (ACTIVE/INACTIVE)
+    const statusIdx = headerMap['status'] ?? headerMap['state']
+    if (statusIdx !== undefined && row[statusIdx]) {
+      const statusValue = row[statusIdx].trim().toUpperCase()
+      if (statusValue === 'ACTIVE') {
+        return true
+      }
+      if (statusValue === 'INACTIVE') {
+        return false
+      }
+    }
+    
+    // Fallback to ACTIVE/ENABLED columns
+    const idx = headerMap['active'] ?? headerMap['enabled']
     if (idx !== undefined && row[idx]) {
       const value = row[idx].trim().toLowerCase()
-      return value === 'true' || value === '1' || value === 'yes' || value === 'y' || value === ''
+      return value === 'true' || value === '1' || value === 'yes' || value === 'y' || value === 'active' || value === ''
     }
     return true // Default to active
   }

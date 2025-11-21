@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserById, saveUser, deleteUser } from '@/lib/db'
-import { encrypt, maskSecret } from '@/lib/crypto'
+import { encrypt, decrypt } from '@/lib/crypto'
 
 export async function GET(
   request: NextRequest,
@@ -15,10 +15,25 @@ export async function GET(
         { status: 404 }
       )
     }
+    
+    // Decrypt password and TOTP/DOB for display
+    let decryptedPassword = ''
+    let decryptedTotpOrDOB = ''
+    try {
+      decryptedPassword = decrypt(user.encryptedPassword)
+    } catch (e) {
+      console.error('Failed to decrypt password:', e)
+    }
+    try {
+      decryptedTotpOrDOB = decrypt(user.encryptedTotpSecret)
+    } catch (e) {
+      console.error('Failed to decrypt TOTP/DOB:', e)
+    }
+    
     return NextResponse.json({
       ...user,
-      encryptedPassword: maskSecret(user.encryptedPassword),
-      encryptedTotpSecret: maskSecret(user.encryptedTotpSecret),
+      password: decryptedPassword,
+      totpSecretOrDOB: decryptedTotpOrDOB,
     })
   } catch (error: any) {
     return NextResponse.json(
@@ -43,7 +58,7 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { name, tradetronUsername, brokerUsername, password, totpSecretOrDOB, isDOB, selectors, active } = body
+    const { name, tradetronUsername, brokerUsername, password, totpSecretOrDOB, isDOB, active } = body
 
     const updated: any = {
       ...user,
@@ -57,7 +72,7 @@ export async function PATCH(
       // Auto-regenerate login URL when tradetronUsername changes
       updated.loginUrl = `https://flattrade.tradetron.tech/auth/${tradetronUsername}`
     }
-    if (selectors !== undefined) updated.selectors = selectors ? JSON.parse(selectors) : undefined
+    // Remove selectors handling - no longer needed
     if (active !== undefined) updated.active = active
 
     // Only update password/totp if provided (for "Change secret" flow)
@@ -76,10 +91,24 @@ export async function PATCH(
 
       await saveUser(updated)
 
+    // Decrypt for response
+    let decryptedPassword = ''
+    let decryptedTotpOrDOB = ''
+    try {
+      decryptedPassword = decrypt(updated.encryptedPassword)
+    } catch (e) {
+      console.error('Failed to decrypt password:', e)
+    }
+    try {
+      decryptedTotpOrDOB = decrypt(updated.encryptedTotpSecret)
+    } catch (e) {
+      console.error('Failed to decrypt TOTP/DOB:', e)
+    }
+    
     return NextResponse.json({
       ...updated,
-      encryptedPassword: maskSecret(updated.encryptedPassword),
-      encryptedTotpSecret: maskSecret(updated.encryptedTotpSecret),
+      password: decryptedPassword,
+      totpSecretOrDOB: decryptedTotpOrDOB,
     })
   } catch (error: any) {
     return NextResponse.json(

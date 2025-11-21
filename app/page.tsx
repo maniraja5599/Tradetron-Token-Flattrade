@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import Link from 'next/link'
 import { User, RunLog } from '@/types'
+import Header from './components/Header'
 
 export default function Dashboard() {
   const router = useRouter()
@@ -22,6 +23,7 @@ export default function Dashboard() {
   const [sheetRange, setSheetRange] = useState('Users!A:Z')
   const [updateExisting, setUpdateExisting] = useState(true)
   const [timeRemaining, setTimeRemaining] = useState<string>('')
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadData()
@@ -65,26 +67,48 @@ export default function Dashboard() {
 
   const loadData = async () => {
     try {
-      const [usersRes, runsRes, healthRes] = await Promise.all([
-        fetch('/api/users'),
-        fetch('/api/runs?limit=20'),
-        fetch('/api/health'),
-      ])
-      if (usersRes.ok) setUsers(await usersRes.json())
-      if (runsRes.ok) setRuns(await runsRes.json())
-      if (healthRes.ok) {
-        const healthData = await healthRes.json()
-        setHealth(healthData)
-        // Set schedule time from health data only when NOT editing
-        if (healthData.scheduler?.schedule && !editingScheduleRef.current) {
-          setScheduleTime({
-            hour: healthData.scheduler.schedule.hour,
-            minute: healthData.scheduler.schedule.minute,
-          })
+      setError(null)
+      // Add timeout to prevent indefinite loading on cold starts
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => {
+        controller.abort()
+      }, 30000) // 30 second timeout
+      
+      try {
+        const [usersRes, runsRes, healthRes] = await Promise.all([
+          fetch('/api/users', { signal: controller.signal }),
+          fetch('/api/runs?limit=20', { signal: controller.signal }),
+          fetch('/api/health', { signal: controller.signal }),
+        ])
+        
+        clearTimeout(timeoutId)
+        
+        if (usersRes.ok) setUsers(await usersRes.json())
+        if (runsRes.ok) setRuns(await runsRes.json())
+        if (healthRes.ok) {
+          const healthData = await healthRes.json()
+          setHealth(healthData)
+          // Set schedule time from health data only when NOT editing
+          if (healthData.scheduler?.schedule && !editingScheduleRef.current) {
+            setScheduleTime({
+              hour: healthData.scheduler.schedule?.hour || 8,
+              minute: healthData.scheduler.schedule?.minute || 30,
+            })
+          }
         }
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId)
+        throw fetchError
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load data:', error)
+      if (error.name === 'AbortError') {
+        setError('Request timeout - the server may be starting up. Please wait a moment and refresh.')
+      } else if (error.message?.includes('fetch')) {
+        setError('Failed to connect to server. The server may be starting up (Render free tier takes ~30-60 seconds). Please wait and refresh.')
+      } else {
+        setError('Failed to load data. Please refresh the page.')
+      }
     } finally {
       setLoading(false)
     }
@@ -273,20 +297,102 @@ export default function Dashboard() {
   const lastRun = runs.length > 0 ? runs[0] : null
 
   if (loading) {
-    return <div className="min-h-screen bg-gray-50 p-8">Loading...</div>
+    return (
+      <div className="min-h-screen bg-gray-50 p-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="text-gray-700 font-medium">Loading dashboard...</div>
+          <div className="text-sm text-gray-700 mt-2">If this takes longer than 30 seconds, the server may be starting up.</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-8 flex items-center justify-center">
+        <div className="max-w-md bg-white rounded-lg shadow-lg p-6 border border-red-200">
+          <div className="text-red-600 font-bold text-lg mb-2">⚠️ Error Loading Dashboard</div>
+          <div className="text-gray-700 mb-4">{error}</div>
+          <button
+            onClick={() => {
+              setError(null)
+              setLoading(true)
+              loadData()
+            }}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    )
   }
 
       return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 p-8">
-          <div className="max-w-7xl mx-auto">
-            <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">TradeTron Token Generator</h1>
+        <div className="min-h-screen bg-geometric relative">
+          <Header />
+          <div className="p-8 pt-24">
+          <div className="bg-geometric-shapes">
+            <div className="geometric-triangle triangle-1"></div>
+            <div className="geometric-triangle triangle-2"></div>
+            <div className="geometric-triangle triangle-3"></div>
+            <div className="geometric-triangle triangle-4"></div>
+            <div className="geometric-triangle triangle-5"></div>
+            <div className="geometric-triangle triangle-6"></div>
+            <div className="geometric-triangle triangle-7"></div>
+            <div className="geometric-triangle triangle-8"></div>
+            <div className="geometric-triangle triangle-9"></div>
+            <div className="geometric-triangle triangle-10"></div>
+            <div className="geometric-triangle triangle-11"></div>
+            <div className="geometric-triangle triangle-12"></div>
+            <div className="geometric-triangle triangle-13"></div>
+            <div className="geometric-triangle triangle-14"></div>
+            <div className="geometric-triangle triangle-15"></div>
+            <div className="geometric-triangle triangle-16"></div>
+            <div className="geometric-triangle triangle-17"></div>
+            <div className="geometric-triangle triangle-18"></div>
+            <div className="geometric-triangle triangle-19"></div>
+            <div className="geometric-triangle triangle-20"></div>
+            <div className="geometric-triangle triangle-21"></div>
+            <div className="geometric-triangle triangle-22"></div>
+            <div className="geometric-triangle triangle-23"></div>
+            <div className="geometric-triangle triangle-24"></div>
+            <div className="geometric-triangle triangle-25"></div>
+            <div className="geometric-triangle triangle-26"></div>
+            <div className="geometric-triangle triangle-27"></div>
+            <div className="geometric-triangle triangle-28"></div>
+            <div className="geometric-triangle triangle-29"></div>
+            <div className="geometric-triangle triangle-30"></div>
+          </div>
+          <div className="max-w-7xl mx-auto relative z-10">
+            <div className="mb-8 text-center">
+              <h1 className="text-5xl font-bold mb-2 flex items-center justify-center gap-2">
+                <span className="text-white tracking-tight drop-shadow-lg">TRADE</span>
+                <span className="logo-brain-gear"></span>
+                <span className="text-white tracking-tight drop-shadow-lg">TRON</span>
+              </h1>
+              <p className="text-xs text-gray-300 font-semibold tracking-widest uppercase mb-1">ALGO STRATEGY MARKETPLACE</p>
+              <p className="text-lg text-gray-200 font-medium">Token Generator</p>
+            </div>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-          <Link href="/users" className="bg-gradient-to-br from-blue-100 to-blue-200 p-6 rounded-lg shadow-md text-gray-800 transform hover:scale-105 transition-transform duration-200 border border-blue-200 cursor-pointer">
-            <div className="text-sm font-medium text-gray-700">Total Users</div>
-            <div className="text-3xl font-bold mt-1 text-gray-900">{users.length}</div>
-            <div className="text-sm text-gray-600 mt-1">{activeUsers.length} active</div>
+          <Link href="/users" className="group relative bg-white/40 backdrop-blur-md p-6 rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-blue-500/20 border border-white/30 hover:border-blue-400/60 transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] hover:-translate-y-1">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-400/30 to-blue-600/15 rounded-full -mr-12 -mt-12 group-hover:scale-150 group-hover:opacity-80 transition-all duration-500"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-xs font-semibold text-white/90 uppercase tracking-wider">Total Users</div>
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-blue-500/50 group-hover:scale-110 transition-all duration-300">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="text-5xl font-bold text-blue-200 mb-2 drop-shadow-lg">{users.length}</div>
+              <div className="text-xs font-medium text-white/80">{activeUsers.length} active</div>
+            </div>
           </Link>
           <div 
             onClick={() => {
@@ -295,118 +401,151 @@ export default function Dashboard() {
                 element.scrollIntoView({ behavior: 'smooth', block: 'start' })
               }
             }}
-            className="bg-gradient-to-br from-green-100 to-green-200 p-6 rounded-lg shadow-md text-gray-800 transform hover:scale-105 transition-transform duration-200 border border-green-200 cursor-pointer"
+            className="group relative bg-white/40 backdrop-blur-md p-6 rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-green-500/20 border border-white/30 hover:border-green-400/60 transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] hover:-translate-y-1"
           >
-            <div className="text-sm font-medium text-gray-700">Last Run</div>
-            {lastRun ? (
-              <>
-                <div className="text-3xl font-bold mt-1 text-gray-900">{format(new Date(lastRun.startedAt), 'HH:mm')}</div>
-                <div className="text-sm text-gray-600 mt-1">{format(new Date(lastRun.startedAt), 'MMM d')}</div>
-              </>
-            ) : (
-              <div className="text-sm text-gray-600 mt-1">No runs yet</div>
-            )}
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-green-400/30 to-green-600/15 rounded-full -mr-12 -mt-12 group-hover:scale-150 group-hover:opacity-80 transition-all duration-500"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-xs font-semibold text-white/90 uppercase tracking-wider">Last Run</div>
+                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-green-500/50 group-hover:scale-110 transition-all duration-300">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+              {lastRun ? (
+                <>
+                  <div className="text-5xl font-bold text-green-200 mb-2 drop-shadow-lg">{format(new Date(lastRun.startedAt), 'HH:mm')}</div>
+                  <div className="text-xs font-medium text-white/80">{format(new Date(lastRun.startedAt), 'MMM d')}</div>
+                </>
+              ) : (
+                <div className="text-xs font-medium text-white/80">No runs yet</div>
+              )}
+            </div>
           </div>
-          <div className="bg-gradient-to-br from-purple-100 to-purple-200 p-6 rounded-lg shadow-md text-gray-800 transform hover:scale-105 transition-transform duration-200 border border-purple-200">
-            <div className="text-sm font-medium text-gray-700">Next Scheduled</div>
-            {health?.scheduler?.schedule ? (
-              <>
-                {editingSchedule ? (
-                  <div className="mt-3 space-y-3">
-                    <div className="flex flex-col gap-3 items-center">
-                      <div className="flex items-center gap-2 bg-white rounded-lg px-4 py-3 border-2 border-purple-400 shadow-md">
-                        <input
-                          type="number"
-                          min="0"
-                          max="23"
-                          value={scheduleTime.hour}
-                          onChange={(e) => setScheduleTime({ ...scheduleTime, hour: parseInt(e.target.value) || 0 })}
-                          className="w-16 px-3 py-2 border-0 text-center text-xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 rounded"
-                          placeholder="HH"
-                        />
-                        <span className="text-gray-700 text-2xl font-bold">:</span>
-                        <input
-                          type="number"
-                          min="0"
-                          max="59"
-                          value={scheduleTime.minute}
-                          onChange={(e) => setScheduleTime({ ...scheduleTime, minute: parseInt(e.target.value) || 0 })}
-                          className="w-16 px-3 py-2 border-0 text-center text-xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 rounded"
-                          placeholder="MM"
-                        />
+          <div className="group relative bg-white/40 backdrop-blur-md p-6 rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-purple-500/20 border border-white/30 hover:border-purple-400/60 transition-all duration-300 overflow-hidden hover:scale-[1.02] hover:-translate-y-1">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-purple-400/30 to-purple-600/15 rounded-full -mr-12 -mt-12 group-hover:scale-150 group-hover:opacity-80 transition-all duration-500"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-xs font-semibold text-white/90 uppercase tracking-wider">Next Scheduled</div>
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-purple-500/50 group-hover:scale-110 transition-all duration-300">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              </div>
+              {health?.scheduler?.schedule ? (
+                <>
+                  {editingSchedule ? (
+                    <div className="mt-3 space-y-3">
+                      <div className="flex flex-col gap-3 items-center">
+                        <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-lg px-4 py-3 border-2 border-purple-400/50 shadow-md">
+                          <input
+                            type="number"
+                            min="0"
+                            max="23"
+                            value={scheduleTime.hour}
+                            onChange={(e) => setScheduleTime({ ...scheduleTime, hour: parseInt(e.target.value) || 0 })}
+                            className="w-16 px-3 py-2 border-0 text-center text-xl font-bold text-white bg-white/10 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded"
+                            placeholder="HH"
+                          />
+                          <span className="text-white/80 text-2xl font-bold">:</span>
+                          <input
+                            type="number"
+                            min="0"
+                            max="59"
+                            value={scheduleTime.minute}
+                            onChange={(e) => setScheduleTime({ ...scheduleTime, minute: parseInt(e.target.value) || 0 })}
+                            className="w-16 px-3 py-2 border-0 text-center text-xl font-bold text-white bg-white/10 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded"
+                            placeholder="MM"
+                          />
+                        </div>
+                        <div className="flex gap-2 w-full justify-center">
+                          <button
+                            onClick={handleUpdateSchedule}
+                            className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-semibold text-sm flex items-center gap-1.5 min-w-[100px] justify-center"
+                            title="Save schedule"
+                          >
+                            <span>✓</span>
+                            <span>Save</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              editingScheduleRef.current = false
+                              setEditingSchedule(false)
+                            }}
+                            className="bg-red-500 text-white px-5 py-2 rounded-lg hover:bg-red-600 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-semibold text-sm flex items-center gap-1.5 min-w-[100px] justify-center"
+                            title="Cancel editing"
+                          >
+                            <span>✗</span>
+                            <span>Cancel</span>
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex gap-2 w-full justify-center">
-                        <button
-                          onClick={handleUpdateSchedule}
-                          className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-semibold text-sm flex items-center gap-1.5 min-w-[100px] justify-center"
-                          title="Save schedule"
-                        >
-                          <span>✓</span>
-                          <span>Save</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            editingScheduleRef.current = false
-                            setEditingSchedule(false)
-                          }}
-                          className="bg-red-500 text-white px-5 py-2 rounded-lg hover:bg-red-600 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-semibold text-sm flex items-center gap-1.5 min-w-[100px] justify-center"
-                          title="Cancel editing"
-                        >
-                          <span>✗</span>
-                          <span>Cancel</span>
-                        </button>
-                      </div>
+                      <div className="text-xs text-center text-white/70 italic">Editing schedule time</div>
                     </div>
-                    <div className="text-xs text-center text-gray-600 italic">Editing schedule time</div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="text-3xl font-bold mt-1 text-gray-900 cursor-pointer hover:opacity-80" onClick={() => {
-                      if (health.scheduler?.schedule) {
-                        setScheduleTime({
-                          hour: health.scheduler.schedule.hour,
-                          minute: health.scheduler.schedule.minute,
-                        })
-                      }
-                      editingScheduleRef.current = true
-                      setEditingSchedule(true)
-                    }}>
-                      {health.scheduler.schedule.timeString}
-                    </div>
-                    <div className="text-sm text-gray-600 mt-1">{health.scheduler.running ? 'Running' : 'Scheduled'}</div>
-                    {timeRemaining && (
-                      <div className="text-xs text-purple-600 font-semibold mt-1 bg-purple-50 px-2 py-1 rounded">
-                        ⏱️ {timeRemaining}
+                  ) : (
+                    <>
+                      <div className="text-5xl font-bold text-purple-200 mb-2 drop-shadow-lg cursor-pointer hover:opacity-80 transition-opacity" onClick={() => {
+                        if (health.scheduler?.schedule) {
+                          setScheduleTime({
+                            hour: health.scheduler.schedule?.hour || 8,
+                            minute: health.scheduler.schedule?.minute || 30,
+                          })
+                        }
+                        editingScheduleRef.current = true
+                        setEditingSchedule(true)
+                      }}>
+                        {health.scheduler?.schedule?.timeString}
                       </div>
-                    )}
+                      <div className="text-xs font-medium text-white/80 mb-2">{health.scheduler?.running ? 'Running' : 'Scheduled'}</div>
+                      {timeRemaining && (
+                        <div className="text-xs text-purple-200 font-semibold mb-2 bg-purple-500/25 px-3 py-1.5 rounded-lg inline-block backdrop-blur-sm">
+                          ⏱️ {timeRemaining}
+                        </div>
+                      )}
                       <button
                         onClick={() => {
                           if (health.scheduler?.schedule) {
                             setScheduleTime({
-                              hour: health.scheduler.schedule.hour,
-                              minute: health.scheduler.schedule.minute,
+                              hour: health.scheduler.schedule?.hour || 8,
+                              minute: health.scheduler.schedule?.minute || 30,
                             })
                           }
                           editingScheduleRef.current = true
                           setEditingSchedule(true)
                         }}
-                        className="text-xs bg-purple-300 bg-opacity-60 hover:bg-opacity-80 px-2 py-1 rounded mt-1 transition-all text-gray-700 font-medium"
+                        className="text-xs bg-purple-500/30 hover:bg-purple-500/50 text-purple-100 px-4 py-2 rounded-lg mt-2 transition-all font-medium shadow-md hover:shadow-purple-500/30"
                       >
                         Edit
                       </button>
-                  </>
-                )}
-              </>
-            ) : (
-              <div className="text-sm text-gray-600">Not scheduled</div>
-            )}
-          </div>
-          <div className="bg-gradient-to-br from-orange-100 to-orange-200 p-6 rounded-lg shadow-md text-gray-800 transform hover:scale-105 transition-transform duration-200 border border-orange-200">
-            <div className="text-sm font-medium text-gray-700">Queue Status</div>
-            <div className="text-3xl font-bold mt-1 text-gray-900">
-              {health?.queue?.running || 0}/{health?.queue?.maxConcurrency || 4}
+                    </>
+                  )}
+                </>
+              ) : (
+                <div className="text-xs font-medium text-white/80">Not scheduled</div>
+              )}
             </div>
-            <div className="text-sm text-gray-600 mt-1">{health?.queue?.queueLength || 0} queued</div>
+          </div>
+          <div className="group relative bg-white/40 backdrop-blur-md p-6 rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-orange-500/20 border border-white/30 hover:border-orange-400/60 transition-all duration-300 overflow-hidden hover:scale-[1.02] hover:-translate-y-1">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-orange-400/30 to-orange-600/15 rounded-full -mr-12 -mt-12 group-hover:scale-150 group-hover:opacity-80 transition-all duration-500"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-xs font-semibold text-white/90 uppercase tracking-wider">Queue Status</div>
+                <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-orange-500/50 group-hover:scale-110 transition-all duration-300">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  </svg>
+                </div>
+              </div>
+              <div className="text-5xl font-bold text-orange-200 mb-2 drop-shadow-lg">
+                {health?.queue?.running || 0}/{health?.queue?.maxConcurrency || 4}
+              </div>
+              <div className="text-xs font-medium text-white/80">{health?.queue?.queueLength || 0} queued</div>
+            </div>
           </div>
           <div 
             onClick={() => {
@@ -418,11 +557,22 @@ export default function Dashboard() {
                 }
               }, 100)
             }}
-            className="bg-gradient-to-br from-green-100 to-emerald-200 p-6 rounded-lg shadow-md text-gray-800 transform hover:scale-105 transition-transform duration-200 border border-green-200 cursor-pointer"
+            className="group relative bg-white/40 backdrop-blur-md p-6 rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-emerald-500/20 border border-white/30 hover:border-emerald-400/60 transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] hover:-translate-y-1"
           >
-            <div className="text-sm font-medium text-gray-700">Success Verification</div>
-            <div className="text-3xl font-bold mt-1 text-gray-900">{successVerifications}</div>
-            <div className="text-sm text-gray-600 mt-1">verified today</div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-400/30 to-emerald-600/15 rounded-full -mr-12 -mt-12 group-hover:scale-150 group-hover:opacity-80 transition-all duration-500"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-xs font-semibold text-white/90 uppercase tracking-wider">Success Verification</div>
+                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-emerald-500/50 group-hover:scale-110 transition-all duration-300">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="text-5xl font-bold text-emerald-200 mb-2 drop-shadow-lg">{successVerifications}</div>
+              <div className="text-xs font-medium text-white/80">verified today</div>
+            </div>
           </div>
           <div 
             onClick={() => {
@@ -434,11 +584,22 @@ export default function Dashboard() {
                 }
               }, 100)
             }}
-            className="bg-gradient-to-br from-yellow-100 to-amber-200 p-6 rounded-lg shadow-md text-gray-800 transform hover:scale-105 transition-transform duration-200 border border-yellow-200 cursor-pointer"
+            className="group relative bg-white/40 backdrop-blur-md p-6 rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-amber-500/20 border border-white/30 hover:border-amber-400/60 transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] hover:-translate-y-1"
           >
-            <div className="text-sm font-medium text-gray-700">Pending Verification</div>
-            <div className="text-3xl font-bold mt-1 text-gray-900">{pendingVerifications}</div>
-            <div className="text-sm text-gray-600 mt-1">pending today</div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-amber-400/30 to-amber-600/15 rounded-full -mr-12 -mt-12 group-hover:scale-150 group-hover:opacity-80 transition-all duration-500"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-xs font-semibold text-white/90 uppercase tracking-wider">Pending Verification</div>
+                <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-amber-500/50 group-hover:scale-110 transition-all duration-300">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="text-5xl font-bold text-amber-200 mb-2 drop-shadow-lg">{pendingVerifications}</div>
+              <div className="text-xs font-medium text-white/80">pending today</div>
+            </div>
           </div>
         </div>
 
@@ -464,10 +625,13 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Users Table */}
+        {/* Users Table - Detailed List View */}
         <div id="users-section" className="bg-white rounded-lg shadow-lg mb-8 border border-gray-200">
           <div className="p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50 flex justify-between items-center">
-            <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Users</h2>
+            <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center gap-2">
+              <span className="text-2xl">👥</span>
+              <span>Users</span>
+            </h2>
             <div className="flex gap-2 items-center">
               {resultFilter !== 'all' && (
                 <button
@@ -519,6 +683,7 @@ export default function Dashboard() {
               <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Login URL</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Last Result</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Last Run Time</th>
@@ -531,7 +696,36 @@ export default function Dashboard() {
                   const lastRun = getLastRun(user.id)
                   return (
                     <tr key={user.id} className="hover:bg-blue-50 transition-colors duration-150">
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-900 font-semibold">{user.name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-900 font-bold text-lg">{user.name}</span>
+                          {!user.active && (
+                            <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-xs font-semibold">
+                              Inactive
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {lastRun ? (
+                          isOAuthSuccessful(lastRun) ? (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                              Success
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
+                              <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                              Failed
+                            </span>
+                          )
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">
+                            <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
+                            No Run
+                          </span>
+                        )}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                         <a
                           href={user.loginUrl}
@@ -545,9 +739,9 @@ export default function Dashboard() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         {lastRun ? (
                           isOAuthSuccessful(lastRun) ? (
-                            <span className="text-green-600 font-medium" title="OAuth successful - Token generated">✓</span>
+                            <span className="text-green-600 font-bold text-lg" title="OAuth successful - Token generated">✓</span>
                           ) : (
-                            <span className="text-red-600 font-medium" title="OAuth failed or token not generated">✗</span>
+                            <span className="text-red-600 font-bold text-lg" title="OAuth failed or token not generated">✗</span>
                           )
                         ) : (
                           <span className="text-gray-400" title="No run today">-</span>
@@ -556,7 +750,7 @@ export default function Dashboard() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                         {lastRun ? (
                           <div className="flex flex-col">
-                            <span className="font-medium">{format(new Date(lastRun.startedAt), 'MMM d, HH:mm:ss')}</span>
+                            <span className="font-semibold text-gray-900">{format(new Date(lastRun.startedAt), 'MMM d, HH:mm:ss')}</span>
                             <span className="text-xs text-gray-500 mt-0.5">{format(new Date(lastRun.startedAt), 'EEE')}</span>
                           </div>
                         ) : (
@@ -565,7 +759,7 @@ export default function Dashboard() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                         {lastRun ? (
-                          <span className="font-medium">
+                          <span className="font-semibold text-gray-900">
                             {lastRun.ms >= 1000 
                               ? `${(lastRun.ms / 1000).toFixed(1)}s` 
                               : `${lastRun.ms}ms`}
@@ -625,8 +819,19 @@ export default function Dashboard() {
 
         {/* Recent Runs */}
         <div id="recent-runs" className="bg-white rounded-lg shadow-lg border border-gray-200">
-          <div className="p-6 border-b bg-gradient-to-r from-purple-50 to-pink-50">
-            <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Recent Runs</h2>
+          <div className="p-6 border-b bg-gradient-to-r from-purple-50 to-pink-50 flex justify-between items-center">
+            <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent flex items-center gap-2">
+              <span className="text-2xl">📊</span>
+              <span>Recent Runs</span>
+            </h2>
+            {runs.length > 10 && (
+              <Link
+                href="/runs"
+                className="text-blue-600 hover:text-blue-800 font-medium text-sm hover:underline"
+              >
+                View All ({runs.length}) →
+              </Link>
+            )}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -641,7 +846,7 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {runs.map((run) => (
+                {runs.slice(0, 10).map((run) => (
                   <tr key={run.id} className={run.status === 'success' && run.tokenGenerated ? 'hover:bg-green-50 transition-colors duration-150' : 'hover:bg-red-50 transition-colors duration-150'}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                       {format(new Date(run.startedAt), 'MMM d, HH:mm:ss')}
@@ -719,9 +924,9 @@ export default function Dashboard() {
                   value={sheetUrl}
                   onChange={(e) => setSheetUrl(e.target.value)}
                   placeholder="https://docs.google.com/spreadsheets/d/SHEET_ID/edit or just SHEET_ID"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-700 mt-1">
                   Paste the full Google Sheets URL or just the Sheet ID
                 </p>
               </div>
@@ -735,9 +940,9 @@ export default function Dashboard() {
                   value={sheetRange}
                   onChange={(e) => setSheetRange(e.target.value)}
                   placeholder="Users!A:Z"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-700 mt-1">
                   Default: Users!A:Z (entire Users sheet). Format: SheetName!A1:Z100
                 </p>
               </div>
@@ -805,7 +1010,8 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-    </div>
-  )
-}
+          </div>
+        </div>
+      )
+    }
 

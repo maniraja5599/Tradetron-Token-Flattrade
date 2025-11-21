@@ -4,10 +4,12 @@ import { saveRun } from './db'
 import { loginFlow } from '@/automations/loginFlow'
 import { updateSheetWithRunResult } from '@/lib/googleSheets'
 import { getGoogleSheetsConfig } from './db'
+import { sendRunNotification, sendBatchNotification } from './telegram'
 
 type Job = {
   userId: string
   headful?: boolean
+  batchId?: string
 }
 
 class JobQueue {
@@ -15,6 +17,12 @@ class JobQueue {
   private running = new Set<string>()
   private maxConcurrency: number
   private processing = false
+  private activeBatches = new Map<string, {
+    expectedCount: number
+    runLogs: RunLog[]
+    startedAt: number
+    inactiveUsers: string[] // Track inactive user names
+  }>()
 
   constructor(maxConcurrency: number = 4) {
     this.maxConcurrency = maxConcurrency
@@ -23,10 +31,81 @@ class JobQueue {
   enqueue(job: Job): void {
     if (this.running.has(job.userId)) {
       console.log(`[Queue] User ${job.userId} already running, skipping`)
+      // If this is part of a batch, we need to account for the skipped job
+      if (job.batchId && this.activeBatches.has(job.batchId)) {
+        const batch = this.activeBatches.get(job.batchId)!
+        // Decrease expected count since this job won't run
+        batch.expectedCount = Math.max(0, batch.expectedCount - 1)
+        console.log(`[Queue] 📦 Adjusted batch ${job.batchId} expected count to ${batch.expectedCount} (job skipped)`)
+        // Check if batch is now complete (fire and forget async call)
+        if (batch.runLogs.length >= batch.expectedCount && batch.expectedCount > 0) {
+          this.completeBatch(job.batchId).catch(err => {
+            console.error(`[Queue] Error completing batch ${job.batchId}:`, err)
+          })
+        }
+      }
       return
     }
     this.queue.push(job)
     this.process()
+  }
+
+  /**
+   * Start a batch run - collects all results and sends batch notification
+   */
+  startBatch(batchId: string, expectedCount: number): void {
+    this.activeBatches.set(batchId, {
+      expectedCount,
+      runLogs: [],
+      startedAt: Date.now(),
+      inactiveUsers: [],
+    })
+    console.log(`[Queue] 📦 Started batch ${batchId} with ${expectedCount} expected jobs`)
+  }
+
+  /**
+   * Check if a batch is active
+   */
+  isBatchActive(batchId?: string): boolean {
+    if (!batchId) return false
+    return this.activeBatches.has(batchId)
+  }
+
+  /**
+   * Add run log to batch and check if batch is complete
+   */
+  private async addToBatch(batchId: string | undefined, runLog: RunLog): Promise<void> {
+    if (!batchId || !this.activeBatches.has(batchId)) {
+      return
+    }
+
+    const batch = this.activeBatches.get(batchId)!
+    batch.runLogs.push(runLog)
+
+    // Check if batch is complete (all expected jobs finished)
+    if (batch.runLogs.length >= batch.expectedCount && batch.expectedCount > 0) {
+      await this.completeBatch(batchId)
+    }
+  }
+
+  /**
+   * Complete a batch and send notification
+   */
+  private async completeBatch(batchId: string): Promise<void> {
+    const batch = this.activeBatches.get(batchId)
+    if (!batch) return
+
+    console.log(`[Queue] 📦 Batch ${batchId} complete - sending batch notification for ${batch.runLogs.length} runs`)
+    
+    // Send batch notification with inactive users info
+    try {
+      await sendBatchNotification(batch.runLogs, batch.inactiveUsers)
+    } catch (error: any) {
+      console.error(`[Queue] ❌ Failed to send batch notification:`, error.message)
+    }
+
+    // Remove batch
+    this.activeBatches.delete(batchId)
   }
 
   private async process(): Promise<void> {
@@ -51,6 +130,19 @@ class JobQueue {
     const user = await getUserById(job.userId)
     if (!user || !user.active) {
       console.log(`[Queue] User ${job.userId} not found or inactive`)
+      // If this is part of a batch, adjust expected count and track inactive user
+      if (job.batchId && this.activeBatches.has(job.batchId)) {
+        const batch = this.activeBatches.get(job.batchId)!
+        batch.expectedCount = Math.max(0, batch.expectedCount - 1)
+        if (user && !user.active) {
+          batch.inactiveUsers.push(user.name)
+        }
+        console.log(`[Queue] 📦 Adjusted batch ${job.batchId} expected count to ${batch.expectedCount} (user inactive)`)
+        // Check if batch is now complete
+        if (batch.runLogs.length >= batch.expectedCount && batch.expectedCount > 0) {
+          await this.completeBatch(job.batchId)
+        }
+      }
       return
     }
 
@@ -137,6 +229,24 @@ class JobQueue {
         console.error(`[Job] ❌ Failed to update Google Sheet for user ${user.name} (Status: ${status}):`, error.message)
         console.error(`[Job] Error details:`, error)
       }
+
+      // Handle Telegram notifications
+      // If this is part of a batch, collect the result and send batch notification when complete
+      // Otherwise, send individual notification
+      try {
+        if (job.batchId && this.isBatchActive(job.batchId)) {
+          // Add to batch - batch notification will be sent when all jobs complete
+          await this.addToBatch(job.batchId, runLog)
+          console.log(`[Job] 📦 Added to batch ${job.batchId} (${this.activeBatches.get(job.batchId)?.runLogs.length}/${this.activeBatches.get(job.batchId)?.expectedCount})`)
+        } else {
+          // Send individual notification (not part of a batch)
+          await sendRunNotification(runLog)
+        }
+      } catch (error: any) {
+        // Don't fail the job if Telegram notification fails - just log the error
+        // This ensures the job completes even if Telegram notification fails
+        console.error(`[Job] ❌ Failed to send Telegram notification for user ${user.name} (Status: ${status}):`, error.message)
+      }
     }
   }
 
@@ -162,5 +272,9 @@ export function getJobQueue(): JobQueue {
 
 export function enqueueJob(job: Job): void {
   getJobQueue().enqueue(job)
+}
+
+export function startBatch(batchId: string, expectedCount: number): void {
+  getJobQueue().startBatch(batchId, expectedCount)
 }
 

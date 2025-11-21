@@ -233,14 +233,53 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
       })
       throw new Error(`Navigation failed: ${navError.message}`)
     }
+    // Wait for page to fully load and stabilize after redirect
     await page.waitForTimeout(5000) // Wait for redirect and page to fully load
-
-    // Wait for login form to be visible
+    
+    // Wait for page to be ready - try multiple strategies
     try {
-      await page.waitForSelector('input[type="text"], input[type="password"], button', { timeout: 10000 })
-      console.log('[LoginFlow] Login form detected')
+      // Strategy 1: Wait for network idle
+      await page.waitForLoadState('networkidle', { timeout: 10000 })
     } catch (error) {
-      console.log('[LoginFlow] Warning: Login form not immediately visible')
+      // Continue even if networkidle doesn't complete
+    }
+    
+    // Strategy 2: Wait for DOM to be stable
+    await page.waitForTimeout(2000) // Additional wait for dynamic content
+    
+    // Wait for login form to be visible - try multiple selectors
+    let formDetected = false
+    const formSelectors = [
+      'input[type="text"]',
+      'input[type="password"]',
+      'input[name*="user"]',
+      'input[name*="username"]',
+      'input[id*="user"]',
+      'input[id*="username"]',
+      'form',
+      'button[type="submit"]'
+    ]
+    
+    for (const selector of formSelectors) {
+      try {
+        await page.waitForSelector(selector, { timeout: 5000, state: 'visible' })
+        formDetected = true
+        console.log(`[LoginFlow] ✅ Login form detected using selector: ${selector}`)
+        break
+      } catch (error) {
+        continue
+      }
+    }
+    
+    if (!formDetected) {
+      // Last attempt: check if any input exists (even if not immediately visible)
+      const hasAnyInput = await page.locator('input').count() > 0
+      if (hasAnyInput) {
+        console.log('[LoginFlow] ⚠️ Form elements found but may not be immediately visible - proceeding anyway')
+        formDetected = true
+      } else {
+        console.log('[LoginFlow] ⚠️ Warning: Login form not immediately visible - will attempt to proceed')
+      }
     }
 
     // Fill username - try multiple approaches

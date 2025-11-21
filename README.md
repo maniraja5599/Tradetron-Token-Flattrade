@@ -13,6 +13,7 @@ A secure, multi-user web application for automating daily TradeTron broker token
 - 🎯 **Flexible Selectors**: Customizable selectors for different broker pages
 - 📋 **Google Sheets Sync**: Import users directly from Google Sheets with one click
 - 🔄 **Auto-Update**: Automatically write run results back to Google Sheets after each authentication
+- 📱 **Telegram Notifications**: Receive real-time notifications on Telegram for each login run
 
 ## Installation
 
@@ -91,6 +92,14 @@ GOOGLE_SHEETS_RANGE=Sheet1!A:Z
 # Optional: Enable Google Sheets auto-update (default: enabled after sync)
 # Note: Requires service account with Editor permission (not API key)
 GOOGLE_SHEETS_UPDATE_ENABLED=true
+
+# Optional: Telegram Notifications
+# Get bot token from @BotFather on Telegram
+# Get chat ID from @userinfobot on Telegram
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+TELEGRAM_CHAT_ID=your_telegram_chat_id
+# Optional: Disable Telegram notifications (default: true if both token and chatId are set)
+# TELEGRAM_ENABLED=true
 ```
 
 ### Development
@@ -132,6 +141,12 @@ Visit http://localhost:3000
    - Required columns: NAME, TRADETRON ID, FLATTRADE ID, PASSWORD, DOB
    - Optional columns: IsDOB (auto-detected), Active (true/false, defaults to true)
    - **📖 See [GOOGLE_SHEETS_SETUP.md](./GOOGLE_SHEETS_SETUP.md) for detailed setup instructions**
+
+6. **Telegram Notifications**: Receive real-time notifications on Telegram for each login run:
+   - Create a Telegram bot using [@BotFather](https://t.me/botfather)
+   - Get your chat ID from [@userinfobot](https://t.me/userinfobot)
+   - Add `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` to `.env.local`
+   - **📖 See [TELEGRAM_NOTIFICATION_SETUP.md](./TELEGRAM_NOTIFICATION_SETUP.md) for detailed setup instructions**
 
 ## Project Structure
 

@@ -167,8 +167,17 @@ async function autoSyncFromGoogleSheets() {
       (h.includes('id') && !h.includes('tradetron') && !h.includes('tt'))
     )
     const passwordCol = headers.findIndex(h => h.includes('password') || h.includes('pwd'))
-    const dobCol = headers.findIndex(h => h.includes('dob') || h.includes('date of birth') || h.includes('birth'))
-    const totpCol = headers.findIndex(h => h.includes('totp') || h.includes('otp') || h.includes('2fa') || h.includes('secret'))
+    const dobCol = headers.findIndex(h => (h.includes('dob') || h.includes('date of birth') || h.includes('birth')) && !h.includes('totp'))
+    const totpKeyCol = headers.findIndex(h => 
+      (h.includes('totp key') || h.includes('totpkey')) || 
+      (h.includes('totp') && !h.includes('dob') && !h.includes('secret or'))
+    )
+    const totpCol = headers.findIndex(h => 
+      (h.includes('totp') || h.includes('otp') || h.includes('2fa') || h.includes('secret')) && 
+      !h.includes('key') && 
+      !h.includes('dob')
+    )
+    const statusCol = headers.findIndex(h => h.includes('status') || h.includes('state'))
 
     if (nameCol < 0 || tradetronCol < 0 || brokerCol < 0 || passwordCol < 0) {
       console.log('[Init] ⚠️ Required columns not found in sheet')
@@ -190,7 +199,9 @@ async function autoSyncFromGoogleSheets() {
       const brokerUsername = row[brokerCol]?.trim()
       const password = row[passwordCol]?.trim()
       const dob = dobCol >= 0 ? row[dobCol]?.trim() : ''
+      const totpKey = totpKeyCol >= 0 ? row[totpKeyCol]?.trim() : ''
       const totpSecret = totpCol >= 0 ? row[totpCol]?.trim() : ''
+      const status = statusCol >= 0 ? row[statusCol]?.trim().toUpperCase() : ''
 
       if (!name || !tradetronUsername || !brokerUsername || !password) {
         skipped++
@@ -209,13 +220,38 @@ async function autoSyncFromGoogleSheets() {
         continue
       }
 
-      // Create new user
-      const isDOB = !!dob && dob.length === 8 && /^\d{8}$/.test(dob)
-      const totpOrDOB = isDOB ? dob : (totpSecret || '')
+      // Priority: TOTP KEY > DOB > TOTP Secret (for backward compatibility)
+      // If both TOTP KEY and DOB are filled, use TOTP KEY
+      let totpOrDOB = ''
+      let isDOB = false
+      
+      if (totpKey) {
+        // TOTP KEY is present - use it (not DOB)
+        totpOrDOB = totpKey
+        isDOB = false
+      } else if (dob) {
+        // Only DOB is present - use it
+        totpOrDOB = dob
+        isDOB = dob.length === 8 && /^\d{8}$/.test(dob)
+      } else if (totpSecret) {
+        // Fallback to old TOTP Secret column (for backward compatibility)
+        totpOrDOB = totpSecret
+        isDOB = false
+      }
 
       if (!totpOrDOB) {
         skipped++
         continue
+      }
+
+      // Determine active status from STATUS column
+      let active = true // Default to active
+      if (status) {
+        if (status === 'ACTIVE') {
+          active = true
+        } else if (status === 'INACTIVE') {
+          active = false
+        }
       }
 
       // Check if ENCRYPTION_KEY is available before encrypting
@@ -234,7 +270,7 @@ async function autoSyncFromGoogleSheets() {
         encryptedPassword: encrypt(password),
         encryptedTotpSecret: encrypt(totpOrDOB),
         isDOB,
-        active: true,
+        active,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }

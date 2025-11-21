@@ -12,11 +12,16 @@
     "seed": "tsx scripts/seed.ts",
     "test:arun": "tsx scripts/test-arun.ts",
     "setup:google-sheets": "tsx scripts/setup-google-sheets-config.ts",
-    "check:google-sheets": "tsx scripts/check-google-sheets-setup.ts"
+    "check:google-sheets": "tsx scripts/check-google-sheets-setup.ts",
+    "test:telegram": "tsx scripts/test-telegram.ts",
+    "get-group-chat-id": "tsx scripts/get-group-chat-id.ts",
+    "run-all": "tsx scripts/run-all-users.ts",
+    "check-results": "tsx scripts/check-results.ts"
   },
   "dependencies": {
     "archiver": "^7.0.1",
     "date-fns": "^3.3.1",
+    "dotenv": "^17.2.3",
     "googleapis": "^165.0.0",
     "lucide-react": "^0.344.0",
     "next": "^14.2.0",

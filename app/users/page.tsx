@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { format } from 'date-fns'
 import Link from 'next/link'
 import { User, RunLog } from '@/types'
+import Header from '../components/Header'
 
 function UsersManagementContent() {
   const router = useRouter()
@@ -115,14 +116,26 @@ function UsersManagementContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-geometric relative">
+      <Header />
+      <div className="p-8 pt-24">
+      <div className="bg-geometric-shapes">
+        <div className="geometric-triangle triangle-1"></div>
+        <div className="geometric-triangle triangle-2"></div>
+        <div className="geometric-triangle triangle-3"></div>
+        <div className="geometric-triangle triangle-4"></div>
+        <div className="geometric-triangle triangle-5"></div>
+        <div className="geometric-triangle triangle-6"></div>
+        <div className="geometric-triangle triangle-7"></div>
+        <div className="geometric-triangle triangle-8"></div>
+      </div>
+      <div className="max-w-7xl mx-auto relative z-10">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 bg-clip-text text-transparent">
               User Management
             </h1>
-            <p className="text-gray-600">Manage all users and their login credentials</p>
+            <p className="text-gray-400">Manage all users and their login credentials</p>
           </div>
           <div className="flex gap-4">
             <Link
@@ -147,7 +160,7 @@ function UsersManagementContent() {
               All Users ({filteredUsers.length})
             </h2>
             <div className="flex gap-2">
-              <span className="text-sm text-gray-600 mr-2">Filter:</span>
+              <span className="text-sm text-gray-700 mr-2">Filter:</span>
               <button
                 onClick={() => {
                   setResultFilter('all')
@@ -242,7 +255,7 @@ function UsersManagementContent() {
                             <span className="text-red-600 font-medium">✗ Failed</span>
                           )
                         ) : (
-                          <span className="text-gray-400">-</span>
+                          <span className="text-gray-600">-</span>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">{totalRuns}</td>
@@ -288,6 +301,7 @@ function UsersManagementContent() {
             </table>
           </div>
         </div>
+      </div>
       </div>
     </div>
   )
