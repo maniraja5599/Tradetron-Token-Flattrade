@@ -182,7 +182,28 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
         const playwrightPath = chromium.executablePath()
         if (playwrightPath) {
           const fs = require('fs')
+          const path = require('path')
+          
           if (fs.existsSync(playwrightPath)) {
+            // Check if file is executable (on Unix systems)
+            if (process.platform !== 'win32') {
+              try {
+                fs.accessSync(playwrightPath, fs.constants.X_OK)
+                console.log(`[LoginFlow] ✅ Browser executable is accessible: ${playwrightPath}`)
+              } catch (permError) {
+                console.warn(`[LoginFlow] ⚠️ Browser executable may not have execute permissions`)
+                console.warn(`[LoginFlow] ⚠️ Attempting to set permissions...`)
+                try {
+                  // Try to make it executable (may fail if no permissions)
+                  fs.chmodSync(playwrightPath, 0o755)
+                  console.log(`[LoginFlow] ✅ Set execute permissions on browser`)
+                } catch (chmodError) {
+                  console.warn(`[LoginFlow] ⚠️ Could not set permissions: ${chmodError.message}`)
+                  console.warn(`[LoginFlow] ⚠️ Will attempt to launch anyway`)
+                }
+              }
+            }
+            
             launchOptions.executablePath = playwrightPath
             console.log(`[LoginFlow] ✅ Using Playwright's bundled browser: ${playwrightPath}`)
           } else {
