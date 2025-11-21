@@ -19,13 +19,7 @@ This application has specific requirements:
 - ✅ Easy environment variable setup
 - ✅ Automatic deployments from GitHub
 
-### 2. **Render**
-- ✅ Free tier available
-- ✅ Persistent storage
-- ✅ Supports long-running processes
-- ⚠️ Free tier spins down after 15 min inactivity
-
-### 3. **Fly.io**
+### 2. **Fly.io**
 - ✅ Free tier: 3 shared VMs
 - ✅ Persistent volumes
 - ✅ Good for long-running apps
@@ -103,51 +97,7 @@ Your app will be live at: `https://your-app-name.up.railway.app`
 
 ---
 
-## 📦 Option 2: Render
-
-### Step 1: Create Render Account
-
-1. Go to [render.com](https://render.com)
-2. Sign up with GitHub
-3. Click "New" → "Web Service"
-4. Connect your GitHub repository
-
-### Step 2: Configure Service
-
-**Settings:**
-- **Name**: tradetron-token-generator
-- **Environment**: Node
-- **Build Command**: `npm install && npm run playwright:install chromium`
-- **Start Command**: `npm start`
-
-### Step 3: Environment Variables
-
-Add in Render dashboard → Environment:
-
-```env
-ENCRYPTION_KEY=your_secret_encryption_key_min_32_chars_long
-MAX_CONCURRENCY=4
-HEADLESS=true
-NODE_ENV=production
-PORT=10000
-```
-
-### Step 4: Persistent Disk (Important!)
-
-1. In Render dashboard → Settings
-2. Enable "Persistent Disk"
-3. Mount point: `/opt/render/project/src/data`
-4. This ensures your JSON files persist
-
-### Step 5: Deploy
-
-Render will build and deploy automatically.
-
-**Note:** Free tier spins down after 15 min inactivity. First request may take 30-60 seconds.
-
----
-
-## 📦 Option 3: Fly.io
+## 📦 Option 2: Fly.io
 
 ### Step 1: Install Fly CLI
 
@@ -311,14 +261,14 @@ Before deploying:
 
 ## 📊 Platform Comparison
 
-| Feature | Railway | Render | Fly.io | Vercel |
-|---------|---------|--------|--------|--------|
-| **Free Tier** | $5/month credit | Free (with limits) | 3 VMs free | Generous free |
-| **Persistent Storage** | ✅ Yes | ✅ Yes | ✅ Yes | ❌ No (need DB) |
-| **Long-Running** | ✅ Yes | ✅ Yes | ✅ Yes | ❌ Serverless |
-| **Auto Deploy** | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes |
-| **Setup Difficulty** | ⭐ Easy | ⭐ Easy | ⭐⭐ Medium | ⭐ Easy |
-| **Best For** | This app | This app | This app | Needs DB migration |
+| Feature | Railway | Fly.io | Vercel |
+|---------|---------|--------|--------|
+| **Free Tier** | $5/month credit | 3 VMs free | Generous free |
+| **Persistent Storage** | ✅ Yes | ✅ Yes | ❌ No (need DB) |
+| **Long-Running** | ✅ Yes | ✅ Yes | ❌ Serverless |
+| **Auto Deploy** | ✅ Yes | ✅ Yes | ✅ Yes |
+| **Setup Difficulty** | ⭐ Easy | ⭐⭐ Medium | ⭐ Easy |
+| **Best For** | This app | This app | Needs DB migration |
 
 ---
 
