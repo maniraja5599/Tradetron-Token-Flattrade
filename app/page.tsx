@@ -445,8 +445,8 @@ export default function Dashboard() {
             <div className="geometric-triangle triangle-30"></div>
           </div>
           <div className="max-w-7xl mx-auto relative z-10">
-            <div className="mb-6 sm:mb-8 text-center px-2">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-2 flex items-center justify-center gap-1 sm:gap-2 flex-wrap">
+            <div className="mb-6 sm:mb-8 text-center px-2 sm:px-4">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-bold mb-2 flex items-center justify-center gap-1 sm:gap-2 flex-wrap max-w-full">
                 <span className="text-white tracking-tight drop-shadow-lg whitespace-nowrap">TRADE</span>
                 <span className="logo-brain-gear flex-shrink-0"></span>
                 <span className="text-white tracking-tight drop-shadow-lg whitespace-nowrap">TRON</span>
@@ -758,7 +758,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="overflow-x-auto -mx-4 sm:-mx-6 lg:mx-0">
-            <table className="w-full min-w-[600px] sm:min-w-[640px]">
+            <table className="w-full min-w-[500px] sm:min-w-[600px] md:min-w-[640px]">
               <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
                 <tr>
                   <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
@@ -913,7 +913,7 @@ export default function Dashboard() {
             )}
           </div>
           <div className="overflow-x-auto -mx-4 sm:-mx-6 lg:mx-0">
-            <table className="w-full min-w-[600px] sm:min-w-[640px]">
+            <table className="w-full min-w-[500px] sm:min-w-[600px] md:min-w-[640px]">
               <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
                 <tr>
                   <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Timestamp</th>
