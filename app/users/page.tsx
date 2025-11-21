@@ -118,7 +118,7 @@ function UsersManagementContent() {
   return (
     <div className="min-h-screen bg-geometric relative">
       <Header />
-      <div className="p-4 sm:p-6 lg:p-8 pt-20 sm:pt-24 overflow-x-hidden">
+      <div className="p-4 sm:p-6 lg:p-8 pt-20 sm:pt-24">
       <div className="bg-geometric-shapes">
         <div className="geometric-triangle triangle-1"></div>
         <div className="geometric-triangle triangle-2"></div>
@@ -131,22 +131,22 @@ function UsersManagementContent() {
       </div>
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
-          <div>
+          <div className="flex-1 min-w-0">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 bg-clip-text text-transparent">
               User Management
             </h1>
             <p className="text-sm sm:text-base text-gray-400">Manage all users and their login credentials</p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto flex-shrink-0">
             <Link
               href="/"
-              className="bg-gray-200 text-gray-700 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:bg-gray-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-sm sm:text-base text-center"
+              className="bg-gray-200 text-gray-700 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg hover:bg-gray-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-xs sm:text-sm text-center whitespace-nowrap"
             >
               ← Back to Dashboard
             </Link>
             <Link
               href="/users/new"
-              className="bg-gradient-to-r from-green-600 to-green-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-sm sm:text-base text-center"
+              className="bg-gradient-to-r from-green-600 to-green-700 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-xs sm:text-sm text-center whitespace-nowrap"
             >
               + Add User
             </Link>
