@@ -1,8 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUsers } from '@/lib/db'
 import { enqueueJob, startBatch } from '@/lib/jobs'
+import { isWithinTimeWindow, getTimeWindowStatus } from '@/lib/timeWindow'
 
 export async function POST(request: NextRequest) {
+  // Check time window restriction
+  if (!isWithinTimeWindow()) {
+    const status = getTimeWindowStatus()
+    return NextResponse.json(
+      {
+        error: 'Server is in sleep mode',
+        message: status.message,
+        nextWindow: status.nextWindow,
+        timeWindowEnabled: true,
+      },
+      { status: 503 }
+    )
+  }
+
   try {
     const users = await getUsers()
     const activeUsers = users.filter(u => u.active)

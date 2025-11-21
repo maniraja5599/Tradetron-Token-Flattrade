@@ -1,11 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserById } from '@/lib/db'
 import { enqueueJob } from '@/lib/jobs'
+import { isWithinTimeWindow, getTimeWindowStatus } from '@/lib/timeWindow'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Check time window restriction
+  if (!isWithinTimeWindow()) {
+    const status = getTimeWindowStatus()
+    return NextResponse.json(
+      {
+        error: 'Server is in sleep mode',
+        message: status.message,
+        nextWindow: status.nextWindow,
+        timeWindowEnabled: true,
+      },
+      { status: 503 }
+    )
+  }
+
   try {
     const { id } = await params
     const user = await getUserById(id)
