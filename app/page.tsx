@@ -77,7 +77,7 @@ export default function Dashboard() {
       try {
         const [usersRes, runsRes, healthRes, scheduleRes] = await Promise.all([
           fetch('/api/users', { signal: controller.signal }),
-          fetch('/api/runs?limit=20', { signal: controller.signal }),
+          fetch('/api/runs?limit=200', { signal: controller.signal }),
           fetch('/api/health', { signal: controller.signal }),
           fetch('/api/schedule', { signal: controller.signal }),
         ])
