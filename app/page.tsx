@@ -343,26 +343,29 @@ export default function Dashboard() {
     const userRuns = runs.filter(r => r.userId === userId)
     if (userRuns.length === 0) return null
     
+    // Sort all runs by startedAt descending (most recent first)
+    const sortedRuns = [...userRuns].sort((a, b) => 
+      new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
+    )
+    
     // Get today's date in local timezone for comparison
     const now = new Date()
     const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     
     // Filter runs from today (using local date, not UTC)
-    const todayRuns = userRuns.filter(r => {
+    const todayRuns = sortedRuns.filter(r => {
       const runDate = new Date(r.startedAt)
       const runDateLocal = new Date(runDate.getFullYear(), runDate.getMonth(), runDate.getDate())
       return runDateLocal.getTime() === todayLocal.getTime()
     })
     
-    // Sort by startedAt descending to get the MOST RECENT run from today
+    // If there are runs from today, return the most recent one
     if (todayRuns.length > 0) {
-      // Sort in descending order (most recent first)
-      const sorted = [...todayRuns].sort((a, b) => 
-        new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
-      )
-      return sorted[0] // Return the most recent run from today
+      return todayRuns[0]
     }
-    return null
+    
+    // Otherwise, return the most recent run overall (even if from a different day)
+    return sortedRuns[0]
   }
 
   // Check if OAuth/login was successful (token generated)

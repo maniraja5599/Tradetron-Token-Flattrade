@@ -30,7 +30,7 @@ function UsersManagementContent() {
     try {
       const [usersRes, runsRes] = await Promise.all([
         fetch('/api/users'),
-        fetch('/api/runs?limit=100'),
+        fetch('/api/runs?limit=500'), // Increased limit to ensure we capture all recent runs
       ])
       if (usersRes.ok) setUsers(await usersRes.json())
       if (runsRes.ok) setRuns(await runsRes.json())
@@ -76,15 +76,31 @@ function UsersManagementContent() {
 
   const getLastRun = (userId: string) => {
     const userRuns = runs.filter(r => r.userId === userId)
-    // Only show runs from today (reset status daily)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const todayRuns = userRuns.filter(r => {
+    if (userRuns.length === 0) return null
+    
+    // Sort all runs by startedAt descending (most recent first)
+    const sortedRuns = [...userRuns].sort((a, b) => 
+      new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
+    )
+    
+    // Get today's date in local timezone for comparison
+    const now = new Date()
+    const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    
+    // First, try to find runs from today
+    const todayRuns = sortedRuns.filter(r => {
       const runDate = new Date(r.startedAt)
-      runDate.setHours(0, 0, 0, 0)
-      return runDate.getTime() === today.getTime()
+      const runDateLocal = new Date(runDate.getFullYear(), runDate.getMonth(), runDate.getDate())
+      return runDateLocal.getTime() === todayLocal.getTime()
     })
-    return todayRuns.length > 0 ? todayRuns[0] : null
+    
+    // If there are runs from today, return the most recent one
+    if (todayRuns.length > 0) {
+      return todayRuns[0]
+    }
+    
+    // Otherwise, return the most recent run overall (even if from a different day)
+    return sortedRuns[0]
   }
 
   const getTotalRuns = (userId: string) => {
