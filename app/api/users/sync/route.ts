@@ -102,7 +102,7 @@ async function fetchSheetData(sheetId: string, range: string = 'Sheet1!A:Z'): Pr
 // Map sheet row to user object
 // Expected columns (configurable via env or default):
 // Name, TradetronUsername, BrokerUsername, Password, TOTPSecretOrDOB, IsDOB (optional), Active (optional)
-function mapRowToUser(row: string[], headers: string[]): Partial<User> | null {
+function mapRowToUser(row: string[], headers: string[]): Partial<User> | null | { error: string } {
   // Create a map of header names to indices (case-insensitive)
   const headerMap: { [key: string]: number } = {}
   headers.forEach((header, index) => {
@@ -226,9 +226,17 @@ function mapRowToUser(row: string[], headers: string[]): Partial<User> | null {
   const password = getPassword()
   const totpSecretOrDOB = getTOTPSecretOrDOB()
 
-  // Validate required fields
-  if (!name || !tradetronUsername || !brokerUsername || !password || !totpSecretOrDOB) {
-    return null // Skip invalid rows
+  // Validate required fields and return error details
+  const missingFields: string[] = []
+  if (!name) missingFields.push('NAME')
+  if (!tradetronUsername) missingFields.push('TRADETRON ID')
+  if (!brokerUsername) missingFields.push('FLATTRADE ID')
+  if (!password) missingFields.push('PASSWORD')
+  if (!totpSecretOrDOB) missingFields.push('DOB/TOTP')
+  
+  if (missingFields.length > 0) {
+    // Return error details instead of null
+    return { error: `Missing required fields: ${missingFields.join(', ')}` }
   }
 
   const isDOB = getIsDOB()
@@ -305,6 +313,13 @@ export async function POST(request: NextRequest) {
         if (!userData) {
           results.skipped++
           results.errors.push(`Row ${i + 2}: Missing required fields`)
+          continue
+        }
+        
+        // Check if userData has an error property (from validation)
+        if ((userData as any).error) {
+          results.skipped++
+          results.errors.push(`Row ${i + 2}: ${(userData as any).error}`)
           continue
         }
 

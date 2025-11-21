@@ -305,7 +305,10 @@ export default function Dashboard() {
       const data = await res.json()
 
       if (res.ok) {
-        alert(`Sync completed!\n${data.message}\n\nCreated: ${data.results.created}\nUpdated: ${data.results.updated}\nSkipped: ${data.results.skipped}\n\n✅ Google Sheets auto-update enabled!\nResults will be written back to the sheet after each run.${data.results.errors.length > 0 ? `\n\nErrors:\n${data.results.errors.slice(0, 5).join('\n')}` : ''}`)
+        const errorMsg = data.results.errors.length > 0 
+          ? `\n\n⚠️ Skipped ${data.results.skipped} row(s) - Details:\n${data.results.errors.slice(0, 10).join('\n')}${data.results.errors.length > 10 ? `\n... and ${data.results.errors.length - 10} more` : ''}`
+          : ''
+        alert(`Sync completed!\n${data.message}\n\nCreated: ${data.results.created}\nUpdated: ${data.results.updated}\nSkipped: ${data.results.skipped}${errorMsg}\n\n✅ Google Sheets auto-update enabled!\nResults will be written back to the sheet after each run.`)
         setShowSyncModal(false)
         setSheetUrl('')
         loadData()
