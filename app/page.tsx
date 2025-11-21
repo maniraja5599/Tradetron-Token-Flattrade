@@ -457,19 +457,19 @@ export default function Dashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-          <Link href="/users" className="group relative bg-white/40 backdrop-blur-md p-6 rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-blue-500/20 border border-white/30 hover:border-blue-400/60 transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] hover:-translate-y-1">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-400/30 to-blue-600/15 rounded-full -mr-12 -mt-12 group-hover:scale-150 group-hover:opacity-80 transition-all duration-500"></div>
+          <Link href="/users" className="group relative bg-white/40 backdrop-blur-md p-4 sm:p-5 rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-blue-500/20 border border-white/30 hover:border-blue-400/60 transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] hover:-translate-y-1">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-400/30 to-blue-600/15 rounded-full -mr-10 -mt-10 group-hover:scale-150 group-hover:opacity-80 transition-all duration-500"></div>
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
                 <div className="text-xs font-semibold text-white/90 uppercase tracking-wider">Total Users</div>
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-blue-500/50 group-hover:scale-110 transition-all duration-300">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-blue-500/50 group-hover:scale-110 transition-all duration-300">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
                 </div>
               </div>
-              <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-blue-200 mb-2 drop-shadow-lg">{users.length}</div>
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-200 mb-1 drop-shadow-lg">{users.length}</div>
               <div className="text-xs font-medium text-white/80">{activeUsers.length} active</div>
             </div>
           </Link>
@@ -480,22 +480,22 @@ export default function Dashboard() {
                 element.scrollIntoView({ behavior: 'smooth', block: 'start' })
               }
             }}
-            className="group relative bg-white/40 backdrop-blur-md p-6 rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-green-500/20 border border-white/30 hover:border-green-400/60 transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] hover:-translate-y-1"
+            className="group relative bg-white/40 backdrop-blur-md p-4 sm:p-5 rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-green-500/20 border border-white/30 hover:border-green-400/60 transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] hover:-translate-y-1"
           >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-green-400/30 to-green-600/15 rounded-full -mr-12 -mt-12 group-hover:scale-150 group-hover:opacity-80 transition-all duration-500"></div>
+            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-400/30 to-green-600/15 rounded-full -mr-10 -mt-10 group-hover:scale-150 group-hover:opacity-80 transition-all duration-500"></div>
             <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
                 <div className="text-xs font-semibold text-white/90 uppercase tracking-wider">Last Run</div>
-                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-green-500/50 group-hover:scale-110 transition-all duration-300">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-green-500/50 group-hover:scale-110 transition-all duration-300">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
               </div>
               {lastRun ? (
                 <>
-                  <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-green-200 mb-2 drop-shadow-lg">{format(new Date(lastRun.startedAt), 'HH:mm')}</div>
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-200 mb-1 drop-shadow-lg">{format(new Date(lastRun.startedAt), 'HH:mm')}</div>
                   <div className="text-xs font-medium text-white/80">{format(new Date(lastRun.startedAt), 'MMM d')}</div>
                 </>
               ) : (
@@ -503,14 +503,14 @@ export default function Dashboard() {
               )}
             </div>
           </div>
-          <div className="group relative bg-white/40 backdrop-blur-md p-6 rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-purple-500/20 border border-white/30 hover:border-purple-400/60 transition-all duration-300 overflow-hidden hover:scale-[1.02] hover:-translate-y-1">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-purple-400/30 to-purple-600/15 rounded-full -mr-12 -mt-12 group-hover:scale-150 group-hover:opacity-80 transition-all duration-500"></div>
+          <div className="group relative bg-white/40 backdrop-blur-md p-4 sm:p-5 rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-purple-500/20 border border-white/30 hover:border-purple-400/60 transition-all duration-300 overflow-hidden hover:scale-[1.02] hover:-translate-y-1">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-400/30 to-purple-600/15 rounded-full -mr-10 -mt-10 group-hover:scale-150 group-hover:opacity-80 transition-all duration-500"></div>
             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
                 <div className="text-xs font-semibold text-white/90 uppercase tracking-wider">Next Scheduled</div>
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-purple-500/50 group-hover:scale-110 transition-all duration-300">
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-purple-500/50 group-hover:scale-110 transition-all duration-300">
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
@@ -567,7 +567,7 @@ export default function Dashboard() {
                     </div>
                   ) : (
                     <>
-                      <div className="text-5xl font-bold text-purple-200 mb-2 drop-shadow-lg cursor-pointer hover:opacity-80 transition-opacity" onClick={() => {
+                      <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-purple-200 mb-1 drop-shadow-lg cursor-pointer hover:opacity-80 transition-opacity" onClick={() => {
                         if (health.scheduler?.schedule) {
                           setScheduleTime({
                             hour: health.scheduler.schedule?.hour || 8,
@@ -579,9 +579,9 @@ export default function Dashboard() {
                       }}>
                         {health.scheduler?.schedule?.timeString}
                       </div>
-                      <div className="text-xs font-medium text-white/80 mb-2">{health.scheduler?.running ? 'Running' : 'Scheduled'}</div>
+                      <div className="text-xs font-medium text-white/80 mb-1">{health.scheduler?.running ? 'Running' : 'Scheduled'}</div>
                       {timeRemaining && (
-                        <div className="text-xs text-purple-200 font-semibold mb-2 bg-purple-500/25 px-3 py-1.5 rounded-lg inline-block backdrop-blur-sm">
+                        <div className="text-xs text-purple-200 font-semibold mb-1 bg-purple-500/25 px-2 py-1 rounded-lg inline-block backdrop-blur-sm">
                           ⏱️ {timeRemaining}
                         </div>
                       )}
@@ -596,7 +596,7 @@ export default function Dashboard() {
                           editingScheduleRef.current = true
                           setEditingSchedule(true)
                         }}
-                        className="text-xs bg-purple-500/30 hover:bg-purple-500/50 text-purple-100 px-4 py-2 rounded-lg mt-2 transition-all font-medium shadow-md hover:shadow-purple-500/30"
+                        className="text-xs bg-purple-500/30 hover:bg-purple-500/50 text-purple-100 px-3 py-1.5 rounded-lg mt-1 transition-all font-medium shadow-md hover:shadow-purple-500/30"
                       >
                         Edit
                       </button>
@@ -608,19 +608,19 @@ export default function Dashboard() {
               )}
             </div>
           </div>
-          <div className="group relative bg-white/40 backdrop-blur-md p-6 rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-orange-500/20 border border-white/30 hover:border-orange-400/60 transition-all duration-300 overflow-hidden hover:scale-[1.02] hover:-translate-y-1">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-orange-400/30 to-orange-600/15 rounded-full -mr-12 -mt-12 group-hover:scale-150 group-hover:opacity-80 transition-all duration-500"></div>
+          <div className="group relative bg-white/40 backdrop-blur-md p-4 sm:p-5 rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-orange-500/20 border border-white/30 hover:border-orange-400/60 transition-all duration-300 overflow-hidden hover:scale-[1.02] hover:-translate-y-1">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-orange-400/30 to-orange-600/15 rounded-full -mr-10 -mt-10 group-hover:scale-150 group-hover:opacity-80 transition-all duration-500"></div>
             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
                 <div className="text-xs font-semibold text-white/90 uppercase tracking-wider">Queue Status</div>
-                <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-orange-500/50 group-hover:scale-110 transition-all duration-300">
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-orange-500/50 group-hover:scale-110 transition-all duration-300">
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                   </svg>
                 </div>
               </div>
-              <div className="text-5xl font-bold text-orange-200 mb-2 drop-shadow-lg">
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-orange-200 mb-1 drop-shadow-lg">
                 {health?.queue?.running || 0}/{health?.queue?.maxConcurrency || 4}
               </div>
               <div className="text-xs font-medium text-white/80">{health?.queue?.queueLength || 0} queued</div>
@@ -636,20 +636,20 @@ export default function Dashboard() {
                 }
               }, 100)
             }}
-            className="group relative bg-white/40 backdrop-blur-md p-6 rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-emerald-500/20 border border-white/30 hover:border-emerald-400/60 transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] hover:-translate-y-1"
+            className="group relative bg-white/40 backdrop-blur-md p-4 sm:p-5 rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-emerald-500/20 border border-white/30 hover:border-emerald-400/60 transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] hover:-translate-y-1"
           >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-400/30 to-emerald-600/15 rounded-full -mr-12 -mt-12 group-hover:scale-150 group-hover:opacity-80 transition-all duration-500"></div>
+            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-emerald-400/30 to-emerald-600/15 rounded-full -mr-10 -mt-10 group-hover:scale-150 group-hover:opacity-80 transition-all duration-500"></div>
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
                 <div className="text-xs font-semibold text-white/90 uppercase tracking-wider">Success Verification</div>
-                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-emerald-500/50 group-hover:scale-110 transition-all duration-300">
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-emerald-500/50 group-hover:scale-110 transition-all duration-300">
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
               </div>
-              <div className="text-5xl font-bold text-emerald-200 mb-2 drop-shadow-lg">{successVerifications}</div>
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-200 mb-1 drop-shadow-lg">{successVerifications}</div>
               <div className="text-xs font-medium text-white/80">verified today</div>
             </div>
           </div>
@@ -663,20 +663,20 @@ export default function Dashboard() {
                 }
               }, 100)
             }}
-            className="group relative bg-white/40 backdrop-blur-md p-6 rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-amber-500/20 border border-white/30 hover:border-amber-400/60 transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] hover:-translate-y-1"
+            className="group relative bg-white/40 backdrop-blur-md p-4 sm:p-5 rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-amber-500/20 border border-white/30 hover:border-amber-400/60 transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] hover:-translate-y-1"
           >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-amber-400/30 to-amber-600/15 rounded-full -mr-12 -mt-12 group-hover:scale-150 group-hover:opacity-80 transition-all duration-500"></div>
+            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-amber-400/30 to-amber-600/15 rounded-full -mr-10 -mt-10 group-hover:scale-150 group-hover:opacity-80 transition-all duration-500"></div>
             <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
                 <div className="text-xs font-semibold text-white/90 uppercase tracking-wider">Pending Verification</div>
-                <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-amber-500/50 group-hover:scale-110 transition-all duration-300">
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-amber-500/50 group-hover:scale-110 transition-all duration-300">
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
               </div>
-              <div className="text-5xl font-bold text-amber-200 mb-2 drop-shadow-lg">{pendingVerifications}</div>
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-200 mb-1 drop-shadow-lg">{pendingVerifications}</div>
               <div className="text-xs font-medium text-white/80">pending today</div>
             </div>
           </div>
