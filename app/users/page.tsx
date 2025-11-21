@@ -203,7 +203,12 @@ function UsersManagementContent() {
             </div>
           </div>
           <div className="overflow-x-auto -mx-4 sm:-mx-6 lg:mx-0">
-            <table className="w-full min-w-0 sm:min-w-[600px] md:min-w-[800px]">
+            <table className="w-full min-w-0 sm:min-w-[600px] md:min-w-[800px] table-fixed sm:table-auto">
+              <colgroup>
+                <col className="w-[30%] sm:w-auto" />
+                <col className="w-[25%] sm:w-auto" />
+                <col className="w-[45%] sm:w-auto" />
+              </colgroup>
               <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
                 <tr>
                   <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
@@ -223,8 +228,8 @@ function UsersManagementContent() {
                   const successRate = getSuccessRate(user.id)
                   return (
                     <tr key={user.id} className="hover:bg-blue-50 transition-colors duration-150">
-                      <td className="px-2 sm:px-3 md:px-6 py-4 text-xs sm:text-sm md:text-base text-gray-900 font-semibold min-w-0">
-                        <span className="truncate block">{user.name}</span>
+                      <td className="px-2 sm:px-3 md:px-6 py-4 text-xs sm:text-sm md:text-base text-gray-900 font-semibold min-w-0 max-w-0 overflow-hidden">
+                        <span className="truncate block min-w-0">{user.name}</span>
                       </td>
                       <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 hidden md:table-cell">{user.brokerUsername}</td>
                       <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 hidden lg:table-cell">
@@ -274,8 +279,8 @@ function UsersManagementContent() {
                           <span className="text-xs sm:text-sm text-gray-700 font-medium">{successRate}%</span>
                         </div>
                       </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4">
-                        <div className="flex flex-wrap gap-1 sm:gap-2">
+                      <td className="px-2 sm:px-3 md:px-6 py-4 max-w-0 overflow-hidden">
+                        <div className="flex flex-wrap gap-1 sm:gap-2 min-w-0">
                           <button
                             onClick={() => handleRunUser(user.id)}
                             className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-1.5 sm:px-2 md:px-3 py-1 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"

@@ -120,19 +120,19 @@ function RunsContent() {
                 ) : (
                   runs.map((run) => (
                     <tr key={run.id} className={run.status === 'success' && run.tokenGenerated ? 'hover:bg-green-50 transition-colors duration-150' : 'hover:bg-red-50 transition-colors duration-150'}>
-                      <td className="px-2 sm:px-3 md:px-6 py-4 text-xs sm:text-sm text-gray-700">
-                        <span className="whitespace-nowrap">{format(new Date(run.startedAt), 'MMM d, HH:mm:ss')}</span>
+                      <td className="px-2 sm:px-3 md:px-6 py-4 text-xs sm:text-sm text-gray-700 max-w-0">
+                        <span className="whitespace-nowrap block truncate">{format(new Date(run.startedAt), 'MMM d, HH:mm:ss')}</span>
                       </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4 text-xs sm:text-base text-gray-900 font-medium min-w-0">
-                        <span className="truncate block">{run.userName}</span>
+                      <td className="px-2 sm:px-3 md:px-6 py-4 text-xs sm:text-base text-gray-900 font-medium min-w-0 max-w-0">
+                        <span className="truncate block min-w-0">{run.userName}</span>
                       </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4">
+                      <td className="px-2 sm:px-3 md:px-6 py-4 max-w-0">
                         {run.status === 'success' && run.tokenGenerated ? (
-                          <span className="text-green-600 font-medium text-xs sm:text-sm" title="OAuth successful - Token generated">✓ Success</span>
+                          <span className="text-green-600 font-medium text-xs sm:text-sm whitespace-nowrap" title="OAuth successful - Token generated">✓ Success</span>
                         ) : run.status === 'success' && !run.tokenGenerated ? (
-                          <span className="text-orange-600 font-medium text-xs sm:text-sm" title="Login completed but token not generated">⚠ Partial</span>
+                          <span className="text-orange-600 font-medium text-xs sm:text-sm whitespace-nowrap" title="Login completed but token not generated">⚠ Partial</span>
                         ) : (
-                          <span className="text-red-600 font-medium text-xs sm:text-sm" title="OAuth failed">✗ Failed</span>
+                          <span className="text-red-600 font-medium text-xs sm:text-sm whitespace-nowrap" title="OAuth failed">✗ Failed</span>
                         )}
                       </td>
                       <td className="px-2 sm:px-3 md:px-6 py-4 text-xs sm:text-sm text-gray-700 max-w-md truncate hidden md:table-cell">

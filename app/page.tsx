@@ -758,7 +758,12 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="overflow-x-auto -mx-4 sm:-mx-6 lg:mx-0">
-            <table className="w-full min-w-0 sm:min-w-[600px] md:min-w-[640px]">
+            <table className="w-full min-w-0 sm:min-w-[600px] md:min-w-[640px] table-fixed sm:table-auto">
+              <colgroup>
+                <col className="w-[30%] sm:w-auto" />
+                <col className="w-[25%] sm:w-auto" />
+                <col className="w-[45%] sm:w-auto" />
+              </colgroup>
               <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
                 <tr>
                   <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
@@ -775,9 +780,9 @@ export default function Dashboard() {
                   const lastRun = getLastRun(user.id)
                   return (
                     <tr key={user.id} className="hover:bg-blue-50 transition-colors duration-150">
-                      <td className="px-2 sm:px-3 md:px-6 py-4">
+                      <td className="px-2 sm:px-3 md:px-6 py-4 max-w-0 overflow-hidden">
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-gray-900 font-bold text-sm sm:text-base md:text-lg truncate">{user.name}</span>
+                          <span className="text-gray-900 font-bold text-sm sm:text-base md:text-lg truncate min-w-0 flex-1">{user.name}</span>
                           {!user.active && (
                             <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-xs font-semibold flex-shrink-0">
                               Inactive
@@ -847,8 +852,8 @@ export default function Dashboard() {
                           <span className="text-gray-400">-</span>
                         )}
                       </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4">
-                        <div className="flex flex-wrap gap-1 sm:gap-2">
+                      <td className="px-2 sm:px-3 md:px-6 py-4 max-w-0 overflow-hidden">
+                        <div className="flex flex-wrap gap-1 sm:gap-2 min-w-0">
                           <button
                             onClick={() => handleRunUser(user.id)}
                             className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-1.5 sm:px-2 md:px-3 py-1 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
@@ -913,7 +918,13 @@ export default function Dashboard() {
             )}
           </div>
           <div className="overflow-x-auto -mx-4 sm:-mx-6 lg:mx-0">
-            <table className="w-full min-w-0 sm:min-w-[600px] md:min-w-[640px]">
+            <table className="w-full min-w-0 sm:min-w-[600px] md:min-w-[640px] table-fixed sm:table-auto">
+              <colgroup>
+                <col className="w-[30%] sm:w-auto" />
+                <col className="w-[25%] sm:w-auto" />
+                <col className="w-[25%] sm:w-auto" />
+                <col className="w-[20%] sm:w-auto" />
+              </colgroup>
               <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
                 <tr>
                   <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Timestamp</th>
@@ -927,11 +938,11 @@ export default function Dashboard() {
               <tbody className="divide-y divide-gray-200">
                 {runs.slice(0, 10).map((run) => (
                   <tr key={run.id} className={run.status === 'success' && run.tokenGenerated ? 'hover:bg-green-50 transition-colors duration-150' : 'hover:bg-red-50 transition-colors duration-150'}>
-                    <td className="px-2 sm:px-3 md:px-6 py-4 text-xs sm:text-sm text-gray-700">
-                      <span className="whitespace-nowrap">{format(new Date(run.startedAt), 'MMM d, HH:mm:ss')}</span>
+                    <td className="px-2 sm:px-3 md:px-6 py-4 text-xs sm:text-sm text-gray-700 max-w-0">
+                      <span className="whitespace-nowrap block truncate">{format(new Date(run.startedAt), 'MMM d, HH:mm:ss')}</span>
                     </td>
-                    <td className="px-2 sm:px-3 md:px-6 py-4 text-xs sm:text-base text-gray-900 font-medium min-w-0">
-                      <span className="truncate block">{run.userName}</span>
+                    <td className="px-2 sm:px-3 md:px-6 py-4 text-xs sm:text-base text-gray-900 font-medium min-w-0 max-w-0">
+                      <span className="truncate block min-w-0">{run.userName}</span>
                     </td>
                     <td className="px-2 sm:px-3 md:px-6 py-4">
                       {run.status === 'success' && run.tokenGenerated ? (
