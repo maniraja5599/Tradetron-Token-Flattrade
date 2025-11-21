@@ -195,9 +195,39 @@ export default function Dashboard() {
         }),
       })
       if (res.ok) {
+        const data = await res.json()
         editingScheduleRef.current = false
         setEditingSchedule(false)
-        loadData()
+        
+        // Update local state immediately with the response
+        if (data.schedule) {
+          setScheduleTime({
+            hour: data.schedule.hour,
+            minute: data.schedule.minute,
+          })
+          
+          // Update health state immediately to reflect the change in UI
+          if (health) {
+            setHealth({
+              ...health,
+              scheduler: {
+                ...health.scheduler,
+                schedule: {
+                  ...health.scheduler?.schedule,
+                  hour: data.schedule.hour,
+                  minute: data.schedule.minute,
+                  timeString: data.schedule.timeString,
+                },
+              },
+            })
+          }
+        }
+        
+        // Wait a moment for scheduler to restart, then refresh to get updated nextRun time
+        setTimeout(() => {
+          loadData()
+        }, 1000)
+        
         alert('Schedule updated successfully!')
       } else {
         const error = await res.json()
