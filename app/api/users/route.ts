@@ -62,8 +62,13 @@ export async function POST(request: NextRequest) {
       encryptedTotpSecret: maskSecret(user.encryptedTotpSecret),
     })
   } catch (error: any) {
+    // Provide helpful error message for encryption key issues
+    let errorMessage = error.message
+    if (error.message.includes('ENCRYPTION_KEY')) {
+      errorMessage = `${error.message}\n\nTo fix this:\n1. Go to Railway → Your Service → Variables tab\n2. Add ENCRYPTION_KEY variable\n3. Set it to a random string of at least 32 characters\n4. You can generate one using: openssl rand -base64 32\n5. Redeploy your service after adding the variable`
+    }
     return NextResponse.json(
-      { error: error.message },
+      { error: errorMessage },
       { status: 500 }
     )
   }

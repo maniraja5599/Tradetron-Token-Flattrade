@@ -317,21 +317,24 @@ export async function POST(request: NextRequest) {
         }
         
         // Check if userData has an error property (from validation)
-        if ((userData as any).error) {
+        if ('error' in userData) {
           results.skipped++
-          results.errors.push(`Row ${i + 2}: ${(userData as any).error}`)
+          results.errors.push(`Row ${i + 2}: ${userData.error}`)
           continue
         }
 
+        // At this point, userData is guaranteed to be Partial<User>
+        const validUserData = userData as Partial<User>
+        
         // Check if user already exists
-        const existingUser = existingUsersMap.get(userData.tradetronUsername!.toLowerCase())
+        const existingUser = existingUsersMap.get(validUserData.tradetronUsername!.toLowerCase())
         
         if (existingUser) {
           // Update existing user if updateExisting is true
           if (updateExisting !== false) {
             const updatedUser: User = {
               ...existingUser,
-              ...userData,
+              ...validUserData,
               updatedAt: new Date().toISOString(),
             }
             await saveUser(updatedUser)
@@ -343,7 +346,7 @@ export async function POST(request: NextRequest) {
           // Create new user
           const newUser: User = {
             id: uuidv4(),
-            ...userData,
+            ...validUserData,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           } as User
