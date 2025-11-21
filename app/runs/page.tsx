@@ -71,7 +71,7 @@ function RunsContent() {
   return (
     <div className="min-h-screen bg-geometric relative">
       <Header />
-      <div className="p-4 sm:p-6 lg:p-8 pt-20 sm:pt-24">
+      <div className="p-4 sm:p-6 lg:p-8 pt-20 sm:pt-24 overflow-x-hidden">
       <div className="bg-geometric-shapes">
         <div className="geometric-triangle triangle-1"></div>
         <div className="geometric-triangle triangle-2"></div>
@@ -98,33 +98,33 @@ function RunsContent() {
 
         {/* Runs Table */}
         <div className="bg-white rounded-lg shadow-lg mb-6 sm:mb-8 border border-gray-200">
-          <div className="overflow-x-auto -mx-4 sm:mx-0">
-            <table className="w-full min-w-[640px]">
+          <div className="overflow-x-auto -mx-4 sm:-mx-6 lg:mx-0">
+            <table className="w-full min-w-0 sm:min-w-[600px] md:min-w-[640px]">
               <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
                 <tr>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Timestamp</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">User</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden md:table-cell">Message</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Duration</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Artifacts</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Timestamp</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">User</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden md:table-cell">Message</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden sm:table-cell">Duration</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Artifacts</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {runs.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-3 sm:px-6 py-8 text-center text-gray-500 text-sm">
+                    <td colSpan={6} className="px-2 sm:px-3 md:px-6 py-8 text-center text-gray-500 text-xs sm:text-sm">
                       No runs found
                     </td>
                   </tr>
                 ) : (
                   runs.map((run) => (
                     <tr key={run.id} className={run.status === 'success' && run.tokenGenerated ? 'hover:bg-green-50 transition-colors duration-150' : 'hover:bg-red-50 transition-colors duration-150'}>
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700">
+                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700">
                         {format(new Date(run.startedAt), 'MMM d, HH:mm:ss')}
                       </td>
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm sm:text-base text-gray-900 font-medium">{run.userName}</td>
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-base text-gray-900 font-medium">{run.userName}</td>
+                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap">
                         {run.status === 'success' && run.tokenGenerated ? (
                           <span className="text-green-600 font-medium text-xs sm:text-sm" title="OAuth successful - Token generated">✓ Success</span>
                         ) : run.status === 'success' && !run.tokenGenerated ? (
@@ -133,17 +133,17 @@ function RunsContent() {
                           <span className="text-red-600 font-medium text-xs sm:text-sm" title="OAuth failed">✗ Failed</span>
                         )}
                       </td>
-                      <td className="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-700 max-w-md truncate hidden md:table-cell">
+                      <td className="px-2 sm:px-3 md:px-6 py-4 text-xs sm:text-sm text-gray-700 max-w-md truncate hidden md:table-cell">
                         {run.message || '-'}
                       </td>
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700">
+                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 hidden sm:table-cell">
                         <span className="font-medium">
                           {run.ms >= 1000 
                             ? `${(run.ms / 1000).toFixed(1)}s` 
                             : `${run.ms}ms`}
                         </span>
                       </td>
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap">
                         {run.artifactDir ? (
                           <a
                             href={`/api/artifacts/${run.id}`}

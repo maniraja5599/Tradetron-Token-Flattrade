@@ -971,7 +971,7 @@ export default function Dashboard() {
         </div>
 
         {/* Footer */}
-        <footer className="mt-8 py-6 text-center text-sm text-gray-600 border-t-2 border-gray-300 bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg">
+        <footer className="mt-6 sm:mt-8 py-4 sm:py-6 text-center text-xs sm:text-sm text-gray-600 border-t-2 border-gray-300 bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg px-4">
           <p className="font-medium">
             © {new Date().getFullYear()}{' '}
             <a
@@ -989,9 +989,9 @@ export default function Dashboard() {
 
       {/* Sync Modal */}
       {showSyncModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold mb-4 text-gray-800">Sync from Google Sheets</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl p-4 sm:p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800">Sync from Google Sheets</h2>
             
             <div className="space-y-4">
               <div>
@@ -1066,11 +1066,11 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="flex gap-3 mt-6">
+            <div className="flex flex-col sm:flex-row gap-3 mt-6">
               <button
                 onClick={handleSyncFromSheet}
                 disabled={syncLoading || !sheetUrl.trim()}
-                className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-purple-800 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:from-purple-700 hover:to-purple-800 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
                 {syncLoading ? 'Syncing...' : 'Sync Now'}
               </button>
@@ -1081,7 +1081,7 @@ export default function Dashboard() {
                   setSheetRange('Users!A:Z')
                 }}
                 disabled={syncLoading}
-                className="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-gray-300 text-gray-700 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:bg-gray-400 font-semibold text-sm sm:text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>

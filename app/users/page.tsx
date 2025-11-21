@@ -118,7 +118,7 @@ function UsersManagementContent() {
   return (
     <div className="min-h-screen bg-geometric relative">
       <Header />
-      <div className="p-4 sm:p-6 lg:p-8 pt-20 sm:pt-24">
+      <div className="p-4 sm:p-6 lg:p-8 pt-20 sm:pt-24 overflow-x-hidden">
       <div className="bg-geometric-shapes">
         <div className="geometric-triangle triangle-1"></div>
         <div className="geometric-triangle triangle-2"></div>
@@ -202,18 +202,18 @@ function UsersManagementContent() {
               </button>
             </div>
           </div>
-          <div className="overflow-x-auto -mx-4 sm:mx-0">
-            <table className="w-full min-w-[800px]">
+          <div className="overflow-x-auto -mx-4 sm:-mx-6 lg:mx-0">
+            <table className="w-full min-w-0 sm:min-w-[600px] md:min-w-[800px]">
               <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
                 <tr>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden md:table-cell">Broker Username</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Login URL</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Last Result</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Total Runs</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Success Rate</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden md:table-cell">Broker Username</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Login URL</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden sm:table-cell">Last Result</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Total Runs</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Success Rate</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -223,9 +223,9 @@ function UsersManagementContent() {
                   const successRate = getSuccessRate(user.id)
                   return (
                     <tr key={user.id} className="hover:bg-blue-50 transition-colors duration-150">
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm sm:text-base text-gray-900 font-semibold">{user.name}</td>
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 hidden md:table-cell">{user.brokerUsername}</td>
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 hidden lg:table-cell">
+                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm md:text-base text-gray-900 font-semibold">{user.name}</td>
+                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 hidden md:table-cell">{user.brokerUsername}</td>
+                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 hidden lg:table-cell">
                         <a
                           href={user.loginUrl}
                           target="_blank"
@@ -235,7 +235,7 @@ function UsersManagementContent() {
                           {user.loginUrl.replace('https://', '')}
                         </a>
                       </td>
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap">
                         <button
                           onClick={() => handleToggleActive(user.id, user.active)}
                           className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold ${
@@ -247,7 +247,7 @@ function UsersManagementContent() {
                           {user.active ? '✓ Active' : '○ Inactive'}
                         </button>
                       </td>
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                         {lastRun ? (
                           lastRun.status === 'success' ? (
                             <span className="text-green-600 font-medium text-xs sm:text-sm">✓ Success</span>
@@ -258,10 +258,10 @@ function UsersManagementContent() {
                           <span className="text-gray-600 text-xs sm:text-sm">-</span>
                         )}
                       </td>
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 font-medium hidden lg:table-cell">{totalRuns}</td>
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
+                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 font-medium hidden lg:table-cell">{totalRuns}</td>
+                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
                         <div className="flex items-center gap-2">
-                          <div className="w-16 bg-gray-200 rounded-full h-2">
+                          <div className="w-12 sm:w-16 bg-gray-200 rounded-full h-2">
                             <div
                               className={`h-2 rounded-full ${
                                 successRate >= 80 ? 'bg-green-500' : successRate >= 50 ? 'bg-yellow-500' : 'bg-red-500'
@@ -272,7 +272,7 @@ function UsersManagementContent() {
                           <span className="text-xs sm:text-sm text-gray-700 font-medium">{successRate}%</span>
                         </div>
                       </td>
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap">
                         <div className="flex gap-1 sm:gap-2">
                           <button
                             onClick={() => handleRunUser(user.id)}

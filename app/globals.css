@@ -39,14 +39,30 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
-  margin: 0 4px;
+  width: 40px;
+  height: 40px;
+  margin: 0 2px;
+}
+
+@media (min-width: 640px) {
+  .logo-brain-gear {
+    width: 48px;
+    height: 48px;
+    margin: 0 3px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .logo-brain-gear {
+    width: 56px;
+    height: 56px;
+    margin: 0 4px;
+  }
 }
 
 .logo-brain-gear::before {
   content: '🧠';
-  font-size: 2.5rem;
+  font-size: 1.75rem;
   position: absolute;
   left: 0;
   z-index: 1;
@@ -56,12 +72,30 @@ body {
 
 .logo-brain-gear::after {
   content: '⚙️';
-  font-size: 2rem;
+  font-size: 1.5rem;
   position: absolute;
   right: 0;
   z-index: 1;
   clip-path: polygon(48% 0, 100% 0, 100% 100%, 48% 100%);
   filter: drop-shadow(-1px 0 0 rgba(0, 0, 0, 0.1));
+}
+
+@media (min-width: 640px) {
+  .logo-brain-gear::before {
+    font-size: 2rem;
+  }
+  .logo-brain-gear::after {
+    font-size: 1.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .logo-brain-gear::before {
+    font-size: 2.5rem;
+  }
+  .logo-brain-gear::after {
+    font-size: 2rem;
+  }
 }
 
 .bg-geometric-shapes {
