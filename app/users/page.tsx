@@ -203,11 +203,11 @@ function UsersManagementContent() {
             </div>
           </div>
           <div className="overflow-x-auto -mx-4 sm:-mx-6 lg:mx-0">
-            <table className="w-full min-w-0 sm:min-w-[600px] md:min-w-[800px] table-fixed sm:table-auto">
+            <table className="w-full min-w-0 sm:min-w-[600px] md:min-w-[800px] table-fixed sm:table-auto" style={{ tableLayout: 'fixed' }}>
               <colgroup>
-                <col className="w-[30%] sm:w-auto" />
-                <col className="w-[25%] sm:w-auto" />
-                <col className="w-[45%] sm:w-auto" />
+                <col style={{ width: '28%' }} />
+                <col style={{ width: '24%' }} />
+                <col style={{ width: '48%' }} />
               </colgroup>
               <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
                 <tr>
