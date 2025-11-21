@@ -444,19 +444,9 @@ export default function Dashboard() {
             <div className="geometric-triangle triangle-29"></div>
             <div className="geometric-triangle triangle-30"></div>
           </div>
-          <div className="max-w-7xl mx-auto relative z-10">
-            <div className="mb-6 sm:mb-8 text-center px-2 sm:px-4">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-bold mb-2 flex items-center justify-center gap-1 sm:gap-2 flex-wrap">
-                <span className="text-white tracking-tight drop-shadow-lg whitespace-nowrap flex-shrink-0">TRADE</span>
-                <span className="logo-brain-gear flex-shrink-0"></span>
-                <span className="text-white tracking-tight drop-shadow-lg whitespace-nowrap flex-shrink-0">TRON</span>
-              </h1>
-              <p className="text-xs sm:text-sm text-gray-300 font-semibold tracking-widest uppercase mb-1">ALGO STRATEGY MARKETPLACE</p>
-              <p className="text-sm sm:text-base lg:text-lg text-gray-200 font-medium">Token Generator</p>
-            </div>
-
+          <div className="max-w-7xl mx-auto relative z-10 overflow-x-visible">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 2xl:grid-cols-6 gap-4 mb-8">
           <Link href="/users" className="group relative bg-white/40 backdrop-blur-md p-4 sm:p-5 rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-blue-500/20 border border-white/30 hover:border-blue-400/60 transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] hover:-translate-y-1">
             <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-400/30 to-blue-600/15 rounded-full -mr-10 -mt-10 group-hover:scale-150 group-hover:opacity-80 transition-all duration-500"></div>
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -895,10 +885,10 @@ export default function Dashboard() {
           <div className="overflow-x-auto mx-0 sm:-mx-6 lg:mx-0">
             <table className="w-full min-w-0 sm:min-w-[600px] md:min-w-[640px] table-fixed sm:table-auto" style={{ width: '100%', maxWidth: '100%' }}>
               <colgroup className="sm:hidden">
-                <col style={{ width: '28%' }} />
-                <col style={{ width: '24%' }} />
-                <col style={{ width: '24%' }} />
-                <col style={{ width: '24%' }} />
+                <col style={{ width: '38%' }} />
+                <col style={{ width: '22%' }} />
+                <col style={{ width: '22%' }} />
+                <col style={{ width: '18%' }} />
               </colgroup>
               <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
                 <tr>
@@ -913,8 +903,8 @@ export default function Dashboard() {
               <tbody className="divide-y divide-gray-200">
                 {runs.slice(0, 10).map((run) => (
                   <tr key={run.id} className={run.status === 'success' && run.tokenGenerated ? 'hover:bg-green-50 transition-colors duration-150' : 'hover:bg-red-50 transition-colors duration-150'}>
-                    <td className="px-2 sm:px-3 md:px-6 py-4 text-xs sm:text-sm text-gray-700 max-w-0 overflow-hidden">
-                      <span className="whitespace-nowrap block truncate">{format(new Date(run.startedAt), 'MMM d, HH:mm:ss')}</span>
+                    <td className="px-2 sm:px-3 md:px-6 py-4 text-xs sm:text-sm text-gray-700">
+                      <span className="whitespace-nowrap block">{format(new Date(run.startedAt), 'MMM d, HH:mm:ss')}</span>
                     </td>
                     <td className="px-2 sm:px-3 md:px-6 py-4 text-xs sm:text-base text-gray-900 font-medium min-w-0 max-w-0 overflow-hidden">
                       <span className="truncate block min-w-0">{run.userName}</span>

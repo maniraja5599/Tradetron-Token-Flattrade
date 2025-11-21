@@ -92,7 +92,12 @@ export default function EditUserPage() {
     : ''
 
   if (loading) {
-    return <div className="p-4 sm:p-8 pt-20 sm:pt-24">Loading...</div>
+    return (
+      <div className="min-h-screen bg-geometric relative">
+        <Header />
+        <div className="p-4 sm:p-8 pt-20 sm:pt-24">Loading...</div>
+      </div>
+    )
   }
 
   return (
