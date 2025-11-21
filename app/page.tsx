@@ -75,10 +75,11 @@ export default function Dashboard() {
       }, 30000) // 30 second timeout
       
       try {
-        const [usersRes, runsRes, healthRes] = await Promise.all([
+        const [usersRes, runsRes, healthRes, scheduleRes] = await Promise.all([
           fetch('/api/users', { signal: controller.signal }),
           fetch('/api/runs?limit=20', { signal: controller.signal }),
           fetch('/api/health', { signal: controller.signal }),
+          fetch('/api/schedule', { signal: controller.signal }),
         ])
         
         clearTimeout(timeoutId)
@@ -87,6 +88,22 @@ export default function Dashboard() {
         if (runsRes.ok) setRuns(await runsRes.json())
         if (healthRes.ok) {
           const healthData = await healthRes.json()
+          
+          // If schedule endpoint is available, use it as source of truth for schedule
+          if (scheduleRes.ok) {
+            const scheduleData = await scheduleRes.json()
+            // Merge schedule data into health data
+            healthData.scheduler = {
+              ...healthData.scheduler,
+              schedule: {
+                hour: scheduleData.hour,
+                minute: scheduleData.minute,
+                timezone: scheduleData.timezone,
+                timeString: scheduleData.timeString,
+              },
+            }
+          }
+          
           setHealth(healthData)
           // Set schedule time from health data only when NOT editing
           if (healthData.scheduler?.schedule && !editingScheduleRef.current) {
@@ -221,6 +238,35 @@ export default function Dashboard() {
               },
             })
           }
+        }
+        
+        // Also fetch schedule endpoint to ensure we have latest data
+        try {
+          const scheduleRes = await fetch('/api/schedule')
+          if (scheduleRes.ok) {
+            const scheduleData = await scheduleRes.json()
+            // Update health state with latest schedule from schedule endpoint
+            if (health) {
+              setHealth({
+                ...health,
+                scheduler: {
+                  ...health.scheduler,
+                  schedule: {
+                    hour: scheduleData.hour,
+                    minute: scheduleData.minute,
+                    timezone: scheduleData.timezone,
+                    timeString: scheduleData.timeString,
+                  },
+                },
+              })
+            }
+            setScheduleTime({
+              hour: scheduleData.hour,
+              minute: scheduleData.minute,
+            })
+          }
+        } catch (e) {
+          console.error('Failed to fetch updated schedule:', e)
         }
         
         // Wait a moment for scheduler to restart, then refresh to get updated nextRun time
