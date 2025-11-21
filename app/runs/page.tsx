@@ -99,7 +99,13 @@ function RunsContent() {
         {/* Runs Table */}
         <div className="bg-white rounded-lg shadow-lg mb-6 sm:mb-8 border border-gray-200">
           <div className="overflow-x-auto -mx-4 sm:-mx-6 lg:mx-0">
-            <table className="w-full min-w-0 sm:min-w-[600px] md:min-w-[640px]">
+            <table className="w-full min-w-0 sm:min-w-[600px] md:min-w-[640px] table-fixed sm:table-auto" style={{ tableLayout: 'fixed' }}>
+              <colgroup>
+                <col style={{ width: '28%' }} />
+                <col style={{ width: '24%' }} />
+                <col style={{ width: '24%' }} />
+                <col style={{ width: '24%' }} />
+              </colgroup>
               <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
                 <tr>
                   <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Timestamp</th>
