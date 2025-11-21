@@ -790,27 +790,27 @@ export default function Dashboard() {
                           )}
                         </div>
                       </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4">
+                      <td className="px-2 sm:px-3 md:px-6 py-2">
                         {lastRun ? (
                           isOAuthSuccessful(lastRun) ? (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
                               <span className="w-2 h-2 bg-green-500 rounded-full"></span>
                               Success
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
                               <span className="w-2 h-2 bg-red-500 rounded-full"></span>
                               Failed
                             </span>
                           )
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">
                             <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
                             No Run
                           </span>
                         )}
                       </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 hidden md:table-cell">
+                      <td className="px-2 sm:px-3 md:px-6 py-2 whitespace-nowrap text-xs text-gray-700 hidden">
                         <a
                           href={user.loginUrl}
                           target="_blank"
@@ -820,49 +820,49 @@ export default function Dashboard() {
                           {user.loginUrl.replace('https://', '')}
                         </a>
                       </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap hidden sm:table-cell">
+                      <td className="px-2 sm:px-3 md:px-6 py-2 whitespace-nowrap hidden sm:table-cell">
                         {lastRun ? (
                           isOAuthSuccessful(lastRun) ? (
-                            <span className="text-green-600 font-bold text-sm sm:text-base md:text-lg" title="OAuth successful - Token generated">✓</span>
+                            <span className="text-green-600 font-medium text-xs" title="OAuth successful - Token generated">✓</span>
                           ) : (
-                            <span className="text-red-600 font-bold text-sm sm:text-base md:text-lg" title="OAuth failed or token not generated">✗</span>
+                            <span className="text-red-600 font-medium text-xs" title="OAuth failed or token not generated">✗</span>
                           )
                         ) : (
-                          <span className="text-gray-400" title="No run today">-</span>
+                          <span className="text-gray-400 text-xs" title="No run today">-</span>
                         )}
                       </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 hidden lg:table-cell">
+                      <td className="px-2 sm:px-3 md:px-6 py-2 whitespace-nowrap text-xs text-gray-700 hidden lg:table-cell">
                         {lastRun ? (
                           <div className="flex flex-col">
-                            <span className="font-semibold text-gray-900">{format(new Date(lastRun.startedAt), 'MMM d, HH:mm:ss')}</span>
-                            <span className="text-xs text-gray-500 mt-0.5">{format(new Date(lastRun.startedAt), 'EEE')}</span>
+                            <span className="font-semibold text-gray-900 text-xs">{format(new Date(lastRun.startedAt), 'MMM d, HH:mm:ss')}</span>
+                            <span className="text-xs text-gray-500">{format(new Date(lastRun.startedAt), 'EEE')}</span>
                           </div>
                         ) : (
-                          <span className="text-gray-400">-</span>
+                          <span className="text-gray-400 text-xs">-</span>
                         )}
                       </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 hidden lg:table-cell">
+                      <td className="px-2 sm:px-3 md:px-6 py-2 whitespace-nowrap text-xs text-gray-700 hidden lg:table-cell">
                         {lastRun ? (
-                          <span className="font-semibold text-gray-900">
+                          <span className="font-semibold text-gray-900 text-xs">
                             {lastRun.ms >= 1000 
                               ? `${(lastRun.ms / 1000).toFixed(1)}s` 
                               : `${lastRun.ms}ms`}
                           </span>
                         ) : (
-                          <span className="text-gray-400">-</span>
+                          <span className="text-gray-400 text-xs">-</span>
                         )}
                       </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4 max-w-0 overflow-hidden">
-                        <div className="flex flex-wrap gap-1 sm:gap-2 min-w-0">
+                      <td className="px-2 sm:px-3 md:px-6 py-2 max-w-0 overflow-hidden">
+                        <div className="flex flex-wrap gap-1 min-w-0">
                           <button
                             onClick={() => handleRunUser(user.id)}
-                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-1.5 sm:px-2 md:px-3 py-1 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
+                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-1.5 sm:px-2 py-0.5 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
                           >
                             Run
                           </button>
                           <Link
                             href="/users"
-                            className="text-green-600 hover:text-green-800 hover:bg-green-50 px-1.5 sm:px-2 md:px-3 py-1 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
+                            className="text-green-600 hover:text-green-800 hover:bg-green-50 px-1.5 sm:px-2 py-0.5 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
                           >
                             View
                           </Link>
