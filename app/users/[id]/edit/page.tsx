@@ -21,6 +21,7 @@ export default function EditUserPage() {
   })
   const [changePassword, setChangePassword] = useState(false)
   const [changeTotp, setChangeTotp] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     if (userId) loadUser()
@@ -74,7 +75,7 @@ export default function EditUserPage() {
       })
 
       if (res.ok) {
-        router.push('/')
+        router.push('/users')
       } else {
         const error = await res.json()
         alert(`Error: ${error.error}`)
@@ -83,6 +84,25 @@ export default function EditUserPage() {
       alert('Failed to update user')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone!')) return
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' })
+      if (res.ok) {
+        alert('User deleted successfully')
+        router.push('/users')
+      } else {
+        const error = await res.json()
+        alert(`Failed to delete user: ${error.error || 'Unknown error'}`)
+      }
+    } catch (error) {
+      alert('Failed to delete user')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -219,20 +239,28 @@ export default function EditUserPage() {
               <p className="text-xs text-gray-700 mt-1">Inactive users will not be included in scheduled runs</p>
             </div>
 
-            <div className="flex gap-4 pt-4">
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <button
                 type="submit"
-                disabled={saving}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                disabled={saving || deleting}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 font-semibold"
               >
                 {saving ? 'Saving...' : 'Save Changes'}
               </button>
               <button
                 type="button"
-                onClick={() => router.push('/')}
-                className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400"
+                onClick={() => router.push('/users')}
+                className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 font-semibold"
               >
                 Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting || saving}
+                className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 font-semibold"
+              >
+                {deleting ? 'Deleting...' : 'Delete User'}
               </button>
             </div>
           </div>

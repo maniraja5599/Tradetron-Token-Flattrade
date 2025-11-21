@@ -126,6 +126,10 @@ export async function deleteUser(id: string): Promise<boolean> {
   return true
 }
 
+export async function deleteAllUsers(): Promise<void> {
+  await writeJsonFile(USERS_FILE, [])
+}
+
 // Runs DB
 export async function getRuns(limit: number = 100): Promise<RunLog[]> {
   const runs = await readJsonFile<RunLog[]>(RUNS_FILE, [])

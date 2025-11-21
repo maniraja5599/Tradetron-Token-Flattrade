@@ -54,10 +54,33 @@ function UsersManagementContent() {
   const handleDeleteUser = async (userId: string) => {
     if (!confirm('Are you sure you want to delete this user?')) return
     try {
-      await fetch(`/api/users/${userId}`, { method: 'DELETE' })
-      loadData()
+      const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' })
+      if (res.ok) {
+        alert('User deleted successfully')
+        loadData()
+      } else {
+        const error = await res.json()
+        alert(`Failed to delete user: ${error.error || 'Unknown error'}`)
+      }
     } catch (error) {
       alert('Failed to delete user')
+    }
+  }
+
+  const handleDeleteAll = async () => {
+    if (!confirm('Are you sure you want to delete ALL users? This action cannot be undone!')) return
+    if (!confirm('This will permanently delete all users. Are you absolutely sure?')) return
+    try {
+      const res = await fetch('/api/users', { method: 'DELETE' })
+      if (res.ok) {
+        alert('All users deleted successfully')
+        loadData()
+      } else {
+        const error = await res.json()
+        alert(`Failed to delete all users: ${error.error || 'Unknown error'}`)
+      }
+    } catch (error) {
+      alert('Failed to delete all users')
     }
   }
 
@@ -161,6 +184,12 @@ function UsersManagementContent() {
             >
               ← Back to Dashboard
             </Link>
+            <button
+              onClick={handleDeleteAll}
+              className="bg-gradient-to-r from-red-600 to-red-700 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg hover:from-red-700 hover:to-red-800 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-xs sm:text-sm text-center whitespace-nowrap"
+            >
+              Delete All
+            </button>
             <Link
               href="/users/new"
               className="bg-gradient-to-r from-green-600 to-green-700 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-xs sm:text-sm text-center whitespace-nowrap"
@@ -310,6 +339,12 @@ function UsersManagementContent() {
                           >
                             View
                           </Link>
+                          <button
+                            onClick={() => handleDeleteUser(user.id)}
+                            className="text-red-600 hover:text-red-800 hover:bg-red-50 px-1.5 sm:px-2 py-0.5 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
+                          >
+                            Delete
+                          </button>
                         </div>
                       </td>
                     </tr>

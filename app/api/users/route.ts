@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUsers, saveUser } from '@/lib/db'
+import { getUsers, saveUser, deleteAllUsers } from '@/lib/db'
 import { encrypt, maskSecret } from '@/lib/crypto'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -69,6 +69,18 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json(
       { error: errorMessage },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE() {
+  try {
+    await deleteAllUsers()
+    return NextResponse.json({ success: true, message: 'All users deleted successfully' })
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error.message },
       { status: 500 }
     )
   }
