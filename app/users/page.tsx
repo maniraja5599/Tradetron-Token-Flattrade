@@ -211,14 +211,14 @@ function UsersManagementContent() {
               </colgroup>
               <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
                 <tr>
-                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
-                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden md:table-cell">Broker Username</th>
-                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Login URL</th>
-                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden sm:table-cell">Last Result</th>
-                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Total Runs</th>
-                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Success Rate</th>
-                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden md:table-cell">Broker Username</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Login URL</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden sm:table-cell">Last Result</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Total Runs</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Success Rate</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -228,11 +228,11 @@ function UsersManagementContent() {
                   const successRate = getSuccessRate(user.id)
                   return (
                     <tr key={user.id} className="hover:bg-blue-50 transition-colors duration-150">
-                      <td className="px-2 sm:px-3 md:px-6 py-4 text-xs sm:text-sm md:text-base text-gray-900 font-semibold min-w-0 max-w-0 overflow-hidden">
-                        <span className="truncate block min-w-0">{user.name}</span>
+                      <td className="px-2 sm:px-3 md:px-6 py-2 text-xs sm:text-sm text-gray-900 font-semibold">
+                        {user.name}
                       </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 hidden md:table-cell">{user.brokerUsername}</td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 hidden lg:table-cell">
+                      <td className="px-2 sm:px-3 md:px-6 py-2 whitespace-nowrap text-xs text-gray-700 hidden md:table-cell">{user.brokerUsername}</td>
+                      <td className="px-2 sm:px-3 md:px-6 py-2 whitespace-nowrap text-xs text-gray-700 hidden lg:table-cell">
                         <a
                           href={user.loginUrl}
                           target="_blank"
@@ -242,10 +242,10 @@ function UsersManagementContent() {
                           {user.loginUrl.replace('https://', '')}
                         </a>
                       </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4">
+                      <td className="px-2 sm:px-3 md:px-6 py-2">
                         <button
                           onClick={() => handleToggleActive(user.id, user.active)}
-                          className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
+                          className={`px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${
                             user.active
                               ? 'bg-green-100 text-green-800 hover:bg-green-200'
                               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -254,42 +254,42 @@ function UsersManagementContent() {
                           {user.active ? '✓ Active' : '○ Inactive'}
                         </button>
                       </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap hidden sm:table-cell">
+                      <td className="px-2 sm:px-3 md:px-6 py-2 whitespace-nowrap hidden sm:table-cell">
                         {lastRun ? (
                           lastRun.status === 'success' ? (
-                            <span className="text-green-600 font-medium text-xs sm:text-sm">✓ Success</span>
+                            <span className="text-green-600 font-medium text-xs">✓ Success</span>
                           ) : (
-                            <span className="text-red-600 font-medium text-xs sm:text-sm">✗ Failed</span>
+                            <span className="text-red-600 font-medium text-xs">✗ Failed</span>
                           )
                         ) : (
-                          <span className="text-gray-600 text-xs sm:text-sm">-</span>
+                          <span className="text-gray-600 text-xs">-</span>
                         )}
                       </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 font-medium hidden lg:table-cell">{totalRuns}</td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
-                        <div className="flex items-center gap-2">
-                          <div className="w-12 sm:w-16 bg-gray-200 rounded-full h-2">
+                      <td className="px-2 sm:px-3 md:px-6 py-2 whitespace-nowrap text-xs text-gray-700 font-medium hidden lg:table-cell">{totalRuns}</td>
+                      <td className="px-2 sm:px-3 md:px-6 py-2 whitespace-nowrap hidden lg:table-cell">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-12 sm:w-16 bg-gray-200 rounded-full h-1.5">
                             <div
-                              className={`h-2 rounded-full ${
+                              className={`h-1.5 rounded-full ${
                                 successRate >= 80 ? 'bg-green-500' : successRate >= 50 ? 'bg-yellow-500' : 'bg-red-500'
                               }`}
                               style={{ width: `${successRate}%` }}
                             ></div>
                           </div>
-                          <span className="text-xs sm:text-sm text-gray-700 font-medium">{successRate}%</span>
+                          <span className="text-xs text-gray-700 font-medium">{successRate}%</span>
                         </div>
                       </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4 max-w-0 overflow-hidden">
-                        <div className="flex flex-wrap gap-1 sm:gap-2 min-w-0">
+                      <td className="px-2 sm:px-3 md:px-6 py-2">
+                        <div className="flex flex-wrap gap-1 min-w-0">
                           <button
                             onClick={() => handleRunUser(user.id)}
-                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-1.5 sm:px-2 md:px-3 py-1 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
+                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-1.5 sm:px-2 py-0.5 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
                           >
                             Run
                           </button>
                           <Link
                             href={`/users/${user.id}/edit`}
-                            className="text-green-600 hover:text-green-800 hover:bg-green-50 px-1.5 sm:px-2 md:px-3 py-1 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
+                            className="text-green-600 hover:text-green-800 hover:bg-green-50 px-1.5 sm:px-2 py-0.5 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
                           >
                             View
                           </Link>
