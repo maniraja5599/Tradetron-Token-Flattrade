@@ -860,37 +860,12 @@ export default function Dashboard() {
                           >
                             Run
                           </button>
-                          <button
-                            onClick={async () => {
-                              try {
-                                const res = await fetch(`/api/test-user/${user.id}`)
-                                const data = await res.json()
-                                if (res.ok) {
-                                  alert(`User: ${data.user.name}\n\nCredentials Check:\n- Password: ${data.credentials.password} (length: ${data.credentials.passwordLength})\n- DOB/TOTP: ${data.credentials.dob} (length: ${data.credentials.dobLength})\n- DOB Format: ${data.credentials.dobFormat}\n\nValidation:\n- Password Valid: ${data.validation.passwordValid ? '✓' : '✗'}\n- DOB/TOTP Valid: ${data.validation.dobValid ? '✓' : '✗'}\n- All Valid: ${data.validation.allValid ? '✓' : '✗'}`)
-                                } else {
-                                  alert(`Error: ${data.error}`)
-                                }
-                              } catch (error: any) {
-                                alert(`Failed to check credentials: ${error.message}`)
-                              }
-                            }}
-                            className="text-purple-600 hover:text-purple-800 hover:bg-purple-50 px-1.5 sm:px-2 md:px-3 py-1 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
-                            title="Check credentials format"
-                          >
-                            Check
-                          </button>
                           <Link
-                            href={`/users/${user.id}/edit`}
+                            href="/users"
                             className="text-green-600 hover:text-green-800 hover:bg-green-50 px-1.5 sm:px-2 md:px-3 py-1 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
                           >
-                            Edit
+                            View
                           </Link>
-                          <button
-                            onClick={() => handleDeleteUser(user.id)}
-                            className="text-red-600 hover:text-red-800 hover:bg-red-50 px-1.5 sm:px-2 md:px-3 py-1 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
-                          >
-                            Delete
-                          </button>
                         </div>
                       </td>
                     </tr>
