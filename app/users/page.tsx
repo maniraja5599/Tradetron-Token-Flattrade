@@ -118,7 +118,7 @@ function UsersManagementContent() {
   return (
     <div className="min-h-screen bg-geometric relative">
       <Header />
-      <div className="p-8 pt-24">
+      <div className="p-4 sm:p-6 lg:p-8 pt-20 sm:pt-24">
       <div className="bg-geometric-shapes">
         <div className="geometric-triangle triangle-1"></div>
         <div className="geometric-triangle triangle-2"></div>
@@ -130,23 +130,23 @@ function UsersManagementContent() {
         <div className="geometric-triangle triangle-8"></div>
       </div>
       <div className="max-w-7xl mx-auto relative z-10">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 bg-clip-text text-transparent">
               User Management
             </h1>
-            <p className="text-gray-400">Manage all users and their login credentials</p>
+            <p className="text-sm sm:text-base text-gray-400">Manage all users and their login credentials</p>
           </div>
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
             <Link
               href="/"
-              className="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold"
+              className="bg-gray-200 text-gray-700 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:bg-gray-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-sm sm:text-base text-center"
             >
               ← Back to Dashboard
             </Link>
             <Link
               href="/users/new"
-              className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-lg hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold"
+              className="bg-gradient-to-r from-green-600 to-green-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-sm sm:text-base text-center"
             >
               + Add User
             </Link>
@@ -154,13 +154,13 @@ function UsersManagementContent() {
         </div>
 
         {/* Users Table */}
-        <div className="bg-white rounded-lg shadow-lg mb-8 border border-gray-200">
-          <div className="p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50 flex justify-between items-center">
-            <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+        <div className="bg-white rounded-lg shadow-lg mb-6 sm:mb-8 border border-gray-200">
+          <div className="p-4 sm:p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
+            <h2 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               All Users ({filteredUsers.length})
             </h2>
-            <div className="flex gap-2">
-              <span className="text-sm text-gray-700 mr-2">Filter:</span>
+            <div className="flex flex-wrap gap-2">
+              <span className="text-xs sm:text-sm text-gray-700 mr-2">Filter:</span>
               <button
                 onClick={() => {
                   setResultFilter('all')
@@ -202,18 +202,18 @@ function UsersManagementContent() {
               </button>
             </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <table className="w-full min-w-[800px]">
               <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Broker Username</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Login URL</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Last Result</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Total Runs</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Success Rate</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden md:table-cell">Broker Username</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Login URL</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Last Result</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Total Runs</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Success Rate</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -223,9 +223,9 @@ function UsersManagementContent() {
                   const successRate = getSuccessRate(user.id)
                   return (
                     <tr key={user.id} className="hover:bg-blue-50 transition-colors duration-150">
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-900 font-semibold">{user.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{user.brokerUsername}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm sm:text-base text-gray-900 font-semibold">{user.name}</td>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 hidden md:table-cell">{user.brokerUsername}</td>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 hidden lg:table-cell">
                         <a
                           href={user.loginUrl}
                           target="_blank"
@@ -235,10 +235,10 @@ function UsersManagementContent() {
                           {user.loginUrl.replace('https://', '')}
                         </a>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                         <button
                           onClick={() => handleToggleActive(user.id, user.active)}
-                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold ${
                             user.active
                               ? 'bg-green-100 text-green-800 hover:bg-green-200'
                               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -247,19 +247,19 @@ function UsersManagementContent() {
                           {user.active ? '✓ Active' : '○ Inactive'}
                         </button>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                         {lastRun ? (
                           lastRun.status === 'success' ? (
-                            <span className="text-green-600 font-medium">✓ Success</span>
+                            <span className="text-green-600 font-medium text-xs sm:text-sm">✓ Success</span>
                           ) : (
-                            <span className="text-red-600 font-medium">✗ Failed</span>
+                            <span className="text-red-600 font-medium text-xs sm:text-sm">✗ Failed</span>
                           )
                         ) : (
-                          <span className="text-gray-600">-</span>
+                          <span className="text-gray-600 text-xs sm:text-sm">-</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">{totalRuns}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 font-medium hidden lg:table-cell">{totalRuns}</td>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
                         <div className="flex items-center gap-2">
                           <div className="w-16 bg-gray-200 rounded-full h-2">
                             <div
@@ -269,26 +269,26 @@ function UsersManagementContent() {
                               style={{ width: `${successRate}%` }}
                             ></div>
                           </div>
-                          <span className="text-sm text-gray-700 font-medium">{successRate}%</span>
+                          <span className="text-xs sm:text-sm text-gray-700 font-medium">{successRate}%</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex gap-2">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                        <div className="flex gap-1 sm:gap-2">
                           <button
                             onClick={() => handleRunUser(user.id)}
-                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-1 rounded text-sm font-semibold transition-all duration-150"
+                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-semibold transition-all duration-150"
                           >
                             Run
                           </button>
                           <Link
                             href={`/users/${user.id}/edit`}
-                            className="text-green-600 hover:text-green-800 hover:bg-green-50 px-3 py-1 rounded text-sm font-semibold transition-all duration-150"
+                            className="text-green-600 hover:text-green-800 hover:bg-green-50 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-semibold transition-all duration-150"
                           >
                             Edit
                           </Link>
                           <button
                             onClick={() => handleDeleteUser(user.id)}
-                            className="text-red-600 hover:text-red-800 hover:bg-red-50 px-3 py-1 rounded text-sm font-semibold transition-all duration-150"
+                            className="text-red-600 hover:text-red-800 hover:bg-red-50 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-semibold transition-all duration-150"
                           >
                             Delete
                           </button>

@@ -71,7 +71,7 @@ function RunsContent() {
   return (
     <div className="min-h-screen bg-geometric relative">
       <Header />
-      <div className="p-8 pt-24">
+      <div className="p-4 sm:p-6 lg:p-8 pt-20 sm:pt-24">
       <div className="bg-geometric-shapes">
         <div className="geometric-triangle triangle-1"></div>
         <div className="geometric-triangle triangle-2"></div>
@@ -81,79 +81,79 @@ function RunsContent() {
         <div className="geometric-triangle triangle-6"></div>
       </div>
       <div className="max-w-7xl mx-auto relative z-10">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 bg-clip-text text-transparent">
               All Runs
             </h1>
-            <p className="text-gray-400">View all authentication runs ({totalRuns} total)</p>
+            <p className="text-sm sm:text-base text-gray-400">View all authentication runs ({totalRuns} total)</p>
           </div>
           <Link
             href="/"
-            className="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold"
+            className="bg-gray-200 text-gray-700 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:bg-gray-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-sm sm:text-base text-center w-full sm:w-auto"
           >
             ← Back to Dashboard
           </Link>
         </div>
 
         {/* Runs Table */}
-        <div className="bg-white rounded-lg shadow-lg mb-8 border border-gray-200">
-          <div className="overflow-x-auto">
-            <table className="w-full">
+        <div className="bg-white rounded-lg shadow-lg mb-6 sm:mb-8 border border-gray-200">
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <table className="w-full min-w-[640px]">
               <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Timestamp</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">User</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Message</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Duration</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Artifacts</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Timestamp</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">User</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden md:table-cell">Message</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Duration</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Artifacts</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {runs.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan={6} className="px-3 sm:px-6 py-8 text-center text-gray-500 text-sm">
                       No runs found
                     </td>
                   </tr>
                 ) : (
                   runs.map((run) => (
                     <tr key={run.id} className={run.status === 'success' && run.tokenGenerated ? 'hover:bg-green-50 transition-colors duration-150' : 'hover:bg-red-50 transition-colors duration-150'}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700">
                         {format(new Date(run.startedAt), 'MMM d, HH:mm:ss')}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-900 font-medium">{run.userName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm sm:text-base text-gray-900 font-medium">{run.userName}</td>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                         {run.status === 'success' && run.tokenGenerated ? (
-                          <span className="text-green-600 font-medium" title="OAuth successful - Token generated">✓ Success</span>
+                          <span className="text-green-600 font-medium text-xs sm:text-sm" title="OAuth successful - Token generated">✓ Success</span>
                         ) : run.status === 'success' && !run.tokenGenerated ? (
-                          <span className="text-orange-600 font-medium" title="Login completed but token not generated">⚠ Partial</span>
+                          <span className="text-orange-600 font-medium text-xs sm:text-sm" title="Login completed but token not generated">⚠ Partial</span>
                         ) : (
-                          <span className="text-red-600 font-medium" title="OAuth failed">✗ Failed</span>
+                          <span className="text-red-600 font-medium text-xs sm:text-sm" title="OAuth failed">✗ Failed</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 max-w-md truncate">
+                      <td className="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-700 max-w-md truncate hidden md:table-cell">
                         {run.message || '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700">
                         <span className="font-medium">
                           {run.ms >= 1000 
                             ? `${(run.ms / 1000).toFixed(1)}s` 
                             : `${run.ms}ms`}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                         {run.artifactDir ? (
                           <a
                             href={`/api/artifacts/${run.id}`}
-                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                            className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium"
                             download
                           >
                             Download
                           </a>
                         ) : (
-                          <span className="text-gray-400">-</span>
+                          <span className="text-gray-400 text-xs sm:text-sm">-</span>
                         )}
                       </td>
                     </tr>

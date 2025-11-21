@@ -92,13 +92,13 @@ export default function EditUserPage() {
     : ''
 
   if (loading) {
-    return <div className="p-8">Loading...</div>
+    return <div className="p-4 sm:p-8 pt-20 sm:pt-24">Loading...</div>
   }
 
   return (
     <div className="min-h-screen bg-geometric relative">
       <Header />
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8 pt-20 sm:pt-24">
       <div className="bg-geometric-shapes">
         <div className="geometric-triangle triangle-1"></div>
         <div className="geometric-triangle triangle-2"></div>
@@ -108,9 +108,9 @@ export default function EditUserPage() {
         <div className="geometric-triangle triangle-6"></div>
       </div>
       <div className="max-w-2xl mx-auto relative z-10">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Edit User</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">Edit User</h1>
         
-        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow">
+        <form onSubmit={handleSubmit} className="bg-white p-4 sm:p-6 rounded-lg shadow">
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

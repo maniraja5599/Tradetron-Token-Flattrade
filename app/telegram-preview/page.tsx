@@ -211,21 +211,21 @@ export default function TelegramPreview() {
       `}} />
       <div className="min-h-screen bg-geometric relative">
         <Header />
-        <div className="p-8 pt-24">
+        <div className="p-4 sm:p-6 lg:p-8 pt-20 sm:pt-24">
         <div className="bg-geometric-shapes">
           <div className="geometric-triangle triangle-1"></div>
           <div className="geometric-triangle triangle-2"></div>
           <div className="geometric-triangle triangle-3"></div>
         </div>
         <div className="max-w-4xl mx-auto relative z-10">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 bg-clip-text text-transparent">Telegram Message Preview</h1>
-          <p className="text-gray-400">Preview of how notifications appear in Telegram</p>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 bg-clip-text text-transparent">Telegram Message Preview</h1>
+          <p className="text-sm sm:text-base text-gray-400">Preview of how notifications appear in Telegram</p>
         </div>
 
         {/* Success Notification */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4 text-green-600">✅ Success Notification</h2>
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-600">✅ Success Notification</h2>
           <div className="bg-blue-50 rounded-lg p-4 border-l-4 border-green-500 mb-4">
             <div 
               className="text-sm leading-relaxed telegram-message whitespace-pre-wrap text-gray-900"
@@ -243,8 +243,8 @@ export default function TelegramPreview() {
         </div>
 
         {/* Failed Notification */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4 text-red-600">❌ Failed Notification</h2>
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-red-600">❌ Failed Notification</h2>
           <div className="bg-blue-50 rounded-lg p-4 border-l-4 border-red-500 mb-4">
             <div 
               className="text-sm leading-relaxed telegram-message whitespace-pre-wrap text-gray-900"
@@ -262,8 +262,8 @@ export default function TelegramPreview() {
         </div>
 
         {/* Batch Notification */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4 text-blue-600">📊 Batch Results Notification</h2>
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-blue-600">📊 Batch Results Notification</h2>
           <div className="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500 mb-4">
             <div 
               className="text-sm leading-relaxed telegram-message whitespace-pre-wrap text-gray-900"
@@ -281,8 +281,8 @@ export default function TelegramPreview() {
         </div>
 
         {/* Info Box */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">ℹ️ About Telegram Notifications</h3>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-blue-900 mb-2">ℹ️ About Telegram Notifications</h3>
           <ul className="list-disc list-inside text-sm text-blue-800 space-y-2">
             <li>Messages are sent in HTML format with parse_mode: 'HTML'</li>
             <li>Bold text uses <code className="bg-blue-100 px-1 rounded">&lt;b&gt;</code> tags</li>
