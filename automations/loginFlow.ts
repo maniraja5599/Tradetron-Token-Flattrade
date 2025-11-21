@@ -197,8 +197,8 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
                   // Try to make it executable (may fail if no permissions)
                   fs.chmodSync(playwrightPath, 0o755)
                   console.log(`[LoginFlow] ✅ Set execute permissions on browser`)
-                } catch (chmodError) {
-                  console.warn(`[LoginFlow] ⚠️ Could not set permissions: ${chmodError.message}`)
+                } catch (chmodError: any) {
+                  console.warn(`[LoginFlow] ⚠️ Could not set permissions: ${chmodError?.message || chmodError}`)
                   console.warn(`[LoginFlow] ⚠️ Will attempt to launch anyway`)
                 }
               }
