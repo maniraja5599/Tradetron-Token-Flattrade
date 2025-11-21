@@ -445,11 +445,11 @@ export default function Dashboard() {
             <div className="geometric-triangle triangle-30"></div>
           </div>
           <div className="max-w-7xl mx-auto relative z-10">
-            <div className="mb-6 sm:mb-8 text-center px-2 sm:px-4">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-bold mb-2 flex items-center justify-center gap-1 sm:gap-2 flex-wrap max-w-full">
-                <span className="text-white tracking-tight drop-shadow-lg whitespace-nowrap">TRADE</span>
+            <div className="mb-6 sm:mb-8 text-center px-2 sm:px-4 w-full">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-bold mb-2 flex items-center justify-center gap-1 sm:gap-2 flex-wrap w-full max-w-full overflow-hidden">
+                <span className="text-white tracking-tight drop-shadow-lg whitespace-nowrap flex-shrink-0">TRADE</span>
                 <span className="logo-brain-gear flex-shrink-0"></span>
-                <span className="text-white tracking-tight drop-shadow-lg whitespace-nowrap">TRON</span>
+                <span className="text-white tracking-tight drop-shadow-lg whitespace-nowrap flex-shrink-0">TRON</span>
               </h1>
               <p className="text-xs sm:text-sm text-gray-300 font-semibold tracking-widest uppercase mb-1">ALGO STRATEGY MARKETPLACE</p>
               <p className="text-sm sm:text-base lg:text-lg text-gray-200 font-medium">Token Generator</p>
@@ -758,16 +758,16 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="overflow-x-auto -mx-4 sm:-mx-6 lg:mx-0">
-            <table className="w-full min-w-[500px] sm:min-w-[600px] md:min-w-[640px]">
+            <table className="w-full min-w-0 sm:min-w-[600px] md:min-w-[640px]">
               <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
                 <tr>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden md:table-cell">Login URL</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Last Result</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Last Run Time</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Duration</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden md:table-cell">Login URL</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden sm:table-cell">Last Result</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Last Run Time</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Duration</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -775,9 +775,9 @@ export default function Dashboard() {
                   const lastRun = getLastRun(user.id)
                   return (
                     <tr key={user.id} className="hover:bg-blue-50 transition-colors duration-150">
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <span className="text-gray-900 font-bold text-base sm:text-lg">{user.name}</span>
+                          <span className="text-gray-900 font-bold text-sm sm:text-base md:text-lg">{user.name}</span>
                           {!user.active && (
                             <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-xs font-semibold">
                               Inactive
@@ -785,7 +785,7 @@ export default function Dashboard() {
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap">
                         {lastRun ? (
                           isOAuthSuccessful(lastRun) ? (
                             <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
@@ -805,7 +805,7 @@ export default function Dashboard() {
                           </span>
                         )}
                       </td>
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-700 hidden md:table-cell">
+                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 hidden md:table-cell">
                         <a
                           href={user.loginUrl}
                           target="_blank"
@@ -815,18 +815,18 @@ export default function Dashboard() {
                           {user.loginUrl.replace('https://', '')}
                         </a>
                       </td>
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                         {lastRun ? (
                           isOAuthSuccessful(lastRun) ? (
-                            <span className="text-green-600 font-bold text-base sm:text-lg" title="OAuth successful - Token generated">✓</span>
+                            <span className="text-green-600 font-bold text-sm sm:text-base md:text-lg" title="OAuth successful - Token generated">✓</span>
                           ) : (
-                            <span className="text-red-600 font-bold text-base sm:text-lg" title="OAuth failed or token not generated">✗</span>
+                            <span className="text-red-600 font-bold text-sm sm:text-base md:text-lg" title="OAuth failed or token not generated">✗</span>
                           )
                         ) : (
                           <span className="text-gray-400" title="No run today">-</span>
                         )}
                       </td>
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-700 hidden lg:table-cell">
+                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 hidden lg:table-cell">
                         {lastRun ? (
                           <div className="flex flex-col">
                             <span className="font-semibold text-gray-900">{format(new Date(lastRun.startedAt), 'MMM d, HH:mm:ss')}</span>
@@ -836,7 +836,7 @@ export default function Dashboard() {
                           <span className="text-gray-400">-</span>
                         )}
                       </td>
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-700 hidden lg:table-cell">
+                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 hidden lg:table-cell">
                         {lastRun ? (
                           <span className="font-semibold text-gray-900">
                             {lastRun.ms >= 1000 
@@ -847,7 +847,7 @@ export default function Dashboard() {
                           <span className="text-gray-400">-</span>
                         )}
                       </td>
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap">
                         <div className="flex gap-1 sm:gap-2">
                           <button
                             onClick={() => handleRunUser(user.id)}
@@ -913,25 +913,25 @@ export default function Dashboard() {
             )}
           </div>
           <div className="overflow-x-auto -mx-4 sm:-mx-6 lg:mx-0">
-            <table className="w-full min-w-[500px] sm:min-w-[600px] md:min-w-[640px]">
+            <table className="w-full min-w-0 sm:min-w-[600px] md:min-w-[640px]">
               <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
                 <tr>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Timestamp</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">User</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden md:table-cell">Message</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Duration</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Artifacts</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Timestamp</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">User</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden md:table-cell">Message</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden sm:table-cell">Duration</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Artifacts</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {runs.slice(0, 10).map((run) => (
                   <tr key={run.id} className={run.status === 'success' && run.tokenGenerated ? 'hover:bg-green-50 transition-colors duration-150' : 'hover:bg-red-50 transition-colors duration-150'}>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700">
+                    <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700">
                       {format(new Date(run.startedAt), 'MMM d, HH:mm:ss')}
                     </td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm sm:text-base text-gray-900 font-medium">{run.userName}</td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                    <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-base text-gray-900 font-medium">{run.userName}</td>
+                    <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap">
                       {run.status === 'success' && run.tokenGenerated ? (
                         <span className="text-green-600 font-medium text-xs sm:text-sm" title="OAuth successful - Token generated">✓ Success</span>
                       ) : run.status === 'success' && !run.tokenGenerated ? (
@@ -940,17 +940,17 @@ export default function Dashboard() {
                         <span className="text-red-600 font-medium text-xs sm:text-sm" title="OAuth failed">✗ Failed</span>
                       )}
                     </td>
-                    <td className="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-700 max-w-md truncate hidden md:table-cell">
+                    <td className="px-2 sm:px-3 md:px-6 py-4 text-xs sm:text-sm text-gray-700 max-w-md truncate hidden md:table-cell">
                       {run.message || '-'}
                     </td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700">
+                    <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 hidden sm:table-cell">
                       <span className="font-medium">
                         {run.ms >= 1000 
                           ? `${(run.ms / 1000).toFixed(1)}s` 
                           : `${run.ms}ms`}
                       </span>
                     </td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                    <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap">
                       {run.artifactDir ? (
                         <a
                           href={`/api/artifacts/${run.id}`}
