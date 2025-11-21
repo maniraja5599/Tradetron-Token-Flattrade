@@ -15,14 +15,8 @@ export async function startScheduler(): Promise<void> {
   const config = await getScheduleConfig()
   const cronExpression = `${config.minute} ${config.hour} * * *`
   
-  // Calculate next run time for logging
-  const now = new Date()
-  const tzDate = new Date(now.toLocaleString('en-US', { timeZone: config.timezone }))
-  const nextRun = new Date(tzDate)
-  nextRun.setHours(config.hour, config.minute, 0, 0)
-  if (nextRun.getTime() <= tzDate.getTime()) {
-    nextRun.setDate(nextRun.getDate() + 1)
-  }
+  // Calculate next run time for logging using the correct timezone conversion
+  const nextRun = await getNextRunTime()
   
   scheduledTask = cron.schedule(cronExpression, async () => {
     console.log(`[Scheduler] ✅ Triggered daily run at ${String(config.hour).padStart(2, '0')}:${String(config.minute).padStart(2, '0')} ${config.timezone}`)
@@ -73,18 +67,86 @@ export function stopScheduler(): void {
 export async function getNextRunTime(): Promise<Date> {
   const config = await getScheduleConfig()
   const now = new Date()
-  const kolkata = new Date(now.toLocaleString('en-US', { timeZone: config.timezone }))
   
-  // Set to scheduled time today
-  const nextRun = new Date(kolkata)
-  nextRun.setHours(config.hour, config.minute, 0, 0)
-  
-  // If already past scheduled time today, schedule for tomorrow
-  if (nextRun.getTime() <= kolkata.getTime()) {
-    nextRun.setDate(nextRun.getDate() + 1)
+  // Helper to get time components in target timezone
+  const getTZTime = (date: Date) => {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: config.timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    })
+    const parts = formatter.formatToParts(date)
+    return {
+      year: parseInt(parts.find(p => p.type === 'year')?.value || '0'),
+      month: parseInt(parts.find(p => p.type === 'month')?.value || '0'),
+      day: parseInt(parts.find(p => p.type === 'day')?.value || '0'),
+      hour: parseInt(parts.find(p => p.type === 'hour')?.value || '0'),
+      minute: parseInt(parts.find(p => p.type === 'minute')?.value || '0')
+    }
   }
   
-  return nextRun
+  // Get current time in IST
+  const tzNow = getTZTime(now)
+  
+  // Determine if scheduled time is today or tomorrow in IST
+  const scheduledTimeMinutes = config.hour * 60 + config.minute
+  const currentTimeMinutes = tzNow.hour * 60 + tzNow.minute
+  
+  // Calculate days to add (0 for today, 1 for tomorrow)
+  const daysToAdd = scheduledTimeMinutes > currentTimeMinutes ? 0 : 1
+  
+  // Get the scheduled date in IST
+  const scheduledDateIST = new Date(now)
+  scheduledDateIST.setUTCDate(scheduledDateIST.getUTCDate() + daysToAdd)
+  const scheduledTZ = getTZTime(scheduledDateIST)
+  
+  // Now find the UTC Date that produces the scheduled time in IST
+  // IST offset is +05:30, so we subtract that from the IST time
+  // Create a UTC date for the scheduled day at the scheduled hour:minute
+  // Then subtract 5:30 to get the actual UTC time
+  
+  // Start with scheduled day at midnight UTC, then add hours/minutes
+  let candidate = new Date(Date.UTC(
+    scheduledTZ.year,
+    scheduledTZ.month - 1,
+    scheduledTZ.day,
+    config.hour,
+    config.minute,
+    0,
+    0
+  ))
+  
+  // Subtract IST offset (5:30 = 5 hours 30 minutes = 330 minutes)
+  candidate = new Date(candidate.getTime() - (5 * 60 + 30) * 60 * 1000)
+  
+  // Verify and adjust if needed (handles edge cases)
+  let verified = getTZTime(candidate)
+  let attempts = 0
+  while (
+    (verified.hour !== config.hour || verified.minute !== config.minute ||
+     verified.day !== scheduledTZ.day || verified.month !== scheduledTZ.month) &&
+    attempts < 5
+  ) {
+    // Calculate adjustment needed
+    const targetMinutes = config.hour * 60 + config.minute
+    const actualMinutes = verified.hour * 60 + verified.minute
+    const diffMinutes = targetMinutes - actualMinutes
+    
+    // Also account for day difference
+    const dayDiff = scheduledTZ.day - verified.day
+    const totalDiffMinutes = diffMinutes + (dayDiff * 24 * 60)
+    
+    candidate = new Date(candidate.getTime() + totalDiffMinutes * 60 * 1000)
+    verified = getTZTime(candidate)
+    attempts++
+  }
+  
+  return candidate
 }
 
 export function isSchedulerRunning(): boolean {
