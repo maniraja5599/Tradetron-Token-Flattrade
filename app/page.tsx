@@ -626,47 +626,6 @@ export default function Dashboard() {
               <div className="text-xs font-medium text-white/80">{health?.queue?.queueLength || 0} queued</div>
             </div>
           </div>
-          {health?.timeWindow && (
-            <div className={`group relative bg-white/40 backdrop-blur-md p-6 rounded-2xl shadow-lg hover:shadow-2xl border border-white/30 transition-all duration-300 overflow-hidden hover:scale-[1.02] hover:-translate-y-1 ${
-              health.timeWindow.active 
-                ? 'hover:shadow-cyan-500/20 hover:border-cyan-400/60' 
-                : 'hover:shadow-gray-500/20 hover:border-gray-400/60'
-            }`}>
-              <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br rounded-full -mr-12 -mt-12 group-hover:scale-150 group-hover:opacity-80 transition-all duration-500 ${
-                health.timeWindow.active 
-                  ? 'from-cyan-400/30 to-cyan-600/15' 
-                  : 'from-gray-400/30 to-gray-600/15'
-              }`}></div>
-              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <div className="relative z-10">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="text-xs font-semibold text-white/90 uppercase tracking-wider">Time Window</div>
-                  <div className={`w-10 h-10 bg-gradient-to-br rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-300 ${
-                    health.timeWindow.active 
-                      ? 'from-cyan-500 to-cyan-600 group-hover:shadow-cyan-500/50' 
-                      : 'from-gray-500 to-gray-600 group-hover:shadow-gray-500/50'
-                  }`}>
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                </div>
-                <div className={`text-2xl font-bold mb-2 drop-shadow-lg ${
-                  health.timeWindow.active ? 'text-cyan-200' : 'text-gray-300'
-                }`}>
-                  {health.timeWindow.active ? '🟢 Active' : '🔴 Sleep'}
-                </div>
-                <div className="text-xs font-medium text-white/80 mb-1">
-                  {health.timeWindow.window?.start} - {health.timeWindow.window?.end} {health.timeWindow.window?.timezone}
-                </div>
-                {health.timeWindow.nextWindow && !health.timeWindow.active && (
-                  <div className="text-xs text-gray-300 font-semibold mt-2 bg-gray-500/25 px-3 py-1.5 rounded-lg inline-block backdrop-blur-sm">
-                    Next: {health.timeWindow.nextWindow}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
           <div 
             onClick={() => {
               setResultFilter('success')
