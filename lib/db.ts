@@ -17,7 +17,7 @@ async function ensureDataDir() {
   }
 }
 
-async function readJsonFile<T>(filePath: string, defaultValue: T): Promise<T> {
+export async function readJsonFile<T>(filePath: string, defaultValue: T): Promise<T> {
   try {
     const content = await fs.readFile(filePath, 'utf-8')
     // Remove BOM (Byte Order Mark) if present
@@ -92,7 +92,7 @@ async function readJsonFile<T>(filePath: string, defaultValue: T): Promise<T> {
   }
 }
 
-async function writeJsonFile<T>(filePath: string, data: T): Promise<void> {
+export async function writeJsonFile<T>(filePath: string, data: T): Promise<void> {
   await ensureDataDir()
   await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8')
 }

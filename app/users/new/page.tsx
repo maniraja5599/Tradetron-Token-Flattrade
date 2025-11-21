@@ -57,7 +57,8 @@ export default function NewUserPage() {
   return (
     <div className="min-h-screen bg-geometric relative">
       <Header />
-      <div className="p-4 sm:p-6 lg:p-8 pt-20 sm:pt-24">
+      <div className="h-[80px] sm:h-[90px]"></div>
+      <div className="p-4 sm:p-6 lg:p-8">
       <div className="bg-geometric-shapes">
         <div className="geometric-triangle triangle-1"></div>
         <div className="geometric-triangle triangle-2"></div>

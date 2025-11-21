@@ -16,14 +16,18 @@ function HeaderContent() {
   }
 
   return (
-    <header className="bg-black/30 backdrop-blur-md shadow-xl sticky top-0 z-50 border-b border-white/20">
+    <header className="fixed top-0 left-0 right-0 bg-gradient-to-r from-indigo-900/40 via-purple-900/40 to-pink-900/40 backdrop-blur-xl shadow-xl z-50 border-b border-white/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between min-w-0 py-3">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity flex-shrink-0 min-w-0 group">
+          <Link href="/" className="flex items-center gap-2 sm:gap-3 hover:opacity-90 transition-opacity flex-shrink-0 min-w-0 group">
             <div className="logo-brain-gear flex-shrink-0 group-hover:scale-110 transition-transform duration-300"></div>
             <div className="min-w-0">
-              <div className="text-lg sm:text-xl md:text-2xl font-extrabold text-white tracking-tight truncate drop-shadow-lg">TRADETRON</div>
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-normal truncate drop-shadow-lg" style={{ 
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                fontWeight: '700',
+                letterSpacing: '-0.02em'
+              }}>TRADETRON</div>
               <div className="text-xs sm:text-xs text-white/90 font-semibold tracking-wide -mt-1 truncate">Token Generator for Flatrade</div>
             </div>
           </Link>
@@ -69,6 +73,16 @@ function HeaderContent() {
               }`}
             >
               Telegram Preview
+            </Link>
+            <Link
+              href="/settings"
+              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap transform hover:scale-105 ${
+                isActive('/settings')
+                  ? 'bg-white/90 text-gray-900 shadow-lg backdrop-blur-sm'
+                  : 'text-white/90 hover:text-white hover:bg-white/20 backdrop-blur-sm'
+              }`}
+            >
+              Settings
             </Link>
           </nav>
 
@@ -136,6 +150,17 @@ function HeaderContent() {
               >
                 Telegram Preview
               </Link>
+              <Link
+                href="/settings"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`px-4 py-3 rounded-xl text-base font-bold transition-all duration-300 ${
+                  isActive('/settings')
+                    ? 'bg-white/90 text-gray-900 shadow-lg backdrop-blur-sm'
+                    : 'text-white/90 hover:text-white hover:bg-white/20 backdrop-blur-sm'
+                }`}
+              >
+                Settings
+              </Link>
             </nav>
           </div>
         )}
@@ -147,7 +172,7 @@ function HeaderContent() {
 export default function Header() {
   return (
     <Suspense fallback={
-      <header className="bg-black/30 backdrop-blur-md shadow-xl sticky top-0 z-50 border-b border-white/20">
+      <header className="fixed top-0 left-0 right-0 bg-gradient-to-r from-indigo-900/40 via-purple-900/40 to-pink-900/40 backdrop-blur-xl shadow-xl z-50 border-b border-white/20">
         <div className="max-w-7xl mx-auto px-8">
           <div className="flex items-center justify-between py-3">
             <div className="flex items-center gap-3">

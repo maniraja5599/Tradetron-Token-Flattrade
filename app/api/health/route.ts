@@ -9,7 +9,7 @@ export async function GET() {
   const nextRun = await getNextRunTime()
   const schedule = await getCurrentSchedule()
   const timeWindowStatus = getTimeWindowStatus()
-  const timeWindow = getTimeWindow()
+  const timeWindow = await getTimeWindow()
 
   return NextResponse.json({
     status: 'ok',

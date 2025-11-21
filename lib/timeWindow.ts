@@ -3,6 +3,9 @@
  * Restricts server operations to specific time windows to save costs
  */
 
+import fs from 'fs/promises'
+import path from 'path'
+
 const TIMEZONE = 'Asia/Kolkata' // IST
 
 export interface TimeWindow {
@@ -23,10 +26,10 @@ const DEFAULT_WINDOW: TimeWindow = {
 }
 
 /**
- * Get current time window from environment or use default
+ * Get current time window from config file, environment variables, or use default (sync version)
  */
-export function getTimeWindow(): TimeWindow {
-  // Allow override via environment variables
+function getTimeWindowSync(): TimeWindow {
+  // Allow override via environment variables (highest priority)
   if (process.env.TIME_WINDOW_START && process.env.TIME_WINDOW_END) {
     const [startHour, startMinute] = process.env.TIME_WINDOW_START.split(':').map(Number)
     const [endHour, endMinute] = process.env.TIME_WINDOW_END.split(':').map(Number)
@@ -40,7 +43,81 @@ export function getTimeWindow(): TimeWindow {
     }
   }
   
+  // Try to read from config file (sync)
+  try {
+    const configPath = path.join(process.cwd(), 'data', 'config.json')
+    const fs = require('fs')
+    if (fs.existsSync(configPath)) {
+      const configData = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
+      if (configData?.timeWindow && typeof configData.timeWindow === 'object') {
+        return configData.timeWindow
+      }
+    }
+  } catch {
+    // Error reading config file, use default
+  }
+  
   return DEFAULT_WINDOW
+}
+
+/**
+ * Get current time window from config file, environment variables, or use default (async version)
+ */
+export async function getTimeWindow(): Promise<TimeWindow> {
+  // Allow override via environment variables (highest priority)
+  if (process.env.TIME_WINDOW_START && process.env.TIME_WINDOW_END) {
+    const [startHour, startMinute] = process.env.TIME_WINDOW_START.split(':').map(Number)
+    const [endHour, endMinute] = process.env.TIME_WINDOW_END.split(':').map(Number)
+    
+    return {
+      startHour,
+      startMinute,
+      endHour,
+      endMinute,
+      timezone: process.env.TIME_WINDOW_TIMEZONE || TIMEZONE,
+    }
+  }
+  
+  // Try to read from config file (async)
+  try {
+    const { readJsonFile } = await import('./db')
+    const configPath = path.join(process.cwd(), 'data', 'config.json')
+    const configData = await readJsonFile<any>(configPath, {})
+    if (configData?.timeWindow && typeof configData.timeWindow === 'object') {
+      return configData.timeWindow
+    }
+  } catch {
+    // Error reading config file, use default
+  }
+  
+  return DEFAULT_WINDOW
+}
+
+/**
+ * Check if time window is enabled (from config file)
+ */
+export async function isTimeWindowEnabled(): Promise<boolean> {
+  try {
+    const { readJsonFile } = await import('./db')
+    const configPath = path.join(process.cwd(), 'data', 'config.json')
+    const configData = await readJsonFile<any>(configPath, {})
+    return configData?.timeWindowEnabled !== false // Default to true if not set
+  } catch {
+    return true // Default to enabled
+  }
+}
+
+/**
+ * Synchronous version for backward compatibility
+ */
+export function isTimeWindowEnabledSync(): boolean {
+  try {
+    const configPath = path.join(process.cwd(), 'data', 'config.json')
+    const configData = require(configPath)
+    return configData?.timeWindowEnabled !== false
+  } catch {
+    return true
+  }
 }
 
 /**
@@ -67,7 +144,12 @@ function getCurrentTimeInTimezone(timezone: string): { hour: number; minute: num
  * Check if current time is within the allowed time window
  */
 export function isWithinTimeWindow(): boolean {
-  const window = getTimeWindow()
+  // If time window is disabled, always allow
+  if (!isTimeWindowEnabledSync()) {
+    return true
+  }
+  
+  const window = getTimeWindowSync()
   const current = getCurrentTimeInTimezone(window.timezone)
   
   const currentMinutes = current.hour * 60 + current.minute
@@ -88,7 +170,7 @@ export function isWithinTimeWindow(): boolean {
  * Get time until next window opens (in milliseconds)
  */
 export function getTimeUntilNextWindow(): number {
-  const window = getTimeWindow()
+  const window = getTimeWindowSync()
   const current = getCurrentTimeInTimezone(window.timezone)
   const now = new Date()
   
@@ -119,7 +201,7 @@ export function getTimeUntilNextWindow(): number {
  * Get human-readable message about time window status
  */
 export function getTimeWindowStatus(): { allowed: boolean; message: string; nextWindow?: string } {
-  const window = getTimeWindow()
+  const window = getTimeWindowSync()
   const allowed = isWithinTimeWindow()
   
   if (allowed) {
