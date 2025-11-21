@@ -1,9 +1,30 @@
 import { RunLog } from '@/types'
+import fs from 'fs'
+import path from 'path'
 
 interface TelegramConfig {
   botToken?: string
   chatId?: string
   enabled?: boolean
+}
+
+interface TelegramNotificationSettings {
+  individualEnabled: boolean
+  batchEnabled: boolean
+}
+
+const SETTINGS_FILE = path.join(process.cwd(), 'data', 'telegram-settings.json')
+
+function getNotificationSettings(): TelegramNotificationSettings {
+  try {
+    if (fs.existsSync(SETTINGS_FILE)) {
+      const data = fs.readFileSync(SETTINGS_FILE, 'utf-8')
+      return JSON.parse(data)
+    }
+  } catch (error) {
+    // Default to enabled if settings file doesn't exist or can't be read
+  }
+  return { individualEnabled: true, batchEnabled: true }
 }
 
 const TELEGRAM_API_URL = 'https://api.telegram.org/bot'
@@ -103,6 +124,13 @@ function formatRunNotification(runLog: RunLog): string {
  */
 export async function sendRunNotification(runLog: RunLog): Promise<boolean> {
   try {
+    // Check if individual notifications are enabled
+    const settings = getNotificationSettings()
+    if (!settings.individualEnabled) {
+      console.log(`[Telegram] Individual notifications are disabled`)
+      return false
+    }
+
     const config = await getTelegramConfig()
     
     if (!config.enabled) {
@@ -223,6 +251,13 @@ function formatBatchNotification(runLogs: RunLog[], inactiveUsers: string[] = []
  */
 export async function sendBatchNotification(runLogs: RunLog[], inactiveUsers: string[] = []): Promise<boolean> {
   try {
+    // Check if batch notifications are enabled
+    const settings = getNotificationSettings()
+    if (!settings.batchEnabled) {
+      console.log(`[Telegram] Batch notifications are disabled`)
+      return false
+    }
+
     const config = await getTelegramConfig()
     
     if (!config.enabled) {

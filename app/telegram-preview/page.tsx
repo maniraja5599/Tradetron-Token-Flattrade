@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { RunLog } from '@/types'
 import Header from '../components/Header'
@@ -108,6 +109,72 @@ function htmlToText(html: string): string {
 }
 
 export default function TelegramPreview() {
+  const [individualEnabled, setIndividualEnabled] = useState(true)
+  const [batchEnabled, setBatchEnabled] = useState(true)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  // Load settings on mount
+  useEffect(() => {
+    loadSettings()
+  }, [])
+
+  const loadSettings = async () => {
+    try {
+      const response = await fetch('/api/telegram/settings')
+      if (response.ok) {
+        const data = await response.json()
+        setIndividualEnabled(data.individualEnabled ?? true)
+        setBatchEnabled(data.batchEnabled ?? true)
+      }
+    } catch (error) {
+      console.error('Failed to load settings:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const saveSettings = async (individual: boolean, batch: boolean) => {
+    setSaving(true)
+    try {
+      const response = await fetch('/api/telegram/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          individualEnabled: individual,
+          batchEnabled: batch,
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setIndividualEnabled(data.settings.individualEnabled)
+        setBatchEnabled(data.settings.batchEnabled)
+        alert('Settings saved successfully!')
+      } else {
+        const error = await response.json()
+        alert(`Failed to save settings: ${error.error || 'Unknown error'}`)
+      }
+    } catch (error: any) {
+      console.error('Failed to save settings:', error)
+      alert(`Failed to save settings: ${error.message || 'Unknown error'}`)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleIndividualToggle = async () => {
+    const newValue = !individualEnabled
+    setIndividualEnabled(newValue)
+    await saveSettings(newValue, batchEnabled)
+  }
+
+  const handleBatchToggle = async () => {
+    const newValue = !batchEnabled
+    setBatchEnabled(newValue)
+    await saveSettings(individualEnabled, newValue)
+  }
+
   // Sample data for preview
   const now = new Date()
   const sampleSuccessRun: RunLog = {
@@ -221,6 +288,52 @@ export default function TelegramPreview() {
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold mb-2 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 bg-clip-text text-transparent">Telegram Message Preview</h1>
           <p className="text-sm sm:text-base text-gray-400">Preview of how notifications appear in Telegram</p>
+        </div>
+
+        {/* Notification Settings */}
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6 border-2 border-purple-200">
+          <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-800">🔔 Notification Settings</h2>
+          <div className="space-y-4">
+            {/* Individual Notification Toggle */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="flex-1">
+                <h3 className="text-base font-semibold text-gray-900 mb-1">Individual Notifications</h3>
+                <p className="text-sm text-gray-600">Send a notification after each user run completes</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer ml-4">
+                <input
+                  type="checkbox"
+                  checked={individualEnabled}
+                  onChange={handleIndividualToggle}
+                  disabled={loading || saving}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+              </label>
+            </div>
+
+            {/* Batch Notification Toggle */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="flex-1">
+                <h3 className="text-base font-semibold text-gray-900 mb-1">Batch Notifications</h3>
+                <p className="text-sm text-gray-600">Send a summary notification when running multiple users</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer ml-4">
+                <input
+                  type="checkbox"
+                  checked={batchEnabled}
+                  onChange={handleBatchToggle}
+                  disabled={loading || saving}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+              </label>
+            </div>
+
+            {saving && (
+              <p className="text-sm text-gray-500 text-center">Saving settings...</p>
+            )}
+          </div>
         </div>
 
         {/* Success Notification */}
