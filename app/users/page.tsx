@@ -291,14 +291,8 @@ function UsersManagementContent() {
                             href={`/users/${user.id}/edit`}
                             className="text-green-600 hover:text-green-800 hover:bg-green-50 px-1.5 sm:px-2 md:px-3 py-1 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
                           >
-                            Edit
+                            View
                           </Link>
-                          <button
-                            onClick={() => handleDeleteUser(user.id)}
-                            className="text-red-600 hover:text-red-800 hover:bg-red-50 px-1.5 sm:px-2 md:px-3 py-1 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
-                          >
-                            Delete
-                          </button>
                         </div>
                       </td>
                     </tr>
