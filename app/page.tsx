@@ -917,8 +917,8 @@ export default function Dashboard() {
               </Link>
             )}
           </div>
-          <div className="overflow-x-auto -mx-4 sm:-mx-6 lg:mx-0">
-            <table className="w-full min-w-0 sm:min-w-[600px] md:min-w-[640px] table-fixed sm:table-auto" style={{ tableLayout: 'fixed' }}>
+          <div className="overflow-x-auto mx-0 sm:-mx-6 lg:mx-0">
+            <table className="w-full min-w-0 sm:min-w-[600px] md:min-w-[640px] table-fixed sm:table-auto" style={{ tableLayout: 'fixed', width: '100%', maxWidth: '100%' }}>
               <colgroup>
                 <col style={{ width: '28%' }} />
                 <col style={{ width: '24%' }} />
