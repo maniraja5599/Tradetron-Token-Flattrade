@@ -411,7 +411,7 @@ export default function Dashboard() {
       return (
         <div className="min-h-screen bg-geometric relative">
           <Header />
-          <div className="p-4 sm:p-6 lg:p-8 pt-20 sm:pt-24">
+          <div className="p-4 sm:p-6 lg:p-8 pt-20 sm:pt-24 overflow-x-hidden">
           <div className="bg-geometric-shapes">
             <div className="geometric-triangle triangle-1"></div>
             <div className="geometric-triangle triangle-2"></div>
@@ -445,14 +445,14 @@ export default function Dashboard() {
             <div className="geometric-triangle triangle-30"></div>
           </div>
           <div className="max-w-7xl mx-auto relative z-10">
-            <div className="mb-6 sm:mb-8 text-center">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-2 flex items-center justify-center gap-2">
-                <span className="text-white tracking-tight drop-shadow-lg">TRADE</span>
-                <span className="logo-brain-gear"></span>
-                <span className="text-white tracking-tight drop-shadow-lg">TRON</span>
+            <div className="mb-6 sm:mb-8 text-center px-2">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-2 flex items-center justify-center gap-1 sm:gap-2 flex-wrap">
+                <span className="text-white tracking-tight drop-shadow-lg whitespace-nowrap">TRADE</span>
+                <span className="logo-brain-gear flex-shrink-0"></span>
+                <span className="text-white tracking-tight drop-shadow-lg whitespace-nowrap">TRON</span>
               </h1>
-              <p className="text-xs text-gray-300 font-semibold tracking-widest uppercase mb-1">ALGO STRATEGY MARKETPLACE</p>
-              <p className="text-sm sm:text-lg text-gray-200 font-medium">Token Generator</p>
+              <p className="text-xs sm:text-sm text-gray-300 font-semibold tracking-widest uppercase mb-1">ALGO STRATEGY MARKETPLACE</p>
+              <p className="text-sm sm:text-base lg:text-lg text-gray-200 font-medium">Token Generator</p>
             </div>
 
         {/* Stats */}
@@ -757,8 +757,8 @@ export default function Dashboard() {
               </button>
             </div>
           </div>
-          <div className="overflow-x-auto -mx-4 sm:mx-0">
-            <table className="w-full min-w-[640px]">
+          <div className="overflow-x-auto -mx-4 sm:-mx-6 lg:mx-0">
+            <table className="w-full min-w-[600px] sm:min-w-[640px]">
               <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
                 <tr>
                   <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
@@ -912,8 +912,8 @@ export default function Dashboard() {
               </Link>
             )}
           </div>
-          <div className="overflow-x-auto -mx-4 sm:mx-0">
-            <table className="w-full min-w-[640px]">
+          <div className="overflow-x-auto -mx-4 sm:-mx-6 lg:mx-0">
+            <table className="w-full min-w-[600px] sm:min-w-[640px]">
               <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
                 <tr>
                   <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Timestamp</th>
