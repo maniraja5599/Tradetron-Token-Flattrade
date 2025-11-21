@@ -775,17 +775,17 @@ export default function Dashboard() {
                   const lastRun = getLastRun(user.id)
                   return (
                     <tr key={user.id} className="hover:bg-blue-50 transition-colors duration-150">
-                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-900 font-bold text-sm sm:text-base md:text-lg">{user.name}</span>
+                      <td className="px-2 sm:px-3 md:px-6 py-4">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-gray-900 font-bold text-sm sm:text-base md:text-lg truncate">{user.name}</span>
                           {!user.active && (
-                            <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-xs font-semibold">
+                            <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-xs font-semibold flex-shrink-0">
                               Inactive
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 sm:px-3 md:px-6 py-4">
                         {lastRun ? (
                           isOAuthSuccessful(lastRun) ? (
                             <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
@@ -847,11 +847,11 @@ export default function Dashboard() {
                           <span className="text-gray-400">-</span>
                         )}
                       </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap">
-                        <div className="flex gap-1 sm:gap-2">
+                      <td className="px-2 sm:px-3 md:px-6 py-4">
+                        <div className="flex flex-wrap gap-1 sm:gap-2">
                           <button
                             onClick={() => handleRunUser(user.id)}
-                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-semibold transition-all duration-150"
+                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-1.5 sm:px-2 md:px-3 py-1 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
                           >
                             Run
                           </button>
@@ -869,20 +869,20 @@ export default function Dashboard() {
                                 alert(`Failed to check credentials: ${error.message}`)
                               }
                             }}
-                            className="text-purple-600 hover:text-purple-800 hover:bg-purple-50 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-semibold transition-all duration-150"
+                            className="text-purple-600 hover:text-purple-800 hover:bg-purple-50 px-1.5 sm:px-2 md:px-3 py-1 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
                             title="Check credentials format"
                           >
                             Check
                           </button>
                           <Link
                             href={`/users/${user.id}/edit`}
-                            className="text-green-600 hover:text-green-800 hover:bg-green-50 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-semibold transition-all duration-150"
+                            className="text-green-600 hover:text-green-800 hover:bg-green-50 px-1.5 sm:px-2 md:px-3 py-1 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
                           >
                             Edit
                           </Link>
                           <button
                             onClick={() => handleDeleteUser(user.id)}
-                            className="text-red-600 hover:text-red-800 hover:bg-red-50 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-semibold transition-all duration-150"
+                            className="text-red-600 hover:text-red-800 hover:bg-red-50 px-1.5 sm:px-2 md:px-3 py-1 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
                           >
                             Delete
                           </button>
@@ -927,11 +927,13 @@ export default function Dashboard() {
               <tbody className="divide-y divide-gray-200">
                 {runs.slice(0, 10).map((run) => (
                   <tr key={run.id} className={run.status === 'success' && run.tokenGenerated ? 'hover:bg-green-50 transition-colors duration-150' : 'hover:bg-red-50 transition-colors duration-150'}>
-                    <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700">
-                      {format(new Date(run.startedAt), 'MMM d, HH:mm:ss')}
+                    <td className="px-2 sm:px-3 md:px-6 py-4 text-xs sm:text-sm text-gray-700">
+                      <span className="whitespace-nowrap">{format(new Date(run.startedAt), 'MMM d, HH:mm:ss')}</span>
                     </td>
-                    <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-base text-gray-900 font-medium">{run.userName}</td>
-                    <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap">
+                    <td className="px-2 sm:px-3 md:px-6 py-4 text-xs sm:text-base text-gray-900 font-medium min-w-0">
+                      <span className="truncate block">{run.userName}</span>
+                    </td>
+                    <td className="px-2 sm:px-3 md:px-6 py-4">
                       {run.status === 'success' && run.tokenGenerated ? (
                         <span className="text-green-600 font-medium text-xs sm:text-sm" title="OAuth successful - Token generated">✓ Success</span>
                       ) : run.status === 'success' && !run.tokenGenerated ? (

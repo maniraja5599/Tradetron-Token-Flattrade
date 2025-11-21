@@ -223,7 +223,9 @@ function UsersManagementContent() {
                   const successRate = getSuccessRate(user.id)
                   return (
                     <tr key={user.id} className="hover:bg-blue-50 transition-colors duration-150">
-                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm md:text-base text-gray-900 font-semibold">{user.name}</td>
+                      <td className="px-2 sm:px-3 md:px-6 py-4 text-xs sm:text-sm md:text-base text-gray-900 font-semibold min-w-0">
+                        <span className="truncate block">{user.name}</span>
+                      </td>
                       <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 hidden md:table-cell">{user.brokerUsername}</td>
                       <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700 hidden lg:table-cell">
                         <a
@@ -235,10 +237,10 @@ function UsersManagementContent() {
                           {user.loginUrl.replace('https://', '')}
                         </a>
                       </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 sm:px-3 md:px-6 py-4">
                         <button
                           onClick={() => handleToggleActive(user.id, user.active)}
-                          className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold ${
+                          className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
                             user.active
                               ? 'bg-green-100 text-green-800 hover:bg-green-200'
                               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -272,23 +274,23 @@ function UsersManagementContent() {
                           <span className="text-xs sm:text-sm text-gray-700 font-medium">{successRate}%</span>
                         </div>
                       </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap">
-                        <div className="flex gap-1 sm:gap-2">
+                      <td className="px-2 sm:px-3 md:px-6 py-4">
+                        <div className="flex flex-wrap gap-1 sm:gap-2">
                           <button
                             onClick={() => handleRunUser(user.id)}
-                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-semibold transition-all duration-150"
+                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-1.5 sm:px-2 md:px-3 py-1 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
                           >
                             Run
                           </button>
                           <Link
                             href={`/users/${user.id}/edit`}
-                            className="text-green-600 hover:text-green-800 hover:bg-green-50 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-semibold transition-all duration-150"
+                            className="text-green-600 hover:text-green-800 hover:bg-green-50 px-1.5 sm:px-2 md:px-3 py-1 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
                           >
                             Edit
                           </Link>
                           <button
                             onClick={() => handleDeleteUser(user.id)}
-                            className="text-red-600 hover:text-red-800 hover:bg-red-50 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-semibold transition-all duration-150"
+                            className="text-red-600 hover:text-red-800 hover:bg-red-50 px-1.5 sm:px-2 md:px-3 py-1 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
                           >
                             Delete
                           </button>

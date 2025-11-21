@@ -120,11 +120,13 @@ function RunsContent() {
                 ) : (
                   runs.map((run) => (
                     <tr key={run.id} className={run.status === 'success' && run.tokenGenerated ? 'hover:bg-green-50 transition-colors duration-150' : 'hover:bg-red-50 transition-colors duration-150'}>
-                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700">
-                        {format(new Date(run.startedAt), 'MMM d, HH:mm:ss')}
+                      <td className="px-2 sm:px-3 md:px-6 py-4 text-xs sm:text-sm text-gray-700">
+                        <span className="whitespace-nowrap">{format(new Date(run.startedAt), 'MMM d, HH:mm:ss')}</span>
                       </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap text-xs sm:text-base text-gray-900 font-medium">{run.userName}</td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 sm:px-3 md:px-6 py-4 text-xs sm:text-base text-gray-900 font-medium min-w-0">
+                        <span className="truncate block">{run.userName}</span>
+                      </td>
+                      <td className="px-2 sm:px-3 md:px-6 py-4">
                         {run.status === 'success' && run.tokenGenerated ? (
                           <span className="text-green-600 font-medium text-xs sm:text-sm" title="OAuth successful - Token generated">✓ Success</span>
                         ) : run.status === 'success' && !run.tokenGenerated ? (
@@ -143,11 +145,11 @@ function RunsContent() {
                             : `${run.ms}ms`}
                         </span>
                       </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 sm:px-3 md:px-6 py-4">
                         {run.artifactDir ? (
                           <a
                             href={`/api/artifacts/${run.id}`}
-                            className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium"
+                            className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium whitespace-nowrap"
                             download
                           >
                             Download
