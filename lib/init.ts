@@ -51,16 +51,35 @@ async function ensurePlaywrightBrowsers() {
   try {
     // Try without --with-deps first (runtime environments typically don't have root access)
     // System dependencies should be installed during build phase
+    console.log('[Init] Running: npx playwright install chromium')
     execSync('npx playwright install chromium', {
       stdio: 'inherit',
       cwd: process.cwd(),
-      timeout: 120000, // 2 minute timeout
+      timeout: 180000, // 3 minute timeout (browser download can take time)
+      env: {
+        ...process.env,
+        // Ensure Playwright doesn't skip browser download
+        PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: undefined,
+      }
     })
     console.log('[Init] ✅ Playwright browsers installed successfully')
+    
+    // Verify installation after install
+    try {
+      const { chromium } = require('playwright')
+      const newExecutablePath = chromium.executablePath()
+      if (newExecutablePath) {
+        await fs.access(newExecutablePath)
+        console.log(`[Init] ✅ Verified browser at: ${newExecutablePath}`)
+      }
+    } catch (verifyError) {
+      console.warn(`[Init] ⚠️ Browser installed but verification failed:`, verifyError)
+    }
   } catch (error: any) {
-    console.error('[Init] ⚠️ Failed to install Playwright browsers:', error.message)
-    console.error('[Init] 💡 This may cause login automation to fail')
-    console.error('[Init] 💡 Browsers should be installed during build phase. Check build logs.')
+    console.error('[Init] ❌ Failed to install Playwright browsers:', error.message)
+    console.error('[Init] 💡 This will cause login automation to fail')
+    console.error('[Init] 💡 Check Railway build logs to ensure browsers are installed during build')
+    console.error('[Init] 💡 Build command should include: npm run playwright:install chromium')
   }
 }
 

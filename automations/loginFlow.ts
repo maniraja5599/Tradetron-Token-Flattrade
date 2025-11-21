@@ -176,11 +176,31 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
       }
     } else {
       console.log(`[LoginFlow] CHROMIUM_EXECUTABLE_PATH not set, using Playwright's default browser`)
+      
+      // Try to get Playwright's bundled browser path
+      try {
+        const playwrightPath = chromium.executablePath()
+        if (playwrightPath) {
+          const fs = require('fs')
+          if (fs.existsSync(playwrightPath)) {
+            launchOptions.executablePath = playwrightPath
+            console.log(`[LoginFlow] ✅ Using Playwright's bundled browser: ${playwrightPath}`)
+          } else {
+            console.warn(`[LoginFlow] ⚠️ Playwright browser path reported but file not found: ${playwrightPath}`)
+            console.warn(`[LoginFlow] ⚠️ This may cause browser launch to fail. Browser may need to be installed.`)
+          }
+        } else {
+          console.warn(`[LoginFlow] ⚠️ chromium.executablePath() returned null - browser may not be installed`)
+        }
+      } catch (error) {
+        console.warn(`[LoginFlow] ⚠️ Could not get Playwright browser path:`, error)
+        console.warn(`[LoginFlow] ⚠️ Will attempt to launch without explicit path`)
+      }
     }
     
     console.log(`[LoginFlow] Launching browser with options:`, {
       headless: launchOptions.headless,
-      executablePath: launchOptions.executablePath || 'default',
+      executablePath: launchOptions.executablePath || 'default (Playwright will find it)',
       argsCount: launchOptions.args.length,
       platform: process.platform
     })
@@ -194,9 +214,20 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
         message: launchError.message,
         stack: launchError.stack,
         executablePath: launchOptions.executablePath,
-        headless: launchOptions.headless
+        headless: launchOptions.headless,
+        platform: process.platform
       })
-      throw new Error(`Browser launch failed: ${launchError.message}`)
+      
+      // Provide helpful error message
+      let errorMessage = `Browser launch failed: ${launchError.message}`
+      if (launchError.message.includes('spawn') || launchError.message.includes('ENOENT')) {
+        errorMessage += '\n\n💡 Browser executable not found. This usually means:\n'
+        errorMessage += '1. Playwright browser was not installed during build\n'
+        errorMessage += '2. Check Railway build logs to ensure "npm run playwright:install chromium" completed\n'
+        errorMessage += '3. The browser may need to be installed at runtime (this is attempted automatically)'
+      }
+      
+      throw new Error(errorMessage)
     }
 
     try {
