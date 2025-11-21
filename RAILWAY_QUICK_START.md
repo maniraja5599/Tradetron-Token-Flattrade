@@ -46,6 +46,21 @@ ENCRYPTION_KEY=your_random_32_character_minimum_secret_key_here
 # https://randomkeygen.com/
 ```
 
+### Time Window Configuration (Cost Savings):
+
+To restrict server operations to specific hours (e.g., 8:15 AM - 9:00 AM IST):
+
+```env
+TIME_WINDOW_START=08:15
+TIME_WINDOW_END=09:00
+TIME_WINDOW_TIMEZONE=Asia/Kolkata
+TIME_WINDOW_ENABLED=true
+```
+
+**Note:** Set `TIME_WINDOW_ENABLED=false` to disable and allow 24/7 operations.
+
+See `TIME_WINDOW_CONFIG.md` for detailed configuration options.
+
 ### Recommended Variables:
 
 ```env
