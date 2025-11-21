@@ -77,7 +77,8 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
     const selectors = mergeSelectors(userSelectors)
 
     // Launch browser
-    const chromiumExecutablePath = process.env.CHROMIUM_EXECUTABLE_PATH
+    // Check both CHROMIUM_EXECUTABLE_PATH and PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
+    const chromiumExecutablePath = process.env.CHROMIUM_EXECUTABLE_PATH || process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
     
     const launchOptions: any = {
       headless: headful ? false : (process.env.HEADLESS !== 'false'),
