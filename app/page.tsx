@@ -766,13 +766,13 @@ export default function Dashboard() {
               </colgroup>
               <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
                 <tr>
-                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
-                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden md:table-cell">Login URL</th>
-                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden sm:table-cell">Last Result</th>
-                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Last Run Time</th>
-                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Duration</th>
-                  <th className="px-2 sm:px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden">Login URL</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden sm:table-cell">Last Result</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Last Run Time</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Duration</th>
+                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -780,9 +780,9 @@ export default function Dashboard() {
                   const lastRun = getLastRun(user.id)
                   return (
                     <tr key={user.id} className="hover:bg-blue-50 transition-colors duration-150">
-                      <td className="px-2 sm:px-3 md:px-6 py-4 max-w-0 overflow-hidden">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-gray-900 font-bold text-sm sm:text-base md:text-lg truncate min-w-0 flex-1">{user.name}</span>
+                      <td className="px-2 sm:px-3 md:px-6 py-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-900 font-semibold text-xs sm:text-sm">{user.name}</span>
                           {!user.active && (
                             <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-xs font-semibold flex-shrink-0">
                               Inactive
