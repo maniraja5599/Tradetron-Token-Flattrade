@@ -445,8 +445,8 @@ export default function Dashboard() {
             <div className="geometric-triangle triangle-30"></div>
           </div>
           <div className="max-w-7xl mx-auto relative z-10">
-            <div className="mb-6 sm:mb-8 text-center px-2 sm:px-4 w-full">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-bold mb-2 flex items-center justify-center gap-1 sm:gap-2 flex-wrap w-full max-w-full overflow-hidden">
+            <div className="mb-6 sm:mb-8 text-center px-2 sm:px-4">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-bold mb-2 flex items-center justify-center gap-1 sm:gap-2 flex-wrap">
                 <span className="text-white tracking-tight drop-shadow-lg whitespace-nowrap flex-shrink-0">TRADE</span>
                 <span className="logo-brain-gear flex-shrink-0"></span>
                 <span className="text-white tracking-tight drop-shadow-lg whitespace-nowrap flex-shrink-0">TRON</span>
