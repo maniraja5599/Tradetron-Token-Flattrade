@@ -5,6 +5,7 @@
 
 import fs from 'fs/promises'
 import path from 'path'
+import { readJsonFile } from './db'
 
 const TIMEZONE = 'Asia/Kolkata' // IST
 
@@ -80,7 +81,6 @@ export async function getTimeWindow(): Promise<TimeWindow> {
   
   // Try to read from config file (async)
   try {
-    const { readJsonFile } = await import('./db')
     const configPath = path.join(process.cwd(), 'data', 'config.json')
     const configData = await readJsonFile<any>(configPath, {})
     if (configData?.timeWindow && typeof configData.timeWindow === 'object') {
@@ -98,7 +98,6 @@ export async function getTimeWindow(): Promise<TimeWindow> {
  */
 export async function isTimeWindowEnabled(): Promise<boolean> {
   try {
-    const { readJsonFile } = await import('./db')
     const configPath = path.join(process.cwd(), 'data', 'config.json')
     const configData = await readJsonFile<any>(configPath, {})
     return configData?.timeWindowEnabled !== false // Default to true if not set
@@ -113,8 +112,12 @@ export async function isTimeWindowEnabled(): Promise<boolean> {
 export function isTimeWindowEnabledSync(): boolean {
   try {
     const configPath = path.join(process.cwd(), 'data', 'config.json')
-    const configData = require(configPath)
-    return configData?.timeWindowEnabled !== false
+    const fsSync = require('fs')
+    if (fsSync.existsSync(configPath)) {
+      const configData = JSON.parse(fsSync.readFileSync(configPath, 'utf-8'))
+      return configData?.timeWindowEnabled !== false
+    }
+    return true
   } catch {
     return true
   }
