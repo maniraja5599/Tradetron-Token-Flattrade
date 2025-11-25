@@ -27,7 +27,12 @@ COPY package*.json ./
 RUN npm ci
 
 # Install Playwright (using system Chromium)
-RUN npx playwright install-deps chromium || true
+# Note: install-deps is not needed on Alpine as we installed packages via apk
+# RUN npx playwright install-deps chromium || true
+
+# Set Node.js memory limit for build and runtime
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Copy application files
 COPY . .
