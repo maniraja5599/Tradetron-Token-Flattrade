@@ -22,6 +22,15 @@ services:
       # Limit concurrency to 1 to save memory on free tier
       - key: MAX_CONCURRENCY
         value: 1
+      # Time Window Configuration (Open by default for Render)
+      - key: TIME_WINDOW_ENABLED
+        value: true
+      - key: TIME_WINDOW_START
+        value: 00:01
+      - key: TIME_WINDOW_END
+        value: 23:59
+      - key: TIME_WINDOW_TIMEZONE
+        value: Asia/Kolkata
       # User must provide these in Render Dashboard
       - key: SECRET_KEY
         sync: false
