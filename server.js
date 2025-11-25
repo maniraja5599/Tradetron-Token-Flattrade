@@ -76,6 +76,12 @@ app.prepare().then(() => {
   const TIME_WINDOW_END = process.env.TIME_WINDOW_END || '09:00'
   const TIME_WINDOW_TIMEZONE = process.env.TIME_WINDOW_TIMEZONE || 'Asia/Kolkata'
 
+  console.log('[Server] 🕒 Time Window Configuration:')
+  console.log(`[Server]   Enabled: ${TIME_WINDOW_ENABLED}`)
+  console.log(`[Server]   Start: ${TIME_WINDOW_START}`)
+  console.log(`[Server]   End: ${TIME_WINDOW_END}`)
+  console.log(`[Server]   Timezone: ${TIME_WINDOW_TIMEZONE}`)
+
   function getCurrentTimeInTimezone(timezone) {
     const now = new Date()
     const formatter = new Intl.DateTimeFormat('en-US', {
