@@ -11,7 +11,7 @@ const os = require('os')
 if (process.env.GSA_JSON_B64) {
   try {
     const json = Buffer.from(process.env.GSA_JSON_B64, 'base64').toString('utf8')
-    
+
     // Validate JSON before writing
     try {
       JSON.parse(json)
@@ -20,7 +20,7 @@ if (process.env.GSA_JSON_B64) {
       console.error('[Server] 💡 Please check that GSA_JSON_B64 is properly base64-encoded')
       throw parseError
     }
-    
+
     // Validate it's a service account JSON (check for required fields)
     const parsed = JSON.parse(json)
     if (!parsed.type || parsed.type !== 'service_account') {
@@ -29,7 +29,7 @@ if (process.env.GSA_JSON_B64) {
     if (!parsed.client_email || !parsed.private_key) {
       console.warn('[Server] ⚠️ GSA_JSON_B64 missing required fields (client_email or private_key)')
     }
-    
+
     const tempPath = path.join(os.tmpdir(), 'gsa.json')
     fs.writeFileSync(tempPath, json, 'utf8')
     process.env.GOOGLE_APPLICATION_CREDENTIALS = tempPath
@@ -69,42 +69,43 @@ process.on('unhandledRejection', (reason, promise) => {
 
 app.prepare().then(() => {
   console.log('Next.js app prepared successfully')
-  
+
   // Time window restriction (8:15 AM to 9:00 AM IST)
   const TIME_WINDOW_ENABLED = process.env.TIME_WINDOW_ENABLED !== 'false' // Enabled by default
   const TIME_WINDOW_START = process.env.TIME_WINDOW_START || '08:15'
   const TIME_WINDOW_END = process.env.TIME_WINDOW_END || '09:00'
   const TIME_WINDOW_TIMEZONE = process.env.TIME_WINDOW_TIMEZONE || 'Asia/Kolkata'
-  
+
   function getCurrentTimeInTimezone(timezone) {
     const now = new Date()
     const formatter = new Intl.DateTimeFormat('en-US', {
       timeZone: timezone,
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
+      hour: 'numeric',
+      minute: 'numeric',
+      hourCycle: 'h23', // Force 00-23 format
     })
     const parts = formatter.formatToParts(now)
+    const hourVal = parseInt(parts.find(p => p.type === 'hour')?.value || '0')
     return {
-      hour: parseInt(parts.find(p => p.type === 'hour')?.value || '0'),
+      hour: hourVal % 24, // Ensure 0-23 range
       minute: parseInt(parts.find(p => p.type === 'minute')?.value || '0'),
     }
   }
-  
+
   function isWithinTimeWindow() {
     if (!TIME_WINDOW_ENABLED) return true // Time window disabled
-    
+
     const [startHour, startMinute] = TIME_WINDOW_START.split(':').map(Number)
     const [endHour, endMinute] = TIME_WINDOW_END.split(':').map(Number)
     const current = getCurrentTimeInTimezone(TIME_WINDOW_TIMEZONE)
-    
+
     const currentMinutes = current.hour * 60 + current.minute
     const startMinutes = startHour * 60 + startMinute
     const endMinutes = endHour * 60 + endMinute
-    
+
     return currentMinutes >= startMinutes && currentMinutes < endMinutes
   }
-  
+
   // Allowed paths that work even outside time window (read-only operations)
   const ALLOWED_PATHS = [
     '/api/health',
@@ -112,7 +113,7 @@ app.prepare().then(() => {
     '/api/users', // GET only
     '/api/runs', // GET only
   ]
-  
+
   function isAllowedPath(url) {
     // Allow health checks and read-only API calls
     if (ALLOWED_PATHS.some(path => url.startsWith(path))) {
@@ -128,18 +129,18 @@ app.prepare().then(() => {
     }
     return false
   }
-  
+
   const server = createServer(async (req, res) => {
     try {
       const parsedUrl = parse(req.url, true)
       const url = parsedUrl.pathname || ''
-      
+
       // Check time window for API routes that modify data
       if (TIME_WINDOW_ENABLED && url.startsWith('/api/') && !isAllowedPath(url)) {
         if (!isWithinTimeWindow()) {
           const current = getCurrentTimeInTimezone(TIME_WINDOW_TIMEZONE)
           const currentTime = `${String(current.hour).padStart(2, '0')}:${String(current.minute).padStart(2, '0')}`
-          
+
           res.statusCode = 503 // Service Unavailable
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify({
@@ -152,7 +153,7 @@ app.prepare().then(() => {
           return
         }
       }
-      
+
       await handle(req, res, parsedUrl)
     } catch (err) {
       console.error('Error occurred handling', req.url, err)
@@ -160,7 +161,7 @@ app.prepare().then(() => {
       res.end('internal server error')
     }
   })
-  
+
   server.listen(port, hostname, (err) => {
     if (err) {
       console.error('Failed to start server:', err)
@@ -169,12 +170,12 @@ app.prepare().then(() => {
     console.log(`> Ready on http://${hostname}:${port}`)
     console.log('Server is running and waiting for requests...')
   })
-  
+
   // Keep process alive
   server.on('error', (err) => {
     console.error('Server error:', err)
   })
-  
+
 }).catch((err) => {
   console.error('Failed to prepare Next.js app:', err)
   console.error('Error stack:', err.stack)
