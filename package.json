@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "next build",
-    "start": "node server.js",
-    "start:prod": "NODE_ENV=production node server.js",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' next build",
+    "start": "NODE_OPTIONS='--max-old-space-size=4096' node server.js",
+    "start:prod": "NODE_OPTIONS='--max-old-space-size=4096' NODE_ENV=production node server.js",
     "postinstall": "npx playwright install chromium --with-deps || npx playwright install chromium",
     "playwright:install": "npx playwright install chromium",
     "seed": "tsx scripts/seed.ts",
