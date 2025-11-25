@@ -1,0 +1,113 @@
+[
+  {
+    "title": "Login Successful",
+    "message": "Successfully generated token for ARUN.",
+    "type": "success",
+    "link": "/runs",
+    "id": "dc532ff3-274e-49ef-9dd7-192d56b94260",
+    "read": false,
+    "createdAt": "2025-11-25T17:53:16.739Z"
+  },
+  {
+    "title": "Batch run started",
+    "message": "Successfully enqueued 6 active user(s) for login.",
+    "type": "success",
+    "id": "26963535-89ab-4401-825b-ed5d0d6c5105",
+    "read": false,
+    "createdAt": "2025-11-25T17:52:35.395Z"
+  },
+  {
+    "title": "Batch Telegram Sent",
+    "message": "Successfully sent batch report for 6 runs to Telegram.",
+    "type": "success",
+    "id": "cc325073-dbf0-4334-9112-89a367d2fe3b",
+    "read": false,
+    "createdAt": "2025-11-25T17:48:14.390Z"
+  },
+  {
+    "title": "Login Successful",
+    "message": "Successfully generated token for UMA.",
+    "type": "success",
+    "link": "/runs",
+    "id": "e2279aa3-b881-4ba4-8fed-f71f0e2c3498",
+    "read": false,
+    "createdAt": "2025-11-25T17:48:13.594Z"
+  },
+  {
+    "title": "Login Successful",
+    "message": "Successfully generated token for SIGAPPI.",
+    "type": "success",
+    "link": "/runs",
+    "id": "ca93703a-6c79-4679-ae08-de604eab31e2",
+    "read": false,
+    "createdAt": "2025-11-25T17:48:08.902Z"
+  },
+  {
+    "title": "Login Successful",
+    "message": "Successfully generated token for ARUN.",
+    "type": "success",
+    "link": "/runs",
+    "id": "c78792a2-44e8-4b83-b20e-1d6f3798a634",
+    "read": false,
+    "createdAt": "2025-11-25T17:47:39.767Z"
+  },
+  {
+    "title": "Login Successful",
+    "message": "Successfully generated token for RISHU.",
+    "type": "success",
+    "link": "/runs",
+    "id": "23c3fbea-a911-4e31-9195-81990f0c8b9e",
+    "read": false,
+    "createdAt": "2025-11-25T17:47:38.168Z"
+  },
+  {
+    "title": "Login Successful",
+    "message": "Successfully generated token for SP.",
+    "type": "success",
+    "link": "/runs",
+    "id": "d54bc4ef-0699-4323-904b-3d1afba3fd18",
+    "read": false,
+    "createdAt": "2025-11-25T17:47:29.957Z"
+  },
+  {
+    "title": "Login Successful",
+    "message": "Successfully generated token for SACHIN.",
+    "type": "success",
+    "link": "/runs",
+    "id": "e9f851f4-4aa7-4060-ba45-90951d8da08c",
+    "read": false,
+    "createdAt": "2025-11-25T17:47:29.205Z"
+  },
+  {
+    "title": "Batch run started",
+    "message": "Successfully enqueued 6 active user(s) for login.",
+    "type": "success",
+    "id": "1c5b5d6f-095e-4e74-ac38-480ea965ddcc",
+    "read": false,
+    "createdAt": "2025-11-25T17:46:56.788Z"
+  },
+  {
+    "title": "Batch run started",
+    "message": "Successfully enqueued 6 active user(s) for login.",
+    "type": "success",
+    "id": "080a64b4-f140-430d-b569-364eb208049f",
+    "read": false,
+    "createdAt": "2025-11-25T17:42:38.139Z"
+  },
+  {
+    "title": "Batch run started",
+    "message": "Successfully enqueued 6 active user(s) for login.",
+    "type": "success",
+    "id": "efed45d9-eb76-4aae-a599-5149ad7c3a4c",
+    "read": false,
+    "createdAt": "2025-11-25T17:33:50.543Z"
+  },
+  {
+    "title": "Test Notification",
+    "message": "This is a test",
+    "type": "info",
+    "id": "ce833f02-1489-44a9-9e4a-ccfde18d5a3f",
+    "read": true,
+    "createdAt": "2025-11-25T17:29:01.547Z"
+  }
+]

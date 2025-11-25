@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { RunLog } from '@/types'
+import { Send } from 'lucide-react'
 import Header from '../components/Header'
 
 // Format run result for Telegram notification (same as in lib/telegram.ts)
@@ -10,7 +11,7 @@ function formatRunNotification(runLog: RunLog): string {
   const status = runLog.status === 'success' ? '✅' : '❌'
   const statusText = runLog.status === 'success' ? 'SUCCESS' : 'FAILED'
   const duration = (runLog.ms / 1000).toFixed(1)
-  
+
   const time = new Date(runLog.finishedAt).toLocaleString('en-IN', {
     timeZone: 'Asia/Kolkata',
     dateStyle: 'short',
@@ -254,7 +255,8 @@ export default function TelegramPreview() {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .telegram-message b {
           font-weight: 700;
         }
@@ -280,133 +282,136 @@ export default function TelegramPreview() {
         <Header />
         <div className="h-[80px] sm:h-[90px]"></div>
         <div className="p-4 sm:p-6 lg:p-8">
-        <div className="bg-geometric-shapes">
-          <div className="geometric-triangle triangle-1"></div>
-          <div className="geometric-triangle triangle-2"></div>
-          <div className="geometric-triangle triangle-3"></div>
-        </div>
-        <div className="max-w-4xl mx-auto relative z-10">
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold mb-2 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 bg-clip-text text-transparent">Telegram Message Preview</h1>
-          <p className="text-sm sm:text-base text-gray-400">Preview of how notifications appear in Telegram</p>
-        </div>
-
-        {/* Notification Settings */}
-        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6 border-2 border-purple-200">
-          <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-800">🔔 Notification Settings</h2>
-          <div className="space-y-4">
-            {/* Individual Notification Toggle */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <div className="flex-1">
-                <h3 className="text-base font-semibold text-gray-900 mb-1">Individual Notifications</h3>
-                <p className="text-sm text-gray-600">Send a notification after each user run completes</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer ml-4">
-                <input
-                  type="checkbox"
-                  checked={individualEnabled}
-                  onChange={handleIndividualToggle}
-                  disabled={loading || saving}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-              </label>
+          <div className="bg-geometric-shapes">
+            <div className="geometric-triangle triangle-1"></div>
+            <div className="geometric-triangle triangle-2"></div>
+            <div className="geometric-triangle triangle-3"></div>
+          </div>
+          <div className="max-w-4xl mx-auto relative z-10">
+            <div className="mb-6 sm:mb-8">
+              <h1 className="text-2xl sm:text-3xl font-bold mb-2 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 bg-clip-text text-transparent flex items-center gap-3">
+                <Send className="w-8 h-8 text-pink-600" />
+                Telegram Message Preview
+              </h1>
+              <p className="text-sm sm:text-base text-gray-400">Preview of how notifications appear in Telegram</p>
             </div>
 
-            {/* Batch Notification Toggle */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <div className="flex-1">
-                <h3 className="text-base font-semibold text-gray-900 mb-1">Batch Notifications</h3>
-                <p className="text-sm text-gray-600">Send a summary notification when running multiple users</p>
+            {/* Notification Settings */}
+            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6 border-2 border-purple-200">
+              <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-800">🔔 Notification Settings</h2>
+              <div className="space-y-4">
+                {/* Individual Notification Toggle */}
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex-1">
+                    <h3 className="text-base font-semibold text-gray-900 mb-1">Individual Notifications</h3>
+                    <p className="text-sm text-gray-600">Send a notification after each user run completes</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer ml-4">
+                    <input
+                      type="checkbox"
+                      checked={individualEnabled}
+                      onChange={handleIndividualToggle}
+                      disabled={loading || saving}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                  </label>
+                </div>
+
+                {/* Batch Notification Toggle */}
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex-1">
+                    <h3 className="text-base font-semibold text-gray-900 mb-1">Batch Notifications</h3>
+                    <p className="text-sm text-gray-600">Send a summary notification when running multiple users</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer ml-4">
+                    <input
+                      type="checkbox"
+                      checked={batchEnabled}
+                      onChange={handleBatchToggle}
+                      disabled={loading || saving}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                  </label>
+                </div>
+
+                {saving && (
+                  <p className="text-sm text-gray-500 text-center">Saving settings...</p>
+                )}
               </div>
-              <label className="relative inline-flex items-center cursor-pointer ml-4">
-                <input
-                  type="checkbox"
-                  checked={batchEnabled}
-                  onChange={handleBatchToggle}
-                  disabled={loading || saving}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-              </label>
             </div>
 
-            {saving && (
-              <p className="text-sm text-gray-500 text-center">Saving settings...</p>
-            )}
-          </div>
-        </div>
+            {/* Success Notification */}
+            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-600">✅ Success Notification</h2>
+              <div className="bg-blue-50 rounded-lg p-4 border-l-4 border-green-500 mb-4">
+                <div
+                  className="text-sm leading-relaxed telegram-message whitespace-pre-wrap text-gray-900"
+                  dangerouslySetInnerHTML={{ __html: successMessage }}
+                />
+              </div>
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-700 mb-2">
+                  <strong>Raw HTML (as sent to Telegram):</strong>
+                </p>
+                <pre className="text-xs bg-gray-800 text-green-400 p-3 rounded overflow-x-auto whitespace-pre-wrap">
+                  {successMessage}
+                </pre>
+              </div>
+            </div>
 
-        {/* Success Notification */}
-        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
-          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-600">✅ Success Notification</h2>
-          <div className="bg-blue-50 rounded-lg p-4 border-l-4 border-green-500 mb-4">
-            <div 
-              className="text-sm leading-relaxed telegram-message whitespace-pre-wrap text-gray-900"
-              dangerouslySetInnerHTML={{ __html: successMessage }}
-            />
-          </div>
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-700 mb-2">
-              <strong>Raw HTML (as sent to Telegram):</strong>
-            </p>
-            <pre className="text-xs bg-gray-800 text-green-400 p-3 rounded overflow-x-auto whitespace-pre-wrap">
-              {successMessage}
-            </pre>
-          </div>
-        </div>
+            {/* Failed Notification */}
+            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-red-600">❌ Failed Notification</h2>
+              <div className="bg-blue-50 rounded-lg p-4 border-l-4 border-red-500 mb-4">
+                <div
+                  className="text-sm leading-relaxed telegram-message whitespace-pre-wrap text-gray-900"
+                  dangerouslySetInnerHTML={{ __html: failedMessage }}
+                />
+              </div>
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-700 mb-2">
+                  <strong>Raw HTML (as sent to Telegram):</strong>
+                </p>
+                <pre className="text-xs bg-gray-800 text-green-400 p-3 rounded overflow-x-auto whitespace-pre-wrap">
+                  {failedMessage}
+                </pre>
+              </div>
+            </div>
 
-        {/* Failed Notification */}
-        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
-          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-red-600">❌ Failed Notification</h2>
-          <div className="bg-blue-50 rounded-lg p-4 border-l-4 border-red-500 mb-4">
-            <div 
-              className="text-sm leading-relaxed telegram-message whitespace-pre-wrap text-gray-900"
-              dangerouslySetInnerHTML={{ __html: failedMessage }}
-            />
-          </div>
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-700 mb-2">
-              <strong>Raw HTML (as sent to Telegram):</strong>
-            </p>
-            <pre className="text-xs bg-gray-800 text-green-400 p-3 rounded overflow-x-auto whitespace-pre-wrap">
-              {failedMessage}
-            </pre>
-          </div>
-        </div>
+            {/* Batch Notification */}
+            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-blue-600">📊 Batch Results Notification</h2>
+              <div className="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500 mb-4">
+                <div
+                  className="text-sm leading-relaxed telegram-message whitespace-pre-wrap text-gray-900"
+                  dangerouslySetInnerHTML={{ __html: batchMessage }}
+                />
+              </div>
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-700 mb-2">
+                  <strong>Raw HTML (as sent to Telegram):</strong>
+                </p>
+                <pre className="text-xs bg-gray-800 text-green-400 p-3 rounded overflow-x-auto whitespace-pre-wrap">
+                  {batchMessage}
+                </pre>
+              </div>
+            </div>
 
-        {/* Batch Notification */}
-        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
-          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-blue-600">📊 Batch Results Notification</h2>
-          <div className="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500 mb-4">
-            <div 
-              className="text-sm leading-relaxed telegram-message whitespace-pre-wrap text-gray-900"
-              dangerouslySetInnerHTML={{ __html: batchMessage }}
-            />
+            {/* Info Box */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-blue-900 mb-2">ℹ️ About Telegram Notifications</h3>
+              <ul className="list-disc list-inside text-sm text-blue-800 space-y-2">
+                <li>Messages are sent in HTML format with parse_mode: 'HTML'</li>
+                <li>Bold text uses <code className="bg-blue-100 px-1 rounded">&lt;b&gt;</code> tags</li>
+                <li>Code blocks use <code className="bg-blue-100 px-1 rounded">&lt;code&gt;</code> tags</li>
+                <li>Italic text uses <code className="bg-blue-100 px-1 rounded">&lt;i&gt;</code> tags</li>
+                <li>Individual notifications are sent after each user run completes</li>
+                <li>Batch notifications summarize all runs when running multiple users</li>
+              </ul>
+            </div>
           </div>
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-700 mb-2">
-              <strong>Raw HTML (as sent to Telegram):</strong>
-            </p>
-            <pre className="text-xs bg-gray-800 text-green-400 p-3 rounded overflow-x-auto whitespace-pre-wrap">
-              {batchMessage}
-            </pre>
-          </div>
-        </div>
-
-        {/* Info Box */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-6">
-          <h3 className="text-base sm:text-lg font-semibold text-blue-900 mb-2">ℹ️ About Telegram Notifications</h3>
-          <ul className="list-disc list-inside text-sm text-blue-800 space-y-2">
-            <li>Messages are sent in HTML format with parse_mode: 'HTML'</li>
-            <li>Bold text uses <code className="bg-blue-100 px-1 rounded">&lt;b&gt;</code> tags</li>
-            <li>Code blocks use <code className="bg-blue-100 px-1 rounded">&lt;code&gt;</code> tags</li>
-            <li>Italic text uses <code className="bg-blue-100 px-1 rounded">&lt;i&gt;</code> tags</li>
-            <li>Individual notifications are sent after each user run completes</li>
-            <li>Batch notifications summarize all runs when running multiple users</li>
-          </ul>
-        </div>
-        </div>
         </div>
       </div>
     </>

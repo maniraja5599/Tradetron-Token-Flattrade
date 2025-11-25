@@ -1,6 +1,7 @@
 import { RunLog } from '@/types'
 import fs from 'fs'
 import path from 'path'
+import { addNotification } from './notifications'
 
 interface TelegramConfig {
   botToken?: string
@@ -35,12 +36,12 @@ const TELEGRAM_API_URL = 'https://api.telegram.org/bot'
 export async function getTelegramConfig(): Promise<TelegramConfig> {
   const botToken = process.env.TELEGRAM_BOT_TOKEN || ''
   const chatId = process.env.TELEGRAM_CHAT_ID || ''
-  
+
   // Check if Telegram is enabled (default: true if both token and chatId are provided)
-  const enabled = process.env.TELEGRAM_ENABLED !== 'false' && 
-                  botToken.length > 0 && 
-                  chatId.length > 0
-  
+  const enabled = process.env.TELEGRAM_ENABLED !== 'false' &&
+    botToken.length > 0 &&
+    chatId.length > 0
+
   return {
     botToken,
     chatId,
@@ -86,7 +87,7 @@ function formatRunNotification(runLog: RunLog): string {
   const status = runLog.status === 'success' ? '✅' : '❌'
   const statusText = runLog.status === 'success' ? 'SUCCESS' : 'FAILED'
   const duration = (runLog.ms / 1000).toFixed(1)
-  
+
   const time = new Date(runLog.finishedAt).toLocaleString('en-IN', {
     timeZone: 'Asia/Kolkata',
     dateStyle: 'short',
@@ -132,7 +133,7 @@ export async function sendRunNotification(runLog: RunLog): Promise<boolean> {
     }
 
     const config = await getTelegramConfig()
-    
+
     if (!config.enabled) {
       console.log(`[Telegram] Notifications disabled or not configured (token: ${config.botToken ? 'set' : 'missing'}, chatId: ${config.chatId ? 'set' : 'missing'})`)
       return false
@@ -145,13 +146,27 @@ export async function sendRunNotification(runLog: RunLog): Promise<boolean> {
 
     const message = formatRunNotification(runLog)
     const success = await sendTelegramMessage(config.botToken, config.chatId, message)
-    
+
     if (success) {
       console.log(`[Telegram] ✅ Notification sent for user: ${runLog.userName} (${runLog.status})`)
+      // Add app notification for successful Telegram message
+      if (runLog.status === 'success') {
+        await addNotification({
+          title: 'Telegram Message Sent',
+          message: `Successfully sent login status for ${runLog.userName} to Telegram.`,
+          type: 'success'
+        })
+      }
     } else {
       console.log(`[Telegram] ❌ Failed to send notification for user: ${runLog.userName}`)
+      // Add app notification for failed Telegram message
+      await addNotification({
+        title: 'Telegram Message Failed',
+        message: `Failed to send login status for ${runLog.userName} to Telegram. Check bot settings.`,
+        type: 'error'
+      })
     }
-    
+
     return success
   } catch (error: any) {
     console.error(`[Telegram] Error sending notification:`, error.message)
@@ -165,7 +180,7 @@ export async function sendRunNotification(runLog: RunLog): Promise<boolean> {
 export async function sendTelegramNotification(message: string): Promise<boolean> {
   try {
     const config = await getTelegramConfig()
-    
+
     if (!config.enabled || !config.botToken || !config.chatId) {
       return false
     }
@@ -187,7 +202,7 @@ function formatBatchNotification(runLogs: RunLog[], inactiveUsers: string[] = []
 
   let message = `<b>📊 Batch Results</b>\n\n`
   message += `Total: ${total} | ✅ ${successful} | ❌ ${unsuccessful}`
-  
+
   // Add inactive users count if any
   if (inactiveUsers.length > 0) {
     message += ` | ⏸️ ${inactiveUsers.length} inactive`
@@ -259,7 +274,7 @@ export async function sendBatchNotification(runLogs: RunLog[], inactiveUsers: st
     }
 
     const config = await getTelegramConfig()
-    
+
     if (!config.enabled) {
       console.log(`[Telegram] Notifications disabled or not configured (token: ${config.botToken ? 'set' : 'missing'}, chatId: ${config.chatId ? 'set' : 'missing'})`)
       return false
@@ -277,14 +292,26 @@ export async function sendBatchNotification(runLogs: RunLog[], inactiveUsers: st
 
     const message = formatBatchNotification(runLogs, inactiveUsers)
     const success = await sendTelegramMessage(config.botToken, config.chatId, message)
-    
+
     if (success) {
       const inactiveText = inactiveUsers.length > 0 ? ` (${inactiveUsers.length} inactive skipped)` : ''
       console.log(`[Telegram] ✅ Batch notification sent for ${runLogs.length} runs${inactiveText}`)
+      // Add app notification for successful Batch Telegram message
+      await addNotification({
+        title: 'Batch Telegram Sent',
+        message: `Successfully sent batch report for ${runLogs.length} runs to Telegram.`,
+        type: 'success'
+      })
     } else {
       console.log(`[Telegram] ❌ Failed to send batch notification`)
+      // Add app notification for failed Batch Telegram message
+      await addNotification({
+        title: 'Batch Telegram Failed',
+        message: `Failed to send batch report to Telegram. Check bot settings.`,
+        type: 'error'
+      })
     }
-    
+
     return success
   } catch (error: any) {
     console.error(`[Telegram] Error sending batch notification:`, error.message)

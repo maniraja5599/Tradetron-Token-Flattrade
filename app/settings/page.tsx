@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Settings } from 'lucide-react'
 import Header from '../components/Header'
 
 export default function SettingsPage() {
@@ -29,7 +30,7 @@ export default function SettingsPage() {
       setLoading(true)
       const response = await fetch('/api/time-window')
       const data = await response.json()
-      
+
       if (data.success && data.timeWindow) {
         setTimeWindow(data.timeWindow)
         setEnabled(data.enabled !== false)
@@ -113,7 +114,8 @@ export default function SettingsPage() {
         <div className="max-w-7xl mx-auto relative z-10 px-4 sm:px-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
             <div className="flex-1 min-w-0 pr-4">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 bg-clip-text text-transparent flex items-center gap-3">
+                <Settings className="w-8 h-8 text-pink-600" />
                 Settings
               </h1>
               <p className="text-sm sm:text-base text-gray-400">Configure time window and server settings</p>

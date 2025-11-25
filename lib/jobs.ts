@@ -5,6 +5,7 @@ import { loginFlow } from '@/automations/loginFlow'
 import { updateSheetWithRunResult } from '@/lib/googleSheets'
 import { getGoogleSheetsConfig } from './db'
 import { sendRunNotification, sendBatchNotification } from './telegram'
+import { addNotification } from './notifications'
 
 type Job = {
   userId: string
@@ -96,7 +97,7 @@ class JobQueue {
     if (!batch) return
 
     console.log(`[Queue] 📦 Batch ${batchId} complete - sending batch notification for ${batch.runLogs.length} runs`)
-    
+
     // Send batch notification with inactive users info
     try {
       await sendBatchNotification(batch.runLogs, batch.inactiveUsers)
@@ -200,7 +201,24 @@ class JobQueue {
 
       await saveRun(runLog)
       console.log(`[Job] Completed login for user: ${user.name} - ${status}`)
-      
+
+      // Add system notification for login result
+      if (status === 'success') {
+        await addNotification({
+          title: 'Login Successful',
+          message: `Successfully generated token for ${user.name}.`,
+          type: 'success',
+          link: '/runs'
+        })
+      } else {
+        await addNotification({
+          title: 'Login Failed',
+          message: `Login failed for ${user.name}: ${message}`,
+          type: 'error',
+          link: '/runs'
+        })
+      }
+
       // Update Google Sheet with run results (ALWAYS updates for both success and failure)
       // This runs in the finally block, so it executes regardless of login outcome
       try {

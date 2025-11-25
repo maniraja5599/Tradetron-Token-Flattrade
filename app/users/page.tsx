@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { format } from 'date-fns'
 import Link from 'next/link'
 import { User, RunLog } from '@/types'
+import { Users } from 'lucide-react'
 import Header from '../components/Header'
+import { useNotifications } from '@/context/NotificationContext'
 
 function UsersManagementContent() {
   const router = useRouter()
@@ -15,6 +17,7 @@ function UsersManagementContent() {
   const [runs, setRuns] = useState<RunLog[]>([])
   const [loading, setLoading] = useState(true)
   const [resultFilter, setResultFilter] = useState<'all' | 'success' | 'fail'>('all')
+  const { notify } = useNotifications()
 
   useEffect(() => {
     // Set filter from URL parameter
@@ -22,7 +25,8 @@ function UsersManagementContent() {
       setResultFilter(filterParam)
     }
     loadData()
-    const interval = setInterval(loadData, 5000)
+    // Increased polling interval to 15s to reduce load
+    const interval = setInterval(loadData, 15000)
     return () => clearInterval(interval)
   }, [filterParam])
 
@@ -44,10 +48,10 @@ function UsersManagementContent() {
   const handleRunUser = async (userId: string) => {
     try {
       await fetch(`/api/run/${userId}`, { method: 'POST' })
-      alert('Login job enqueued')
+      notify('Login job enqueued', 'The login process has been started for this user.', 'success')
       loadData()
     } catch (error) {
-      alert('Failed to run user')
+      notify('Failed to run user', 'Could not start the login process.', 'error')
     }
   }
 
@@ -56,14 +60,14 @@ function UsersManagementContent() {
     try {
       const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' })
       if (res.ok) {
-        alert('User deleted successfully')
+        notify('User deleted', 'The user has been successfully deleted.', 'success')
         loadData()
       } else {
         const error = await res.json()
-        alert(`Failed to delete user: ${error.error || 'Unknown error'}`)
+        notify('Failed to delete user', error.error || 'Unknown error', 'error')
       }
     } catch (error) {
-      alert('Failed to delete user')
+      notify('Failed to delete user', 'An unexpected error occurred.', 'error')
     }
   }
 
@@ -73,14 +77,14 @@ function UsersManagementContent() {
     try {
       const res = await fetch('/api/users', { method: 'DELETE' })
       if (res.ok) {
-        alert('All users deleted successfully')
+        notify('All users deleted', 'All users have been permanently deleted.', 'success')
         loadData()
       } else {
         const error = await res.json()
-        alert(`Failed to delete all users: ${error.error || 'Unknown error'}`)
+        notify('Failed to delete all users', error.error || 'Unknown error', 'error')
       }
     } catch (error) {
-      alert('Failed to delete all users')
+      notify('Failed to delete all users', 'An unexpected error occurred.', 'error')
     }
   }
 
@@ -91,58 +95,68 @@ function UsersManagementContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ active: !currentActive }),
       })
+      notify('User updated', `User is now ${!currentActive ? 'active' : 'inactive'}.`, 'success')
       loadData()
     } catch (error) {
-      alert('Failed to update user')
+      notify('Failed to update user', 'Could not update user status.', 'error')
     }
   }
 
-  const getLastRun = (userId: string) => {
-    const userRuns = runs.filter(r => r.userId === userId)
-    if (userRuns.length === 0) return null
-    
-    // Sort all runs by startedAt descending (most recent first)
-    const sortedRuns = [...userRuns].sort((a, b) => 
-      new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
-    )
-    
+  // Memoize user statistics to avoid expensive recalculations on every render
+  const userStats = useMemo(() => {
+    const stats = new Map<string, { lastRun: RunLog | null, totalRuns: number, successRate: number }>()
+
     // Get today's date in local timezone for comparison
     const now = new Date()
-    const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    
-    // First, try to find runs from today
-    const todayRuns = sortedRuns.filter(r => {
-      const runDate = new Date(r.startedAt)
-      const runDateLocal = new Date(runDate.getFullYear(), runDate.getMonth(), runDate.getDate())
-      return runDateLocal.getTime() === todayLocal.getTime()
+    const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+
+    users.forEach(user => {
+      const userRuns = runs.filter(r => r.userId === user.id)
+
+      if (userRuns.length === 0) {
+        stats.set(user.id, { lastRun: null, totalRuns: 0, successRate: 0 })
+        return
+      }
+
+      // Sort runs once
+      const sortedRuns = [...userRuns].sort((a, b) =>
+        new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
+      )
+
+      // Calculate Last Run
+      let lastRun = sortedRuns[0]
+      // Try to find run from today
+      const todayRun = sortedRuns.find(r => {
+        const runDate = new Date(r.startedAt)
+        const runDateLocal = new Date(runDate.getFullYear(), runDate.getMonth(), runDate.getDate()).getTime()
+        return runDateLocal === todayLocal
+      })
+      if (todayRun) lastRun = todayRun
+
+      // Calculate Success Rate
+      const successful = userRuns.filter(r => r.status === 'success').length
+      const successRate = Math.round((successful / userRuns.length) * 100)
+
+      stats.set(user.id, {
+        lastRun,
+        totalRuns: userRuns.length,
+        successRate
+      })
     })
-    
-    // If there are runs from today, return the most recent one
-    if (todayRuns.length > 0) {
-      return todayRuns[0]
-    }
-    
-    // Otherwise, return the most recent run overall (even if from a different day)
-    return sortedRuns[0]
-  }
 
-  const getTotalRuns = (userId: string) => {
-    return runs.filter(r => r.userId === userId).length
-  }
+    return stats
+  }, [users, runs])
 
-  const getSuccessRate = (userId: string) => {
-    const userRuns = runs.filter(r => r.userId === userId)
-    if (userRuns.length === 0) return 0
-    const successful = userRuns.filter(r => r.status === 'success').length
-    return Math.round((successful / userRuns.length) * 100)
-  }
+  const filteredUsers = useMemo(() => {
+    return users.filter(user => {
+      if (resultFilter === 'all') return true
+      const stats = userStats.get(user.id)
+      const lastRun = stats?.lastRun
 
-  const filteredUsers = users.filter(user => {
-    if (resultFilter === 'all') return true
-    const lastRun = getLastRun(user.id)
-    if (!lastRun) return resultFilter === 'fail' // Show users with no run today as "unsuccessful"
-    return resultFilter === 'success' ? lastRun.status === 'success' : lastRun.status === 'fail'
-  })
+      if (!lastRun) return resultFilter === 'fail' // Show users with no run today as "unsuccessful"
+      return resultFilter === 'success' ? lastRun.status === 'success' : lastRun.status === 'fail'
+    })
+  }, [users, userStats, resultFilter])
 
   if (loading) {
     return (
@@ -159,202 +173,200 @@ function UsersManagementContent() {
       <Header />
       <div className="h-[80px] sm:h-[90px]"></div>
       <div className="p-4 sm:p-6 lg:p-8">
-      <div className="bg-geometric-shapes">
-        <div className="geometric-triangle triangle-1"></div>
-        <div className="geometric-triangle triangle-2"></div>
-        <div className="geometric-triangle triangle-3"></div>
-        <div className="geometric-triangle triangle-4"></div>
-        <div className="geometric-triangle triangle-5"></div>
-        <div className="geometric-triangle triangle-6"></div>
-        <div className="geometric-triangle triangle-7"></div>
-        <div className="geometric-triangle triangle-8"></div>
-      </div>
-      <div className="max-w-7xl mx-auto relative z-10 px-4 sm:px-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
-          <div className="flex-1 min-w-0 pr-4">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 bg-clip-text text-transparent">
-              User Management
-            </h1>
-            <p className="text-sm sm:text-base text-gray-400">Manage all users and their login credentials</p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 flex-shrink-0 w-full sm:w-auto">
-            <Link
-              href="/"
-              className="bg-gray-200 text-gray-700 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg hover:bg-gray-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-xs sm:text-sm text-center whitespace-nowrap"
-            >
-              ← Back to Dashboard
-            </Link>
-            <button
-              onClick={handleDeleteAll}
-              className="bg-gradient-to-r from-red-600 to-red-700 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg hover:from-red-700 hover:to-red-800 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-xs sm:text-sm text-center whitespace-nowrap"
-            >
-              Delete All
-            </button>
-            <Link
-              href="/users/new"
-              className="bg-gradient-to-r from-green-600 to-green-700 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-xs sm:text-sm text-center whitespace-nowrap"
-            >
-              + Add User
-            </Link>
-          </div>
+        <div className="bg-geometric-shapes">
+          <div className="geometric-triangle triangle-1"></div>
+          <div className="geometric-triangle triangle-2"></div>
+          <div className="geometric-triangle triangle-3"></div>
+          <div className="geometric-triangle triangle-4"></div>
+          <div className="geometric-triangle triangle-5"></div>
+          <div className="geometric-triangle triangle-6"></div>
+          <div className="geometric-triangle triangle-7"></div>
+          <div className="geometric-triangle triangle-8"></div>
         </div>
-
-        {/* Users Table */}
-        <div className="bg-white rounded-lg shadow-lg mb-6 sm:mb-8 border border-gray-200">
-          <div className="p-4 sm:p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
-            <h2 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              All Users ({filteredUsers.length})
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              <span className="text-xs sm:text-sm text-gray-700 mr-2">Filter:</span>
-              <button
-                onClick={() => {
-                  setResultFilter('all')
-                  router.push('/users')
-                }}
-                className={`px-3 py-1 text-sm rounded ${
-                  resultFilter === 'all'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
+        <div className="max-w-7xl mx-auto relative z-10 px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
+            <div className="flex-1 min-w-0 pr-4">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 bg-clip-text text-transparent flex items-center gap-3">
+                <Users className="w-8 h-8 text-pink-600" />
+                User Management
+              </h1>
+              <p className="text-sm sm:text-base text-gray-400">Manage all users and their login credentials</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 flex-shrink-0 w-full sm:w-auto">
+              <Link
+                href="/"
+                className="bg-gray-200 text-gray-700 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg hover:bg-gray-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-xs sm:text-sm text-center whitespace-nowrap"
               >
-                All
-              </button>
+                ← Back to Dashboard
+              </Link>
               <button
-                onClick={() => {
-                  setResultFilter('success')
-                  router.push('/users?filter=success')
-                }}
-                className={`px-3 py-1 text-sm rounded ${
-                  resultFilter === 'success'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
+                onClick={handleDeleteAll}
+                className="bg-gradient-to-r from-red-600 to-red-700 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg hover:from-red-700 hover:to-red-800 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-xs sm:text-sm text-center whitespace-nowrap"
               >
-                Success
+                Delete All
               </button>
-              <button
-                onClick={() => {
-                  setResultFilter('fail')
-                  router.push('/users?filter=fail')
-                }}
-                className={`px-3 py-1 text-sm rounded ${
-                  resultFilter === 'fail'
-                    ? 'bg-red-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
+              <Link
+                href="/users/new"
+                className="bg-gradient-to-r from-green-600 to-green-700 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-xs sm:text-sm text-center whitespace-nowrap"
               >
-                Unsuccess
-              </button>
+                + Add User
+              </Link>
             </div>
           </div>
-          <div className="overflow-x-auto mx-0 sm:-mx-6 lg:mx-0">
-            <table className="w-full min-w-0 sm:min-w-[600px] md:min-w-[800px] table-fixed sm:table-auto" style={{ width: '100%', maxWidth: '100%' }}>
-              <colgroup className="sm:hidden">
-                <col style={{ width: '28%' }} />
-                <col style={{ width: '24%' }} />
-                <col style={{ width: '48%' }} />
-              </colgroup>
-              <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
-                <tr>
-                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
-                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden md:table-cell">Broker Username</th>
-                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Login URL</th>
-                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden sm:table-cell">Last Result</th>
-                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Total Runs</th>
-                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Success Rate</th>
-                  <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredUsers.map((user) => {
-                  const lastRun = getLastRun(user.id)
-                  const totalRuns = getTotalRuns(user.id)
-                  const successRate = getSuccessRate(user.id)
-                  return (
-                    <tr key={user.id} className="hover:bg-blue-50 transition-colors duration-150">
-                      <td className="px-2 sm:px-3 md:px-6 py-2 text-xs sm:text-sm text-gray-900 font-semibold">
-                        {user.name}
-                      </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-2 whitespace-nowrap text-xs text-gray-700 hidden md:table-cell">{user.brokerUsername}</td>
-                      <td className="px-2 sm:px-3 md:px-6 py-2 whitespace-nowrap text-xs text-gray-700 hidden lg:table-cell">
-                        <a
-                          href={user.loginUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-                        >
-                          {user.loginUrl.replace('https://', '')}
-                        </a>
-                      </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-2">
-                        <button
-                          onClick={() => handleToggleActive(user.id, user.active)}
-                          className={`px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${
-                            user.active
+
+          {/* Users Table */}
+          <div className="bg-white rounded-lg shadow-lg mb-6 sm:mb-8 border border-gray-200">
+            <div className="p-4 sm:p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
+              <h2 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                All Users ({filteredUsers.length})
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                <span className="text-xs sm:text-sm text-gray-700 mr-2">Filter:</span>
+                <button
+                  onClick={() => {
+                    setResultFilter('all')
+                    router.push('/users')
+                  }}
+                  className={`px-3 py-1 text-sm rounded ${resultFilter === 'all'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => {
+                    setResultFilter('success')
+                    router.push('/users?filter=success')
+                  }}
+                  className={`px-3 py-1 text-sm rounded ${resultFilter === 'success'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                >
+                  Success
+                </button>
+                <button
+                  onClick={() => {
+                    setResultFilter('fail')
+                    router.push('/users?filter=fail')
+                  }}
+                  className={`px-3 py-1 text-sm rounded ${resultFilter === 'fail'
+                    ? 'bg-red-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                >
+                  Unsuccess
+                </button>
+              </div>
+            </div>
+            <div className="overflow-x-auto mx-0 sm:-mx-6 lg:mx-0">
+              <table className="w-full min-w-0 sm:min-w-[600px] md:min-w-[800px] table-fixed sm:table-auto" style={{ width: '100%', maxWidth: '100%' }}>
+                <colgroup className="sm:hidden">
+                  <col style={{ width: '28%' }} />
+                  <col style={{ width: '24%' }} />
+                  <col style={{ width: '48%' }} />
+                </colgroup>
+                <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
+                  <tr>
+                    <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
+                    <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden md:table-cell">Broker Username</th>
+                    <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Login URL</th>
+                    <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
+                    <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden sm:table-cell">Last Result</th>
+                    <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Total Runs</th>
+                    <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">Success Rate</th>
+                    <th className="px-2 sm:px-3 md:px-6 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {filteredUsers.map((user) => {
+                    const stats = userStats.get(user.id)
+                    const lastRun = stats?.lastRun
+                    const totalRuns = stats?.totalRuns || 0
+                    const successRate = stats?.successRate || 0
+
+                    return (
+                      <tr key={user.id} className="hover:bg-blue-50 transition-colors duration-150">
+                        <td className="px-2 sm:px-3 md:px-6 py-2 text-xs sm:text-sm text-gray-900 font-semibold">
+                          {user.name}
+                        </td>
+                        <td className="px-2 sm:px-3 md:px-6 py-2 whitespace-nowrap text-xs text-gray-700 hidden md:table-cell">{user.brokerUsername}</td>
+                        <td className="px-2 sm:px-3 md:px-6 py-2 whitespace-nowrap text-xs text-gray-700 hidden lg:table-cell">
+                          <a
+                            href={user.loginUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                          >
+                            {user.loginUrl.replace('https://', '')}
+                          </a>
+                        </td>
+                        <td className="px-2 sm:px-3 md:px-6 py-2">
+                          <button
+                            onClick={() => handleToggleActive(user.id, user.active)}
+                            className={`px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${user.active
                               ? 'bg-green-100 text-green-800 hover:bg-green-200'
                               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          } transition-colors`}
-                        >
-                          {user.active ? '✓ Active' : '○ Inactive'}
-                        </button>
-                      </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-2 whitespace-nowrap hidden sm:table-cell">
-                        {lastRun ? (
-                          lastRun.status === 'success' ? (
-                            <span className="text-green-600 font-medium text-xs">✓ Success</span>
+                              } transition-colors`}
+                          >
+                            {user.active ? '✓ Active' : '○ Inactive'}
+                          </button>
+                        </td>
+                        <td className="px-2 sm:px-3 md:px-6 py-2 whitespace-nowrap hidden sm:table-cell">
+                          {lastRun ? (
+                            lastRun.status === 'success' ? (
+                              <span className="text-green-600 font-medium text-xs">✓ Success</span>
+                            ) : (
+                              <span className="text-red-600 font-medium text-xs">✗ Failed</span>
+                            )
                           ) : (
-                            <span className="text-red-600 font-medium text-xs">✗ Failed</span>
-                          )
-                        ) : (
-                          <span className="text-gray-600 text-xs">-</span>
-                        )}
-                      </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-2 whitespace-nowrap text-xs text-gray-700 font-medium hidden lg:table-cell">{totalRuns}</td>
-                      <td className="px-2 sm:px-3 md:px-6 py-2 whitespace-nowrap hidden lg:table-cell">
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-12 sm:w-16 bg-gray-200 rounded-full h-1.5">
-                            <div
-                              className={`h-1.5 rounded-full ${
-                                successRate >= 80 ? 'bg-green-500' : successRate >= 50 ? 'bg-yellow-500' : 'bg-red-500'
-                              }`}
-                              style={{ width: `${successRate}%` }}
-                            ></div>
+                            <span className="text-gray-600 text-xs">-</span>
+                          )}
+                        </td>
+                        <td className="px-2 sm:px-3 md:px-6 py-2 whitespace-nowrap text-xs text-gray-700 font-medium hidden lg:table-cell">{totalRuns}</td>
+                        <td className="px-2 sm:px-3 md:px-6 py-2 whitespace-nowrap hidden lg:table-cell">
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-12 sm:w-16 bg-gray-200 rounded-full h-1.5">
+                              <div
+                                className={`h-1.5 rounded-full ${successRate >= 80 ? 'bg-green-500' : successRate >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                                  }`}
+                                style={{ width: `${successRate}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-xs text-gray-700 font-medium">{successRate}%</span>
                           </div>
-                          <span className="text-xs text-gray-700 font-medium">{successRate}%</span>
-                        </div>
-                      </td>
-                      <td className="px-2 sm:px-3 md:px-6 py-2">
-                        <div className="flex flex-wrap gap-1 min-w-0">
-                          <button
-                            onClick={() => handleRunUser(user.id)}
-                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-1.5 sm:px-2 py-0.5 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
-                          >
-                            Run
-                          </button>
-                          <Link
-                            href={`/users/${user.id}/edit`}
-                            className="text-green-600 hover:text-green-800 hover:bg-green-50 px-1.5 sm:px-2 py-0.5 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
-                          >
-                            View
-                          </Link>
-                          <button
-                            onClick={() => handleDeleteUser(user.id)}
-                            className="text-red-600 hover:text-red-800 hover:bg-red-50 px-1.5 sm:px-2 py-0.5 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+                        </td>
+                        <td className="px-2 sm:px-3 md:px-6 py-2">
+                          <div className="flex flex-wrap gap-1 min-w-0">
+                            <button
+                              onClick={() => handleRunUser(user.id)}
+                              className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-1.5 sm:px-2 py-0.5 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
+                            >
+                              Run
+                            </button>
+                            <Link
+                              href={`/users/${user.id}/edit`}
+                              className="text-green-600 hover:text-green-800 hover:bg-green-50 px-1.5 sm:px-2 py-0.5 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
+                            >
+                              View
+                            </Link>
+                            <button
+                              onClick={() => handleDeleteUser(user.id)}
+                              className="text-red-600 hover:text-red-800 hover:bg-red-50 px-1.5 sm:px-2 py-0.5 rounded text-xs font-semibold transition-all duration-150 whitespace-nowrap"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-      </div>
       </div>
     </div>
   )
