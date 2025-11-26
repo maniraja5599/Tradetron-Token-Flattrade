@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   productionBrowserSourceMaps: false,
+  output: 'standalone',
   eslint: {
     // Warning: This allows production builds to successfully complete even if
     // your project has ESLint errors.
@@ -14,6 +15,8 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   experimental: {
+    workerThreads: false,
+    cpus: 1,
     serverActions: {
       bodySizeLimit: '2mb',
     },

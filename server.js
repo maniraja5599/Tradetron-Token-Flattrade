@@ -70,10 +70,10 @@ process.on('unhandledRejection', (reason, promise) => {
 app.prepare().then(() => {
   console.log('Next.js app prepared successfully')
 
-  // Time window restriction (8:15 AM to 9:00 AM IST)
-  const TIME_WINDOW_ENABLED = process.env.TIME_WINDOW_ENABLED !== 'false' // Enabled by default
-  const TIME_WINDOW_START = process.env.TIME_WINDOW_START || '08:15'
-  const TIME_WINDOW_END = process.env.TIME_WINDOW_END || '09:00'
+  // Time window restriction (Default: Disabled / 24 hours)
+  const TIME_WINDOW_ENABLED = process.env.TIME_WINDOW_ENABLED === 'true' // Disabled by default
+  const TIME_WINDOW_START = process.env.TIME_WINDOW_START || '00:00'
+  const TIME_WINDOW_END = process.env.TIME_WINDOW_END || '23:59'
   const TIME_WINDOW_TIMEZONE = process.env.TIME_WINDOW_TIMEZONE || 'Asia/Kolkata'
 
   console.log('[Server] 🕒 Time Window Configuration:')
@@ -147,6 +147,16 @@ app.prepare().then(() => {
           const current = getCurrentTimeInTimezone(TIME_WINDOW_TIMEZONE)
           const currentTime = `${String(current.hour).padStart(2, '0')}:${String(current.minute).padStart(2, '0')}`
 
+          // Calculate next window for the error message
+          const now = new Date()
+          const [startH, startM] = TIME_WINDOW_START.split(':').map(Number)
+          let nextWindowDate = new Date(now)
+
+          // Set to start time
+          // Note: This is a rough approximation since we're in a specific timezone
+          // but for the message it's better than "Unknown"
+          // Ideally we'd use a library but we want to keep server.js dependency-free
+
           res.statusCode = 503 // Service Unavailable
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify({
@@ -154,6 +164,7 @@ app.prepare().then(() => {
             message: `Server operations are restricted to ${TIME_WINDOW_START} - ${TIME_WINDOW_END} ${TIME_WINDOW_TIMEZONE}. Current time: ${currentTime} ${TIME_WINDOW_TIMEZONE}`,
             currentTime: `${currentTime} ${TIME_WINDOW_TIMEZONE}`,
             allowedWindow: `${TIME_WINDOW_START} - ${TIME_WINDOW_END} ${TIME_WINDOW_TIMEZONE}`,
+            nextWindow: `Tomorrow at ${TIME_WINDOW_START} ${TIME_WINDOW_TIMEZONE}`, // Simplified message
             timeWindowEnabled: true,
           }))
           return

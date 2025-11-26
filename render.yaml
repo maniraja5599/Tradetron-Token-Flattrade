@@ -24,7 +24,7 @@ services:
         value: 1
       # Time Window Configuration (Open by default for Render)
       - key: TIME_WINDOW_ENABLED
-        value: true
+        value: false
       - key: TIME_WINDOW_START
         value: 00:01
       - key: TIME_WINDOW_END

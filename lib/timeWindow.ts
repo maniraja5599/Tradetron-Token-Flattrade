@@ -17,12 +17,12 @@ export interface TimeWindow {
   timezone: string
 }
 
-// Default time window: 8:15 AM to 9:00 AM IST
+// Default time window: 00:00 to 23:59 IST (24 hours)
 const DEFAULT_WINDOW: TimeWindow = {
-  startHour: 8,
-  startMinute: 15,
-  endHour: 9,
-  endMinute: 0,
+  startHour: 0,
+  startMinute: 0,
+  endHour: 23,
+  endMinute: 59,
   timezone: TIMEZONE,
 }
 
@@ -34,7 +34,7 @@ function getTimeWindowSync(): TimeWindow {
   if (process.env.TIME_WINDOW_START && process.env.TIME_WINDOW_END) {
     const [startHour, startMinute] = process.env.TIME_WINDOW_START.split(':').map(Number)
     const [endHour, endMinute] = process.env.TIME_WINDOW_END.split(':').map(Number)
-    
+
     return {
       startHour,
       startMinute,
@@ -43,7 +43,7 @@ function getTimeWindowSync(): TimeWindow {
       timezone: process.env.TIME_WINDOW_TIMEZONE || TIMEZONE,
     }
   }
-  
+
   // Try to read from config file (sync)
   try {
     const configPath = path.join(process.cwd(), 'data', 'config.json')
@@ -57,7 +57,7 @@ function getTimeWindowSync(): TimeWindow {
   } catch {
     // Error reading config file, use default
   }
-  
+
   return DEFAULT_WINDOW
 }
 
@@ -69,7 +69,7 @@ export async function getTimeWindow(): Promise<TimeWindow> {
   if (process.env.TIME_WINDOW_START && process.env.TIME_WINDOW_END) {
     const [startHour, startMinute] = process.env.TIME_WINDOW_START.split(':').map(Number)
     const [endHour, endMinute] = process.env.TIME_WINDOW_END.split(':').map(Number)
-    
+
     return {
       startHour,
       startMinute,
@@ -78,7 +78,7 @@ export async function getTimeWindow(): Promise<TimeWindow> {
       timezone: process.env.TIME_WINDOW_TIMEZONE || TIMEZONE,
     }
   }
-  
+
   // Try to read from config file (async)
   try {
     const configPath = path.join(process.cwd(), 'data', 'config.json')
@@ -89,7 +89,7 @@ export async function getTimeWindow(): Promise<TimeWindow> {
   } catch {
     // Error reading config file, use default
   }
-  
+
   return DEFAULT_WINDOW
 }
 
@@ -100,7 +100,7 @@ export async function isTimeWindowEnabled(): Promise<boolean> {
   try {
     const configPath = path.join(process.cwd(), 'data', 'config.json')
     const configData = await readJsonFile<any>(configPath, {})
-    return configData?.timeWindowEnabled !== false // Default to true if not set
+    return configData?.timeWindowEnabled === true // Default to false if not set
   } catch {
     return true // Default to enabled
   }
@@ -135,7 +135,7 @@ function getCurrentTimeInTimezone(timezone: string): { hour: number; minute: num
     second: '2-digit',
     hour12: false,
   })
-  
+
   const parts = formatter.formatToParts(now)
   return {
     hour: parseInt(parts.find(p => p.type === 'hour')?.value || '0'),
@@ -151,14 +151,14 @@ export function isWithinTimeWindow(): boolean {
   if (!isTimeWindowEnabledSync()) {
     return true
   }
-  
+
   const window = getTimeWindowSync()
   const current = getCurrentTimeInTimezone(window.timezone)
-  
+
   const currentMinutes = current.hour * 60 + current.minute
   const startMinutes = window.startHour * 60 + window.startMinute
   const endMinutes = window.endHour * 60 + window.endMinute
-  
+
   // Handle case where end time is before start time (spans midnight)
   if (endMinutes < startMinutes) {
     // Window spans midnight (e.g., 22:00 to 02:00)
@@ -176,12 +176,12 @@ export function getTimeUntilNextWindow(): number {
   const window = getTimeWindowSync()
   const current = getCurrentTimeInTimezone(window.timezone)
   const now = new Date()
-  
+
   const currentMinutes = current.hour * 60 + current.minute
   const startMinutes = window.startHour * 60 + window.startMinute
-  
+
   let nextWindowStart = new Date(now)
-  
+
   if (currentMinutes < startMinutes) {
     // Window is later today
     nextWindowStart.setUTCHours(window.startHour, window.startMinute, 0, 0)
@@ -196,7 +196,7 @@ export function getTimeUntilNextWindow(): number {
     nextWindowStart.setUTCHours(nextWindowStart.getUTCHours() - 5)
     nextWindowStart.setUTCMinutes(nextWindowStart.getUTCMinutes() - 30)
   }
-  
+
   return nextWindowStart.getTime() - now.getTime()
 }
 
@@ -206,18 +206,18 @@ export function getTimeUntilNextWindow(): number {
 export function getTimeWindowStatus(): { allowed: boolean; message: string; nextWindow?: string } {
   const window = getTimeWindowSync()
   const allowed = isWithinTimeWindow()
-  
+
   if (allowed) {
     return {
       allowed: true,
       message: `Server is active (within time window: ${String(window.startHour).padStart(2, '0')}:${String(window.startMinute).padStart(2, '0')} - ${String(window.endHour).padStart(2, '0')}:${String(window.endMinute).padStart(2, '0')} ${window.timezone})`,
     }
   }
-  
+
   const timeUntil = getTimeUntilNextWindow()
   const hours = Math.floor(timeUntil / (1000 * 60 * 60))
   const minutes = Math.floor((timeUntil % (1000 * 60 * 60)) / (1000 * 60))
-  
+
   const nextWindowTime = new Date(Date.now() + timeUntil)
   const nextWindowStr = nextWindowTime.toLocaleString('en-US', {
     timeZone: window.timezone,
@@ -227,7 +227,7 @@ export function getTimeWindowStatus(): { allowed: boolean; message: string; next
     month: '2-digit',
     year: 'numeric',
   })
-  
+
   return {
     allowed: false,
     message: `Server is in sleep mode (outside time window). Next window opens in ${hours}h ${minutes}m`,

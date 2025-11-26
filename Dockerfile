@@ -31,7 +31,7 @@ RUN npm ci
 # RUN npx playwright install-deps chromium || true
 
 # Set Node.js memory limit for build and runtime
-ENV NODE_OPTIONS="--max-old-space-size=4096"
+# ENV NODE_OPTIONS="--max-old-space-size=4096"
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Copy application files
