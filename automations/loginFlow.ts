@@ -39,7 +39,7 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
   let browser: Browser | null = null
   let context: BrowserContext | null = null
   let page: Page | null = null
-  
+
   const artifactDir = path.join(
     process.cwd(),
     'artifacts',
@@ -67,7 +67,7 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
     } catch (error) {
       return {
         status: 'fail',
-        message: isDOB 
+        message: isDOB
           ? 'Invalid DOB format. Expected DDMMYYYY (8 digits).'
           : 'Invalid TOTP secret? Check your authenticator\'s base32 key.',
       }
@@ -79,11 +79,11 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
     // Launch browser
     // Check both CHROMIUM_EXECUTABLE_PATH and PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
     const chromiumExecutablePath = process.env.CHROMIUM_EXECUTABLE_PATH || process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
-    
+
     const launchOptions: any = {
       headless: headful ? false : (process.env.HEADLESS !== 'false'),
       args: [
-        '--no-sandbox', 
+        '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
@@ -111,29 +111,33 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
         '--enable-automation',
         '--password-store=basic',
         '--use-mock-keychain',
+        // Low memory optimizations
+        '--disable-site-isolation-trials',
+        '--no-zygote',
+        '--renderer-process-limit=1',
       ],
     }
-    
+
     // Use system Chromium if path is provided
     if (chromiumExecutablePath) {
       try {
         const fs = require('fs')
         const path = require('path')
         const isWindows = process.platform === 'win32'
-        
+
         // Try multiple possible paths
         // On Windows: only check the provided path
         // On Linux/Alpine: check Linux paths
-        const possiblePaths = isWindows 
+        const possiblePaths = isWindows
           ? [chromiumExecutablePath]
           : [
-              chromiumExecutablePath,
-              '/usr/bin/chromium',
-              '/usr/bin/chromium-browser',
-              '/usr/lib/chromium/chromium',
-              '/usr/lib/chromium/chromium-browser'
-            ]
-        
+            chromiumExecutablePath,
+            '/usr/bin/chromium',
+            '/usr/bin/chromium-browser',
+            '/usr/lib/chromium/chromium',
+            '/usr/lib/chromium/chromium-browser'
+          ]
+
         let foundPath: string | null = null
         for (const testPath of possiblePaths) {
           try {
@@ -161,7 +165,7 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
             continue
           }
         }
-        
+
         if (foundPath) {
           launchOptions.executablePath = foundPath
           console.log(`[LoginFlow] Using system Chromium: ${foundPath}`)
@@ -177,14 +181,14 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
       }
     } else {
       console.log(`[LoginFlow] CHROMIUM_EXECUTABLE_PATH not set, using Playwright's default browser`)
-      
+
       // Try to get Playwright's bundled browser path
       try {
         const playwrightPath = chromium.executablePath()
         if (playwrightPath) {
           const fs = require('fs')
           const path = require('path')
-          
+
           if (fs.existsSync(playwrightPath)) {
             // Check if file is executable (on Unix systems)
             if (process.platform !== 'win32') {
@@ -204,7 +208,7 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
                 }
               }
             }
-            
+
             launchOptions.executablePath = playwrightPath
             console.log(`[LoginFlow] ✅ Using Playwright's bundled browser: ${playwrightPath}`)
           } else {
@@ -219,14 +223,14 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
         console.warn(`[LoginFlow] ⚠️ Will attempt to launch without explicit path`)
       }
     }
-    
+
     console.log(`[LoginFlow] Launching browser with options:`, {
       headless: launchOptions.headless,
       executablePath: launchOptions.executablePath || 'default (Playwright will find it)',
       argsCount: launchOptions.args.length,
       platform: process.platform
     })
-    
+
     try {
       browser = await chromium.launch(launchOptions)
       console.log(`[LoginFlow] ✅ Browser launched successfully`)
@@ -239,7 +243,7 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
         headless: launchOptions.headless,
         platform: process.platform
       })
-      
+
       // Provide helpful error message
       let errorMessage = `Browser launch failed: ${launchError.message}`
       if (launchError.message.includes('spawn') || launchError.message.includes('ENOENT')) {
@@ -248,7 +252,7 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
         errorMessage += '2. Check Railway build logs to ensure "npm run playwright:install chromium" completed\n'
         errorMessage += '3. The browser may need to be installed at runtime (this is attempted automatically)'
       }
-      
+
       throw new Error(errorMessage)
     }
 
@@ -288,7 +292,7 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
     }
     // Wait for page to fully load and stabilize after redirect
     await page.waitForTimeout(5000) // Wait for redirect and page to fully load
-    
+
     // Wait for page to be ready - try multiple strategies
     try {
       // Strategy 1: Wait for network idle
@@ -296,10 +300,10 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
     } catch (error) {
       // Continue even if networkidle doesn't complete
     }
-    
+
     // Strategy 2: Wait for DOM to be stable
     await page.waitForTimeout(2000) // Additional wait for dynamic content
-    
+
     // Wait for login form to be visible - try multiple selectors
     let formDetected = false
     const formSelectors = [
@@ -312,7 +316,7 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
       'form',
       'button[type="submit"]'
     ]
-    
+
     for (const selector of formSelectors) {
       try {
         await page.waitForSelector(selector, { timeout: 5000, state: 'visible' })
@@ -323,7 +327,7 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
         continue
       }
     }
-    
+
     if (!formDetected) {
       // Last attempt: check if any input exists (even if not immediately visible)
       const hasAnyInput = await page.locator('input').count() > 0
@@ -338,7 +342,7 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
     // Fill username - try multiple approaches
     console.log(`[LoginFlow] Filling username: ${brokerUsername}`)
     let usernameFilled = false
-    
+
     // First try: Find first visible text input
     try {
       const textInputs = await page.locator('input[type="text"]').all()
@@ -559,7 +563,7 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
     // Wait for navigation to complete and redirect back to Tradetron
     await page.waitForLoadState('networkidle', { timeout: 20000 })
     await page.waitForTimeout(3000) // Wait for Tradetron redirect
-    
+
     // Check if there's another redirect (some pages redirect again after showing error)
     try {
       await page.waitForLoadState('networkidle', { timeout: 5000 })
@@ -580,7 +584,7 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
     console.log(`[LoginFlow] Page title: ${pageTitle}`)
     console.log(`[LoginFlow] Page text length: ${pageText.length} chars`)
     console.log(`[LoginFlow] Page text sample: ${pageText.substring(0, 300)}...`)
-    
+
     // Check for visible error messages on the page (not just in text)
     let visibleErrors: string[] = []
     try {
@@ -618,10 +622,10 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
 
     // IMPORTANT: Check for SUCCESS indicators FIRST before checking for errors
     // This prevents false negatives where success pages have error-related words
-    
+
     // Check for explicit success messages in page content (highest priority)
     // Also check if page text contains just "Success" (common on success pages)
-    const hasExplicitSuccessText = 
+    const hasExplicitSuccessText =
       lowerPageText.includes('token generated successfully') ||
       (lowerPageText.includes('success') && (lowerPageText.includes('token') || lowerPageText.includes('generated'))) ||
       lowerPageContent.includes('token generated successfully') ||
@@ -630,16 +634,16 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
       // OR if page text is primarily just "Success" (common on success pages)
       (pageText.trim().toLowerCase().includes('success') && finalUrl.includes('sid=')) ||
       (pageText.trim().toLowerCase() === 'success' || pageText.trim().toLowerCase().startsWith('success'))
-    
+
     // Check for success URLs
-    const hasFinalSuccessUrl = 
+    const hasFinalSuccessUrl =
       (finalUrl.includes('tradetron.tech') && (finalUrl.includes('/success') || finalUrl.includes('token=') || finalUrl.includes('sid='))) ||
       (finalUrl.includes('flattrade.broker.tradetron.tech') && finalUrl.includes('/success')) ||
       (finalUrl.includes('tradetron') && finalUrl.includes('success'))
-    
+
     const hasSuccessUrl = hasFinalSuccessUrl ||
       (finalUrl.includes('auth.flattrade.in') && finalUrl.includes('sid=') && (hasExplicitSuccessText || pageText.trim().toLowerCase().includes('success')))
-    
+
     // If we have strong success indicators, treat as success immediately
     if (hasExplicitSuccessText || hasSuccessUrl) {
       console.log(`[LoginFlow] ✅ Strong success indicators detected!`)
@@ -647,27 +651,27 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
       console.log(`[LoginFlow] - Success URL: ${hasSuccessUrl}`)
       console.log(`[LoginFlow] - Final URL: ${finalUrl}`)
       console.log(`[LoginFlow] - Page text sample: ${pageText.substring(0, 200)}`)
-      
+
       // Verify we're NOT still on the login page (no sid= or token=)
-      const isStillOnLoginPage = 
-        finalUrl.includes('auth') && 
+      const isStillOnLoginPage =
+        finalUrl.includes('auth') &&
         (finalUrl.includes('flattrade') || finalUrl.includes('login')) &&
         !finalUrl.includes('sid=') &&
         !finalUrl.includes('token=')
-      
+
       // If we have sid= in URL and success text, it's definitely a success
       // OR if we have success URL pattern, it's a success
       const hasSessionId = finalUrl.includes('sid=')
       const hasToken = finalUrl.includes('token=')
-      
+
       // Return success if:
       // 1. We have a session ID or token in URL AND success text, OR
       // 2. We have a final success URL, OR
       // 3. We're not on login page and have explicit success text
-      if (hasFinalSuccessUrl || 
-          (hasSessionId && hasExplicitSuccessText) ||
-          (hasToken && hasExplicitSuccessText) ||
-          (!isStillOnLoginPage && hasExplicitSuccessText && (hasSessionId || hasToken || finalUrl.includes('tradetron')))) {
+      if (hasFinalSuccessUrl ||
+        (hasSessionId && hasExplicitSuccessText) ||
+        (hasToken && hasExplicitSuccessText) ||
+        (!isStillOnLoginPage && hasExplicitSuccessText && (hasSessionId || hasToken || finalUrl.includes('tradetron')))) {
         console.log(`[LoginFlow] ✅ Returning success!`)
         console.log(`[LoginFlow] - hasFinalSuccessUrl: ${hasFinalSuccessUrl}`)
         console.log(`[LoginFlow] - hasSessionId: ${hasSessionId}, hasToken: ${hasToken}`)
@@ -685,41 +689,41 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
         console.log(`[LoginFlow] - hasExplicitSuccessText: ${hasExplicitSuccessText}`)
       }
     }
-    
+
     // Now check for ERROR messages (only if we didn't find strong success indicators)
     // Filter out success messages that might be in error-styled elements
     const realVisibleErrors = visibleErrors.filter(err => {
       const lowerErr = err.toLowerCase()
       // Don't treat success messages as errors
-      return !lowerErr.includes('token generated successfully') && 
-             !(lowerErr.includes('success') && (lowerErr.includes('token') || lowerErr.includes('generated'))) &&
-             !lowerErr.includes('success')
+      return !lowerErr.includes('token generated successfully') &&
+        !(lowerErr.includes('success') && (lowerErr.includes('token') || lowerErr.includes('generated'))) &&
+        !lowerErr.includes('success')
     })
-    
+
     if (realVisibleErrors.length > 0) {
       const errorMessage = realVisibleErrors[0] || 'Authentication failed - Error detected on page'
       console.log(`[LoginFlow] ❌ Visible error detected: ${errorMessage}`)
       throw new Error(errorMessage)
     }
-    
+
     // Check for error hints in page content
     const hasErrorHints = selectors.errorHints.some(hint => {
       const lowerHint = hint.toLowerCase()
       return lowerPageText.includes(lowerHint) ||
-             lowerPageContent.includes(lowerHint) ||
-             lowerPageTitle.includes(lowerHint) ||
-             finalUrl.toLowerCase().includes('error') ||
-             finalUrl.toLowerCase().includes('fail')
+        lowerPageContent.includes(lowerHint) ||
+        lowerPageTitle.includes(lowerHint) ||
+        finalUrl.toLowerCase().includes('error') ||
+        finalUrl.toLowerCase().includes('fail')
     })
-    
+
     // Only treat as error if we have error hints AND no success indicators
     // CRITICAL: If page shows "Success" text, NEVER treat it as an error
     if (hasErrorHints && !hasExplicitSuccessText && !hasSuccessUrl) {
       // Double-check: if page text is primarily "Success", don't treat as error
       const pageTextTrimmed = pageText.trim().toLowerCase()
-      if (pageTextTrimmed === 'success' || 
-          pageTextTrimmed.startsWith('success') ||
-          (pageTextTrimmed.includes('success') && finalUrl.includes('sid='))) {
+      if (pageTextTrimmed === 'success' ||
+        pageTextTrimmed.startsWith('success') ||
+        (pageTextTrimmed.includes('success') && finalUrl.includes('sid='))) {
         console.log(`[LoginFlow] ⚠️ Error hints found but page shows "Success" - treating as success`)
         // Even if we have error hints, if page shows Success with sid=, it's a success
         if (finalUrl.includes('sid=') || finalUrl.includes('token=')) {
@@ -731,7 +735,7 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
           }
         }
       }
-      
+
       console.log(`[LoginFlow] ❌ Error detected in page content!`)
       // Try to extract the actual error message
       let errorMessage = 'Authentication failed - Error detected on page'
@@ -756,14 +760,14 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
                 // Don't use success messages as error messages
                 const lowerErrorText = errorText.toLowerCase().trim()
                 // If the error text is just "Success" or starts with "Success", ignore it
-                if (lowerErrorText === 'success' || 
-                    lowerErrorText.startsWith('success') ||
-                    lowerErrorText.includes('token generated successfully')) {
+                if (lowerErrorText === 'success' ||
+                  lowerErrorText.startsWith('success') ||
+                  lowerErrorText.includes('token generated successfully')) {
                   console.log(`[LoginFlow] ⚠️ Ignoring "Success" text found in error element`)
                   continue // Skip this error text, look for a real error
                 }
-                if (!lowerErrorText.includes('success') && 
-                    !lowerErrorText.includes('token generated')) {
+                if (!lowerErrorText.includes('success') &&
+                  !lowerErrorText.includes('token generated')) {
                   errorMessage = errorText.trim()
                   console.log(`[LoginFlow] Found error message: ${errorMessage}`)
                   break
@@ -777,10 +781,10 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
       } catch (e) {
         // Could not extract specific error, use generic message
       }
-      
+
       // Final check: if error message is just "Success", don't throw error
       if (errorMessage.trim().toLowerCase() === 'success' ||
-          errorMessage.trim().toLowerCase().startsWith('success')) {
+        errorMessage.trim().toLowerCase().startsWith('success')) {
         console.log(`[LoginFlow] ⚠️ Error message is "Success" - this is likely a false positive`)
         // If we have sid= in URL, treat as success
         if (finalUrl.includes('sid=') || finalUrl.includes('token=')) {
@@ -794,17 +798,17 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
         // Otherwise, use generic error message instead of "Success"
         errorMessage = 'Authentication failed - Could not verify success'
       }
-      
+
       throw new Error(errorMessage)
     }
 
     // If we got here, we didn't find strong success indicators and no errors were thrown
     // This means we're in an ambiguous state - check if we're on intermediate auth page
-    const isIntermediateAuthPage = 
-      finalUrl.includes('auth.flattrade.in') && 
+    const isIntermediateAuthPage =
+      finalUrl.includes('auth.flattrade.in') &&
       finalUrl.includes('sid=') &&
       !finalUrl.includes('tradetron.tech')
-    
+
     // Additional check: If we're on intermediate auth page, wait a bit more to see if we get final redirect
     // (hasFinalSuccessUrl is already checked above, so if we're here it wasn't a final success URL)
     if (isIntermediateAuthPage) {
@@ -816,7 +820,7 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
           console.log(`[LoginFlow] Got final redirect to: ${updatedUrl}`)
           // Re-check with updated URL
           const updatedPageText = await page.textContent('body') || ''
-          const updatedHasError = selectors.errorHints.some(hint => 
+          const updatedHasError = selectors.errorHints.some(hint =>
             updatedPageText.toLowerCase().includes(hint.toLowerCase())
           )
           if (!updatedHasError && updatedUrl.includes('tradetron.tech')) {
@@ -835,16 +839,16 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
 
     // If we reach here, we couldn't determine success or failure definitively
     // Check if we're still on the login page (credentials might be wrong)
-    const isStillOnLoginPage = 
-      finalUrl.includes('auth') && 
+    const isStillOnLoginPage =
+      finalUrl.includes('auth') &&
       (finalUrl.includes('flattrade') || finalUrl.includes('login')) &&
       !finalUrl.includes('sid=') &&
       !finalUrl.includes('token=')
-    
+
     if (isStillOnLoginPage) {
       throw new Error('Authentication failed - Still on login page. Check username, password, or DOB.')
     }
-    
+
     // Default to failure if we can't determine success
     throw new Error('Login verification failed - URL or content did not match success criteria')
   } catch (error: any) {
@@ -857,18 +861,18 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
       contextExists: context !== null,
       pageExists: page !== null
     })
-    
+
     // Save artifacts on failure
     try {
       await fs.mkdir(artifactDir, { recursive: true })
-      
+
       if (page && !page.isClosed()) {
         try {
           const screenshot = await page.screenshot({ fullPage: true }).catch(() => null)
           if (screenshot) {
             await fs.writeFile(path.join(artifactDir, 'screenshot.png'), screenshot)
           }
-          
+
           const html = await page.content().catch(() => null)
           if (html) {
             await fs.writeFile(path.join(artifactDir, 'page.html'), html)
@@ -877,7 +881,7 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
           console.error(`[LoginFlow] Failed to capture page artifacts:`, pageError)
         }
       }
-      
+
       // Save error log
       const errorLog = {
         timestamp: new Date().toISOString(),
@@ -893,7 +897,7 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
         }
       }
       await fs.writeFile(
-        path.join(artifactDir, 'error.json'), 
+        path.join(artifactDir, 'error.json'),
         JSON.stringify(errorLog, null, 2)
       )
     } catch (artifactError) {
@@ -916,7 +920,7 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
     } catch (e) {
       console.error(`[LoginFlow] Error closing context:`, e)
     }
-    
+
     try {
       if (browser && browser.isConnected()) {
         await browser.close()

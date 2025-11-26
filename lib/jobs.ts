@@ -118,8 +118,13 @@ class JobQueue {
       if (!job) break
 
       this.running.add(job.userId)
-      this.runJob(job).finally(() => {
+      this.runJob(job).finally(async () => {
         this.running.delete(job.userId)
+        // Add delay to allow GC and prevent memory spikes
+        if (process.env.NODE_ENV === 'production') {
+          console.log('[Queue] ⏳ Waiting 5s for GC before next job...')
+          await new Promise(resolve => setTimeout(resolve, 5000))
+        }
         this.process()
       })
     }
