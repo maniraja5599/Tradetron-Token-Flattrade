@@ -63,7 +63,7 @@ async function ensurePlaywrightBrowsers() {
       }
     })
     console.log('[Init] ✅ Playwright browsers installed successfully')
-    
+
     // Verify installation after install
     try {
       const { chromium } = require('playwright')
@@ -122,7 +122,7 @@ async function autoSyncFromGoogleSheets() {
 
     // Fetch data from Google Sheets
     let values: string[][] = []
-    
+
     if (serviceAccountKey || serviceAccountKeyPath) {
       // Use service account
       let credentials: any
@@ -141,19 +141,19 @@ async function autoSyncFromGoogleSheets() {
           credentials = JSON.parse(keyToParse)
         }
       }
-      
+
       const auth = new google.auth.JWT({
         email: credentials.client_email,
         key: credentials.private_key,
         scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
       })
-      
+
       const response = await sheets.spreadsheets.values.get({
         auth,
         spreadsheetId: sheetId,
         range: defaultRange,
       })
-      
+
       values = (response.data.values as string[][]) || []
     } else {
       // Use API key
@@ -162,7 +162,7 @@ async function autoSyncFromGoogleSheets() {
         spreadsheetId: sheetId,
         range: defaultRange,
       })
-      
+
       values = (response.data.values as string[][]) || []
     }
 
@@ -173,13 +173,13 @@ async function autoSyncFromGoogleSheets() {
 
     // Parse headers (first row)
     const headers = values[0].map(h => h?.trim().toLowerCase() || '')
-    
+
     // Find column indices (case-insensitive matching)
     const nameCol = headers.findIndex(h => h.includes('name') || h.includes('user'))
     const tradetronCol = headers.findIndex(h => h.includes('tradetron') || h.includes('tt id') || h.includes('tradetron id'))
-    const brokerCol = headers.findIndex(h => 
-      h.includes('broker') || 
-      h.includes('username') || 
+    const brokerCol = headers.findIndex(h =>
+      h.includes('broker') ||
+      h.includes('username') ||
       h.includes('user id') ||
       h.includes('flattrade') ||
       h.includes('flattrade id') ||
@@ -187,13 +187,13 @@ async function autoSyncFromGoogleSheets() {
     )
     const passwordCol = headers.findIndex(h => h.includes('password') || h.includes('pwd'))
     const dobCol = headers.findIndex(h => (h.includes('dob') || h.includes('date of birth') || h.includes('birth')) && !h.includes('totp'))
-    const totpKeyCol = headers.findIndex(h => 
-      (h.includes('totp key') || h.includes('totpkey')) || 
+    const totpKeyCol = headers.findIndex(h =>
+      (h.includes('totp key') || h.includes('totpkey')) ||
       (h.includes('totp') && !h.includes('dob') && !h.includes('secret or'))
     )
-    const totpCol = headers.findIndex(h => 
-      (h.includes('totp') || h.includes('otp') || h.includes('2fa') || h.includes('secret')) && 
-      !h.includes('key') && 
+    const totpCol = headers.findIndex(h =>
+      (h.includes('totp') || h.includes('otp') || h.includes('2fa') || h.includes('secret')) &&
+      !h.includes('key') &&
       !h.includes('dob')
     )
     const statusCol = headers.findIndex(h => h.includes('status') || h.includes('state'))
@@ -243,7 +243,7 @@ async function autoSyncFromGoogleSheets() {
       // If both TOTP KEY and DOB are filled, use TOTP KEY
       let totpOrDOB = ''
       let isDOB = false
-      
+
       if (totpKey) {
         // TOTP KEY is present - use it (not DOB)
         totpOrDOB = totpKey
@@ -320,12 +320,12 @@ async function autoSyncFromGoogleSheets() {
 export async function initializeApp() {
   try {
     await ensureDirectories()
-    
+
     // Ensure Playwright browsers are installed (with timeout to prevent blocking too long)
     try {
       await Promise.race([
         ensurePlaywrightBrowsers(),
-        new Promise((_, reject) => 
+        new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Browser installation timeout')), 120000) // 2 min timeout
         )
       ])
@@ -337,7 +337,7 @@ export async function initializeApp() {
         console.error('[Init] ⚠️ Playwright browser check failed:', error.message)
       }
     }
-    
+
     // Check if this is first run (no users exist)
     const users = await getUsers()
     if (users.length === 0) {
@@ -350,8 +350,12 @@ export async function initializeApp() {
     } else {
       console.log(`[Init] ✅ Found ${users.length} existing user(s) - skipping auto-sync`)
     }
-    
-    await startScheduler()
+
+    // Delay scheduler start to allow server to stabilize and bind port
+    setTimeout(async () => {
+      await startScheduler()
+      console.log('[Init] ✅ Scheduler started (delayed)')
+    }, 10000)
     console.log('[Init] ✅ Application initialized successfully')
   } catch (error: any) {
     console.error('[Init] ❌ Critical error during initialization:', error)

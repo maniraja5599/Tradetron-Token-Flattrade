@@ -18,7 +18,7 @@ services:
         value: 1
       # Override Dockerfile's 4GB limit to fit Render Free Tier (512MB)
       - key: NODE_OPTIONS
-        value: --max-old-space-size=460
+        value: --max-old-space-size=256
       # Limit concurrency to 1 to save memory on free tier
       - key: MAX_CONCURRENCY
         value: 1
