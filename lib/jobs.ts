@@ -280,6 +280,47 @@ class JobQueue {
       maxConcurrency: this.maxConcurrency,
     }
   }
+
+  /**
+   * Get batch progress information
+   */
+  getBatchProgress(batchId: string): { completed: number; total: number; percentage: number; active: boolean } | null {
+    const batch = this.activeBatches.get(batchId)
+    if (!batch) return null
+
+    const percentage = batch.expectedCount > 0 
+      ? Math.round((batch.runLogs.length / batch.expectedCount) * 100)
+      : 0
+
+    return {
+      completed: batch.runLogs.length,
+      total: batch.expectedCount,
+      percentage: Math.min(100, percentage),
+      active: true,
+    }
+  }
+
+  /**
+   * Get all active batches with their progress
+   */
+  getAllBatchProgress(): Array<{ batchId: string; completed: number; total: number; percentage: number }> {
+    const batches: Array<{ batchId: string; completed: number; total: number; percentage: number }> = []
+    
+    for (const [batchId, batch] of this.activeBatches.entries()) {
+      const percentage = batch.expectedCount > 0 
+        ? Math.round((batch.runLogs.length / batch.expectedCount) * 100)
+        : 0
+
+      batches.push({
+        batchId,
+        completed: batch.runLogs.length,
+        total: batch.expectedCount,
+        percentage: Math.min(100, percentage),
+      })
+    }
+
+    return batches
+  }
 }
 
 // Singleton instance
@@ -299,5 +340,13 @@ export function enqueueJob(job: Job): void {
 
 export function startBatch(batchId: string, expectedCount: number): void {
   getJobQueue().startBatch(batchId, expectedCount)
+}
+
+export function getBatchProgress(batchId: string) {
+  return getJobQueue().getBatchProgress(batchId)
+}
+
+export function getAllBatchProgress() {
+  return getJobQueue().getAllBatchProgress()
 }
 
