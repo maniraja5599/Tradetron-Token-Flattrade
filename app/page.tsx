@@ -28,6 +28,13 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null)
   const [currentBatchId, setCurrentBatchId] = useState<string | null>(null)
   const batchRefreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const [loadingSteps, setLoadingSteps] = useState({
+    users: false,
+    runs: false,
+    health: false,
+    schedule: false,
+  })
+  const [loadingProgress, setLoadingProgress] = useState(0)
   const { notify } = useNotifications()
 
   useEffect(() => {
@@ -115,6 +122,13 @@ export default function Dashboard() {
   const loadData = async () => {
     try {
       setError(null)
+      
+      // Reset loading steps for initial load
+      if (loading) {
+        setLoadingSteps({ users: false, runs: false, health: false, schedule: false })
+        setLoadingProgress(0)
+      }
+      
       // Add timeout to prevent indefinite loading on cold starts
       const controller = new AbortController()
       const timeoutId = setTimeout(() => {
@@ -122,42 +136,93 @@ export default function Dashboard() {
       }, 30000) // 30 second timeout
 
       try {
-        const [usersRes, runsRes, healthRes, scheduleRes] = await Promise.all([
-          fetch('/api/users', { signal: controller.signal }),
-          fetch('/api/runs?limit=500', { signal: controller.signal }), // Increased limit to ensure all recent runs are fetched
-          fetch('/api/health', { signal: controller.signal }),
-          fetch('/api/schedule', { signal: controller.signal }),
-        ])
+        // Load data with progress tracking
+        let completedSteps = 0
+        const totalSteps = 4
+        
+        const updateProgress = () => {
+          completedSteps++
+          const progress = Math.round((completedSteps / totalSteps) * 100)
+          setLoadingProgress(progress)
+        }
+        
+        const promises = [
+          fetch('/api/users', { signal: controller.signal }).then(async (res) => {
+            if (res.ok) {
+              setLoadingSteps(prev => ({ ...prev, users: true }))
+              updateProgress()
+              return { type: 'users', data: await res.json() }
+            }
+            updateProgress()
+            return { type: 'users', data: null }
+          }),
+          fetch('/api/runs?limit=500', { signal: controller.signal }).then(async (res) => {
+            if (res.ok) {
+              setLoadingSteps(prev => ({ ...prev, runs: true }))
+              updateProgress()
+              return { type: 'runs', data: await res.json() }
+            }
+            updateProgress()
+            return { type: 'runs', data: null }
+          }),
+          fetch('/api/health', { signal: controller.signal }).then(async (res) => {
+            if (res.ok) {
+              setLoadingSteps(prev => ({ ...prev, health: true }))
+              updateProgress()
+              return { type: 'health', data: await res.json() }
+            }
+            updateProgress()
+            return { type: 'health', data: null }
+          }),
+          fetch('/api/schedule', { signal: controller.signal }).then(async (res) => {
+            if (res.ok) {
+              setLoadingSteps(prev => ({ ...prev, schedule: true }))
+              updateProgress()
+              return { type: 'schedule', data: await res.json() }
+            }
+            updateProgress()
+            return { type: 'schedule', data: null }
+          }),
+        ]
 
+        const results = await Promise.all(promises)
         clearTimeout(timeoutId)
 
-        if (usersRes.ok) setUsers(await usersRes.json())
-        if (runsRes.ok) setRuns(await runsRes.json())
-        if (healthRes.ok) {
-          const healthData = await healthRes.json()
-
-          // If schedule endpoint is available, use it as source of truth for schedule
-          if (scheduleRes.ok) {
-            const scheduleData = await scheduleRes.json()
-            // Merge schedule data into health data
-            healthData.scheduler = {
-              ...healthData.scheduler,
-              schedule: {
-                hour: scheduleData.hour,
-                minute: scheduleData.minute,
-                timezone: scheduleData.timezone,
-                timeString: scheduleData.timeString,
-              },
+        // Process results
+        for (const result of results) {
+          if (result.data) {
+            switch (result.type) {
+              case 'users':
+                setUsers(result.data)
+                break
+              case 'runs':
+                setRuns(result.data)
+                break
+              case 'health':
+                const healthData = result.data
+                // Merge schedule data if available
+                const scheduleResult = results.find(r => r.type === 'schedule')
+                if (scheduleResult?.data) {
+                  healthData.scheduler = {
+                    ...healthData.scheduler,
+                    schedule: {
+                      hour: scheduleResult.data.hour,
+                      minute: scheduleResult.data.minute,
+                      timezone: scheduleResult.data.timezone,
+                      timeString: scheduleResult.data.timeString,
+                    },
+                  }
+                }
+                setHealth(healthData)
+                // Set schedule time from health data only when NOT editing
+                if (healthData.scheduler?.schedule && !editingScheduleRef.current) {
+                  setScheduleTime({
+                    hour: healthData.scheduler.schedule?.hour || 8,
+                    minute: healthData.scheduler.schedule?.minute || 30,
+                  })
+                }
+                break
             }
-          }
-
-          setHealth(healthData)
-          // Set schedule time from health data only when NOT editing
-          if (healthData.scheduler?.schedule && !editingScheduleRef.current) {
-            setScheduleTime({
-              hour: healthData.scheduler.schedule?.hour || 8,
-              minute: healthData.scheduler.schedule?.minute || 30,
-            })
           }
         }
       } catch (fetchError: any) {
@@ -169,12 +234,13 @@ export default function Dashboard() {
       if (error.name === 'AbortError') {
         setError('Request timeout - the server may be starting up. Please wait a moment and refresh.')
       } else if (error.message?.includes('fetch')) {
-        setError('Failed to connect to server. The server may be starting up (Render free tier takes ~30-60 seconds). Please wait and refresh.')
+        setError('Failed to connect to server. The server may be starting up (Railway free tier takes ~30-60 seconds). Please wait and refresh.')
       } else {
         setError('Failed to load data. Please refresh the page.')
       }
     } finally {
       setLoading(false)
+      setLoadingProgress(100)
     }
   }
 
@@ -480,11 +546,90 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <div className="text-gray-700 font-medium">Loading dashboard...</div>
-          <div className="text-sm text-gray-700 mt-2">If this takes longer than 30 seconds, the server may be starting up.</div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 p-8 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
+          <div className="text-center mb-6">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto mb-4"></div>
+            <div className="text-2xl font-bold text-gray-800 mb-2">Loading Dashboard</div>
+            <div className="text-sm text-gray-600 mb-4">
+              {loadingProgress < 100 
+                ? `Initializing... ${loadingProgress}%`
+                : 'Almost ready...'}
+            </div>
+          </div>
+          
+          {/* Progress Bar */}
+          <div className="w-full bg-gray-200 rounded-full h-3 mb-6 overflow-hidden">
+            <div
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${loadingProgress}%` }}
+            ></div>
+          </div>
+
+          {/* Loading Steps */}
+          <div className="space-y-3">
+            <div className={`flex items-center gap-3 p-2 rounded-lg transition-all ${loadingSteps.users ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-500'}`}>
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center ${loadingSteps.users ? 'bg-green-500' : 'bg-gray-300'}`}>
+                {loadingSteps.users ? (
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                )}
+              </div>
+              <span className="text-sm font-medium">Loading users...</span>
+            </div>
+            
+            <div className={`flex items-center gap-3 p-2 rounded-lg transition-all ${loadingSteps.runs ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-500'}`}>
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center ${loadingSteps.runs ? 'bg-green-500' : 'bg-gray-300'}`}>
+                {loadingSteps.runs ? (
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                )}
+              </div>
+              <span className="text-sm font-medium">Loading run history...</span>
+            </div>
+            
+            <div className={`flex items-center gap-3 p-2 rounded-lg transition-all ${loadingSteps.health ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-500'}`}>
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center ${loadingSteps.health ? 'bg-green-500' : 'bg-gray-300'}`}>
+                {loadingSteps.health ? (
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                )}
+              </div>
+              <span className="text-sm font-medium">Checking server health...</span>
+            </div>
+            
+            <div className={`flex items-center gap-3 p-2 rounded-lg transition-all ${loadingSteps.schedule ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-500'}`}>
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center ${loadingSteps.schedule ? 'bg-green-500' : 'bg-gray-300'}`}>
+                {loadingSteps.schedule ? (
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                )}
+              </div>
+              <span className="text-sm font-medium">Loading schedule...</span>
+            </div>
+          </div>
+
+          <div className="mt-6 text-center">
+            <div className="text-xs text-gray-500">
+              {loadingProgress < 50 
+                ? '⏳ Server may be starting up (Railway free tier takes ~30-60 seconds)'
+                : loadingProgress < 100
+                ? '📡 Connecting to server...'
+                : '✅ Almost ready!'}
+            </div>
+          </div>
         </div>
       </div>
     )
