@@ -27,6 +27,7 @@ export default function Dashboard() {
   const [timeRemaining, setTimeRemaining] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const [currentBatchId, setCurrentBatchId] = useState<string | null>(null)
+  const batchRefreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const { notify } = useNotifications()
 
   useEffect(() => {
@@ -35,12 +36,27 @@ export default function Dashboard() {
     return () => clearInterval(interval)
   }, [])
 
-  // Clear batch ID when batch is complete
+  // Cleanup batch refresh interval on unmount
+  useEffect(() => {
+    return () => {
+      if (batchRefreshIntervalRef.current) {
+        clearInterval(batchRefreshIntervalRef.current)
+      }
+    }
+  }, [])
+
+  // Clear batch ID and stop aggressive refresh when batch is complete
   useEffect(() => {
     if (currentBatchId && health?.queue?.progress) {
       if (health.queue.progress.percentage >= 100 || health.queue.progress.completed >= health.queue.progress.total) {
-        // Batch complete, clear after a short delay
+        // Batch complete, stop aggressive refresh and clear batch ID
+        if (batchRefreshIntervalRef.current) {
+          clearInterval(batchRefreshIntervalRef.current)
+          batchRefreshIntervalRef.current = null
+        }
+        // Force a final refresh to get latest run data
         setTimeout(() => {
+          loadData()
           setCurrentBatchId(null)
         }, 2000)
       }
@@ -48,7 +64,16 @@ export default function Dashboard() {
       // Check if batch is still active
       const batchStillActive = health.queue.batches.some((b: any) => b.batchId === currentBatchId)
       if (!batchStillActive) {
-        setCurrentBatchId(null)
+        // Batch no longer in active batches, stop aggressive refresh
+        if (batchRefreshIntervalRef.current) {
+          clearInterval(batchRefreshIntervalRef.current)
+          batchRefreshIntervalRef.current = null
+        }
+        // Force a final refresh
+        setTimeout(() => {
+          loadData()
+          setCurrentBatchId(null)
+        }, 1000)
       }
     }
   }, [currentBatchId, health?.queue?.progress, health?.queue?.batches])
@@ -99,7 +124,7 @@ export default function Dashboard() {
       try {
         const [usersRes, runsRes, healthRes, scheduleRes] = await Promise.all([
           fetch('/api/users', { signal: controller.signal }),
-          fetch('/api/runs?limit=200', { signal: controller.signal }),
+          fetch('/api/runs?limit=500', { signal: controller.signal }), // Increased limit to ensure all recent runs are fetched
           fetch('/api/health', { signal: controller.signal }),
           fetch('/api/schedule', { signal: controller.signal }),
         ])
@@ -178,7 +203,28 @@ export default function Dashboard() {
           setCurrentBatchId(data.batchId)
         }
       }
+      // Force immediate refresh
       loadData()
+      
+      // Refresh more frequently during batch runs (every 2 seconds instead of 5)
+      if (data.batchId) {
+        // Clear any existing batch refresh interval
+        if (batchRefreshIntervalRef.current) {
+          clearInterval(batchRefreshIntervalRef.current)
+        }
+        
+        batchRefreshIntervalRef.current = setInterval(() => {
+          loadData()
+        }, 2000)
+        
+        // Clean up after 10 minutes max (should be enough for any batch)
+        setTimeout(() => {
+          if (batchRefreshIntervalRef.current) {
+            clearInterval(batchRefreshIntervalRef.current)
+            batchRefreshIntervalRef.current = null
+          }
+        }, 10 * 60 * 1000)
+      }
     } catch (error: any) {
       console.error('Error running all users:', error)
       notify('Failed to run all users', error.message || 'Network error', 'error')
@@ -376,20 +422,29 @@ export default function Dashboard() {
       new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
     )
 
-    // Get today's date in local timezone for comparison
-    const now = new Date()
-    const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    // Get current time
+    const now = new Date().getTime()
+    
+    // Check for runs from last 48 hours (more lenient to catch all recent runs)
+    // This avoids timezone issues and ensures we catch runs that might be slightly older
+    const last48Hours = now - (48 * 60 * 60 * 1000)
 
-    // Filter runs from today (using local date, not UTC)
-    const todayRuns = sortedRuns.filter(r => {
-      const runDate = new Date(r.startedAt)
-      const runDateLocal = new Date(runDate.getFullYear(), runDate.getMonth(), runDate.getDate())
-      return runDateLocal.getTime() === todayLocal.getTime()
+    // Also check "today" in local timezone for primary check
+    const todayLocal = new Date()
+    todayLocal.setHours(0, 0, 0, 0)
+    const todayStart = todayLocal.getTime()
+    const todayEnd = todayStart + (24 * 60 * 60 * 1000)
+
+    // Filter runs from today (local timezone) or last 48 hours
+    const recentRuns = sortedRuns.filter(r => {
+      const runTime = new Date(r.startedAt).getTime()
+      // Check if run is from today (local time) OR within last 48 hours
+      return (runTime >= todayStart && runTime < todayEnd) || runTime >= last48Hours
     })
 
-    // If there are runs from today, return the most recent one
-    if (todayRuns.length > 0) {
-      return todayRuns[0]
+    // If there are recent runs, return the most recent one
+    if (recentRuns.length > 0) {
+      return recentRuns[0]
     }
 
     // Otherwise, return the most recent run overall (even if from a different day)
