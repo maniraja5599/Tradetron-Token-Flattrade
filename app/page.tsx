@@ -671,23 +671,28 @@ export default function Dashboard() {
                   {health?.queue?.running || 0}/{health?.queue?.maxConcurrency || 4}
                 </div>
                 <div className="text-xs font-medium text-white/80 mb-2">{health?.queue?.queueLength || 0} queued</div>
-                {/* Progress Bar */}
+                {/* Progress Bar - Only show in Queue Status card */}
                 {health?.queue?.progress && health.queue.progress.total > 0 && (
-                  <div className="mt-2">
-                    <div className="flex items-center justify-between mb-1">
+                  <div className="mt-3 pt-3 border-t border-orange-500/20">
+                    <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-semibold text-orange-200">
-                        Progress: {health.queue.progress.completed}/{health.queue.progress.total}
+                        Processing: {health.queue.progress.completed}/{health.queue.progress.total}
                       </span>
                       <span className="text-xs font-bold text-orange-300">
                         {health.queue.progress.percentage}%
                       </span>
                     </div>
-                    <div className="w-full bg-orange-900/30 rounded-full h-2 overflow-hidden backdrop-blur-sm">
+                    <div className="w-full bg-orange-900/40 rounded-full h-2.5 overflow-hidden backdrop-blur-sm">
                       <div
-                        className="bg-gradient-to-r from-orange-400 to-orange-500 h-2 rounded-full transition-all duration-500 ease-out shadow-lg"
+                        className="bg-gradient-to-r from-orange-400 to-orange-500 h-2.5 rounded-full transition-all duration-500 ease-out shadow-lg"
                         style={{ width: `${Math.min(100, health.queue.progress.percentage)}%` }}
                       ></div>
                     </div>
+                    {health.queue.progress.percentage < 100 && (
+                      <div className="mt-2 text-xs text-orange-300/80 text-center">
+                        ⏳ Please wait until completion...
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -750,35 +755,15 @@ export default function Dashboard() {
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8">
-            <div className="flex-1 sm:flex-initial">
-              <button
-                onClick={handleRunAll}
-                disabled={health?.queue?.progress && health.queue.progress.percentage < 100}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none w-full sm:w-auto"
-              >
-                {health?.queue?.progress && health.queue.progress.percentage < 100
-                  ? `Running... ${health.queue.progress.percentage}%`
-                  : 'Run All Now'}
-              </button>
-              {health?.queue?.progress && health.queue.progress.percentage < 100 && (
-                <div className="mt-2 bg-blue-900/30 rounded-lg p-3 backdrop-blur-sm border border-blue-500/30">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-blue-200">
-                      Processing: {health.queue.progress.completed} of {health.queue.progress.total} users
-                    </span>
-                    <span className="text-xs font-bold text-blue-300">
-                      {health.queue.progress.percentage}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-blue-900/50 rounded-full h-2.5 overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-blue-400 to-blue-500 h-2.5 rounded-full transition-all duration-500 ease-out shadow-lg"
-                      style={{ width: `${Math.min(100, health.queue.progress.percentage)}%` }}
-                    ></div>
-                  </div>
-                </div>
-              )}
-            </div>
+            <button
+              onClick={handleRunAll}
+              disabled={health?.queue?.progress && health.queue.progress.total > 0 && health.queue.progress.percentage < 100}
+              className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:hover:from-blue-600 disabled:hover:to-blue-700"
+            >
+              {health?.queue?.progress && health.queue.progress.total > 0 && health.queue.progress.percentage < 100
+                ? `Running... ${health.queue.progress.percentage}%`
+                : 'Run All Now'}
+            </button>
             <Link
               href="/users/new"
               className="bg-gradient-to-r from-green-600 to-green-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-sm sm:text-base text-center"
