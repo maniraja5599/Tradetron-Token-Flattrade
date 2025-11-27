@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getJobQueue } from '@/lib/jobs'
 import { isSchedulerRunning, getNextRunTime, getCurrentSchedule } from '@/lib/scheduler'
-import { isWithinTimeWindow, getTimeWindowStatus, getTimeWindow } from '@/lib/timeWindow'
+import { isWithinTimeWindow, getTimeWindowStatus, getTimeWindow, isTimeWindowEnabledSync } from '@/lib/timeWindow'
 
 export async function GET() {
   const queue = getJobQueue()
@@ -27,7 +27,7 @@ export async function GET() {
     },
     queue: stats,
     timeWindow: {
-      enabled: process.env.TIME_WINDOW_ENABLED !== 'false',
+      enabled: isTimeWindowEnabledSync(),
       active: isWithinTimeWindow(),
       window: {
         start: `${String(timeWindow.startHour).padStart(2, '0')}:${String(timeWindow.startMinute).padStart(2, '0')}`,

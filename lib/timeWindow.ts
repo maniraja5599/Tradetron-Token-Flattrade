@@ -97,12 +97,17 @@ export async function getTimeWindow(): Promise<TimeWindow> {
  * Check if time window is enabled (from config file)
  */
 export async function isTimeWindowEnabled(): Promise<boolean> {
+  // Check environment variable first (highest priority)
+  if (process.env.TIME_WINDOW_ENABLED !== undefined) {
+    return process.env.TIME_WINDOW_ENABLED === 'true'
+  }
+  
   try {
     const configPath = path.join(process.cwd(), 'data', 'config.json')
     const configData = await readJsonFile<any>(configPath, {})
-    return configData?.timeWindowEnabled === true // Default to false if not set
+    return configData?.timeWindowEnabled === true // Only enabled if explicitly set to true
   } catch {
-    return true // Default to enabled
+    return false // Disabled by default
   }
 }
 
@@ -110,16 +115,21 @@ export async function isTimeWindowEnabled(): Promise<boolean> {
  * Synchronous version for backward compatibility
  */
 export function isTimeWindowEnabledSync(): boolean {
+  // Check environment variable first (highest priority)
+  if (process.env.TIME_WINDOW_ENABLED !== undefined) {
+    return process.env.TIME_WINDOW_ENABLED === 'true'
+  }
+  
   try {
     const configPath = path.join(process.cwd(), 'data', 'config.json')
     const fsSync = require('fs')
     if (fsSync.existsSync(configPath)) {
       const configData = JSON.parse(fsSync.readFileSync(configPath, 'utf-8'))
-      return configData?.timeWindowEnabled !== false
+      return configData?.timeWindowEnabled === true // Only enabled if explicitly set to true
     }
-    return true
+    return false // Disabled by default
   } catch {
-    return true
+    return false // Disabled by default
   }
 }
 

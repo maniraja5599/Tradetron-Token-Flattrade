@@ -118,6 +118,7 @@ app.prepare().then(() => {
     '/api/schedule',
     '/api/users', // GET only
     '/api/runs', // GET only
+    '/api/time-window', // Allow time window configuration changes
   ]
 
   function isAllowedPath(url) {
