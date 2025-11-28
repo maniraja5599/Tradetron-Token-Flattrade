@@ -34,27 +34,32 @@ export async function isPausedForDate(date: Date): Promise<boolean> {
     return false
   }
 
-  // Check if paused indefinitely (no pausedUntil)
-  if (pauseConfig.paused && !pauseConfig.pausedUntil) {
+  const dateStr = date.toISOString().split('T')[0] // YYYY-MM-DD format
+
+  // First check: Is this specific date in the pausedDates array?
+  if (pauseConfig.pausedDates && pauseConfig.pausedDates.length > 0) {
+    if (pauseConfig.pausedDates.includes(dateStr)) {
+      return true
+    }
+  }
+
+  // Second check: Is paused indefinitely? (paused: true, no pausedUntil, no pausedDates or empty)
+  if (!pauseConfig.pausedUntil) {
+    // Indefinite pause - pause all dates
     return true
   }
 
-  // Check if paused until a specific date
+  // Third check: Is paused until a specific date?
   if (pauseConfig.pausedUntil) {
     const pausedUntilDate = new Date(pauseConfig.pausedUntil)
     const checkDate = new Date(date)
     checkDate.setHours(0, 0, 0, 0)
     pausedUntilDate.setHours(0, 0, 0, 0)
     
+    // If current date is on or before the pausedUntil date, it's paused
     if (checkDate <= pausedUntilDate) {
       return true
     }
-  }
-
-  // Check if specific date is in pausedDates array
-  const dateStr = date.toISOString().split('T')[0] // YYYY-MM-DD
-  if (pauseConfig.pausedDates?.includes(dateStr)) {
-    return true
   }
 
   return false
