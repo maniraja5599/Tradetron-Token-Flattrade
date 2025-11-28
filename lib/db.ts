@@ -159,7 +159,12 @@ export async function getScheduleConfig(): Promise<ScheduleConfig> {
 }
 
 export async function saveScheduleConfig(config: ScheduleConfig): Promise<void> {
-  await writeJsonFile(CONFIG_FILE, config)
+  // Preserve other config properties (like googleSheets) when saving schedule
+  const fullConfig = await readJsonFile<any>(CONFIG_FILE, {})
+  fullConfig.hour = config.hour
+  fullConfig.minute = config.minute
+  fullConfig.timezone = config.timezone
+  await writeJsonFile(CONFIG_FILE, fullConfig)
 }
 
 // Google Sheets Config

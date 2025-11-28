@@ -12,10 +12,11 @@ export async function startScheduler(): Promise<void> {
     stopScheduler()
   }
 
-  // Ensure schedule is set to 08:31 (default)
+  // Force schedule to 08:31 (default) - always update to ensure correct time
   let config = await getScheduleConfig()
+  // Always set to 08:31 regardless of existing config
   if (config.hour !== DEFAULT_SCHEDULE.hour || config.minute !== DEFAULT_SCHEDULE.minute) {
-    console.log(`[Scheduler] Updating schedule to default: ${String(DEFAULT_SCHEDULE.hour).padStart(2, '0')}:${String(DEFAULT_SCHEDULE.minute).padStart(2, '0')}`)
+    console.log(`[Scheduler] Updating schedule from ${String(config.hour).padStart(2, '0')}:${String(config.minute).padStart(2, '0')} to default: ${String(DEFAULT_SCHEDULE.hour).padStart(2, '0')}:${String(DEFAULT_SCHEDULE.minute).padStart(2, '0')}`)
     config = {
       hour: DEFAULT_SCHEDULE.hour,
       minute: DEFAULT_SCHEDULE.minute,
