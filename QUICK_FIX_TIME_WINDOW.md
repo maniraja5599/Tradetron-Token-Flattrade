@@ -68,3 +68,4 @@ After applying any option above:
 
 The time window was enabled in the config file (`data/config.json`) with `timeWindowEnabled: true`. The code now prioritizes environment variables and defaults to disabled if nothing is set.
 
+

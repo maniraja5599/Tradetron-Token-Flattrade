@@ -21,6 +21,10 @@ export default function Dashboard() {
   const [sheetUrl, setSheetUrl] = useState('https://docs.google.com/spreadsheets/d/1W7i5AQ77-pklRv0BkDRkFILSkjq4bkvN5vTCQU7YrLA/edit?gid=0#gid=0')
   const [sheetRange, setSheetRange] = useState('Users!A:Z')
   const [updateExisting, setUpdateExisting] = useState(true)
+  const [showPauseModal, setShowPauseModal] = useState(false)
+  const [pauseLoading, setPauseLoading] = useState(false)
+  const [selectedPauseDate, setSelectedPauseDate] = useState<string>('')
+  const [pauseType, setPauseType] = useState<'today' | 'tomorrow' | 'date' | 'indefinite'>('today')
   const [error, setError] = useState<string | null>(null)
   const [currentBatchId, setCurrentBatchId] = useState<string | null>(null)
   const batchRefreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -314,6 +318,71 @@ export default function Dashboard() {
     loadData()
   }
 
+
+  const handlePauseScheduler = async (untilDate?: Date | null, dates?: Date[]) => {
+    setPauseLoading(true)
+    try {
+      const res = await fetch('/api/scheduler/pause', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          untilDate: untilDate?.toISOString(),
+          dates: dates?.map(d => d.toISOString().split('T')[0]),
+        }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        notify('Scheduler paused', data.message, 'success')
+        setShowPauseModal(false)
+        loadData()
+      } else {
+        notify('Failed to pause', data.error || 'Unknown error', 'error')
+      }
+    } catch (error: any) {
+      notify('Error', error.message || 'Failed to pause scheduler', 'error')
+    } finally {
+      setPauseLoading(false)
+    }
+  }
+
+  const handleResumeScheduler = async () => {
+    setPauseLoading(true)
+    try {
+      const res = await fetch('/api/scheduler/resume', { method: 'POST' })
+      const data = await res.json()
+      if (res.ok) {
+        notify('Scheduler resumed', 'Scheduled runs will continue', 'success')
+        loadData()
+      } else {
+        notify('Failed to resume', data.error || 'Unknown error', 'error')
+      }
+    } catch (error: any) {
+      notify('Error', error.message || 'Failed to resume scheduler', 'error')
+    } finally {
+      setPauseLoading(false)
+    }
+  }
+
+  const handleStopScheduler = async () => {
+    if (!confirm('Are you sure you want to stop the scheduler indefinitely? You can resume it later.')) {
+      return
+    }
+    setPauseLoading(true)
+    try {
+      const res = await fetch('/api/scheduler/stop', { method: 'POST' })
+      const data = await res.json()
+      if (res.ok) {
+        notify('Scheduler stopped', 'Scheduled runs are paused indefinitely', 'warning')
+        loadData()
+      } else {
+        notify('Failed to stop', data.error || 'Unknown error', 'error')
+      }
+    } catch (error: any) {
+      notify('Error', error.message || 'Failed to stop scheduler', 'error')
+    } finally {
+      setPauseLoading(false)
+    }
+  }
 
   const handleSyncFromSheet = async () => {
     if (!sheetUrl.trim()) {
@@ -650,7 +719,39 @@ export default function Dashboard() {
                         })}
                       </div>
                     )}
-                    <div className="text-xs font-medium text-white/80 mb-1">{health.scheduler?.running ? 'Running' : 'Scheduled'}</div>
+                    <div className="text-xs font-medium text-white/80 mb-1">
+                      {health.scheduler?.paused ? '⏸️ Paused' : (health.scheduler?.running ? 'Running' : 'Scheduled')}
+                    </div>
+                    {health.scheduler?.pausedUntil && (
+                      <div className="text-xs font-medium text-yellow-300 mb-2">
+                        Until: {new Date(health.scheduler.pausedUntil).toLocaleDateString()}
+                      </div>
+                    )}
+                    <div className="flex gap-2 mt-2">
+                      {health.scheduler?.paused ? (
+                        <button
+                          onClick={handleResumeScheduler}
+                          className="text-xs bg-green-500/30 hover:bg-green-500/50 text-green-100 px-3 py-1.5 rounded-lg transition-all font-medium shadow-md hover:shadow-green-500/30"
+                        >
+                          ▶️ Resume
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => setShowPauseModal(true)}
+                            className="text-xs bg-yellow-500/30 hover:bg-yellow-500/50 text-yellow-100 px-3 py-1.5 rounded-lg transition-all font-medium shadow-md hover:shadow-yellow-500/30"
+                          >
+                            ⏸️ Pause
+                          </button>
+                          <button
+                            onClick={handleStopScheduler}
+                            className="text-xs bg-red-500/30 hover:bg-red-500/50 text-red-100 px-3 py-1.5 rounded-lg transition-all font-medium shadow-md hover:shadow-red-500/30"
+                          >
+                            ⏹️ Stop
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </>
                 ) : (
                   <div className="text-xs font-medium text-white/80">Not scheduled</div>
@@ -1151,6 +1252,125 @@ export default function Dashboard() {
             </div>
           )
         }
+
+        {/* Pause Modal */}
+        {showPauseModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl p-4 sm:p-6 max-w-md w-full">
+              <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800">Pause Scheduler</h2>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Pause Duration</label>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => {
+                        setPauseType('today')
+                        setSelectedPauseDate('')
+                      }}
+                      className={`w-full px-4 py-2 rounded-lg text-left transition-all ${
+                        pauseType === 'today'
+                          ? 'bg-yellow-100 border-2 border-yellow-500'
+                          : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
+                      }`}
+                    >
+                      📅 Today
+                    </button>
+                    <button
+                      onClick={() => {
+                        setPauseType('tomorrow')
+                        setSelectedPauseDate('')
+                      }}
+                      className={`w-full px-4 py-2 rounded-lg text-left transition-all ${
+                        pauseType === 'tomorrow'
+                          ? 'bg-yellow-100 border-2 border-yellow-500'
+                          : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
+                      }`}
+                    >
+                      📅 Tomorrow
+                    </button>
+                    <button
+                      onClick={() => {
+                        setPauseType('date')
+                      }}
+                      className={`w-full px-4 py-2 rounded-lg text-left transition-all ${
+                        pauseType === 'date'
+                          ? 'bg-yellow-100 border-2 border-yellow-500'
+                          : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
+                      }`}
+                    >
+                      📅 Select Date
+                    </button>
+                    <button
+                      onClick={() => {
+                        setPauseType('indefinite')
+                        setSelectedPauseDate('')
+                      }}
+                      className={`w-full px-4 py-2 rounded-lg text-left transition-all ${
+                        pauseType === 'indefinite'
+                          ? 'bg-yellow-100 border-2 border-yellow-500'
+                          : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
+                      }`}
+                    >
+                      ⏸️ Indefinitely
+                    </button>
+                  </div>
+                </div>
+
+                {pauseType === 'date' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
+                    <input
+                      type="date"
+                      value={selectedPauseDate}
+                      onChange={(e) => setSelectedPauseDate(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    />
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row gap-3 mt-6">
+                  <button
+                    onClick={async () => {
+                      let pauseDate: Date | null = null
+                      if (pauseType === 'today') {
+                        const today = new Date()
+                        today.setHours(23, 59, 59, 999)
+                        pauseDate = today
+                      } else if (pauseType === 'tomorrow') {
+                        const tomorrow = new Date()
+                        tomorrow.setDate(tomorrow.getDate() + 1)
+                        tomorrow.setHours(23, 59, 59, 999)
+                        pauseDate = tomorrow
+                      } else if (pauseType === 'date' && selectedPauseDate) {
+                        const date = new Date(selectedPauseDate)
+                        date.setHours(23, 59, 59, 999)
+                        pauseDate = date
+                      }
+                      await handlePauseScheduler(pauseDate)
+                    }}
+                    disabled={pauseLoading || (pauseType === 'date' && !selectedPauseDate)}
+                    className="flex-1 bg-gradient-to-r from-yellow-600 to-yellow-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:from-yellow-700 hover:to-yellow-800 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  >
+                    {pauseLoading ? 'Pausing...' : 'Pause'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowPauseModal(false)
+                      setPauseType('today')
+                      setSelectedPauseDate('')
+                    }}
+                    disabled={pauseLoading}
+                    className="flex-1 bg-gray-300 text-gray-700 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:bg-gray-400 font-semibold text-sm sm:text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div >
     </div >
   )

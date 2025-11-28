@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getJobQueue, getAllBatchProgress } from '@/lib/jobs'
 import { isSchedulerRunning, getNextRunTime, getCurrentSchedule } from '@/lib/scheduler'
 import { isWithinTimeWindow, getTimeWindowStatus, getTimeWindow, isTimeWindowEnabledSync } from '@/lib/timeWindow'
+import { getPauseConfig } from '@/lib/schedulerPause'
 
 export async function GET() {
   const queue = getJobQueue()
@@ -11,6 +12,7 @@ export async function GET() {
   const timeWindowStatus = getTimeWindowStatus()
   const timeWindow = await getTimeWindow()
   const batchProgress = getAllBatchProgress()
+  const pauseConfig = await getPauseConfig()
 
   // Calculate overall progress if there are active batches
   let overallProgress = null
@@ -37,6 +39,9 @@ export async function GET() {
       },
       nextRun: nextRun.toISOString(),
       nextRunIST: nextRun.toLocaleString('en-US', { timeZone: schedule.timezone }),
+      paused: pauseConfig.paused,
+      pausedUntil: pauseConfig.pausedUntil,
+      pausedDates: pauseConfig.pausedDates,
     },
     queue: {
       ...stats,

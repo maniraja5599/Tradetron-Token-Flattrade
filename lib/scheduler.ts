@@ -3,6 +3,7 @@ import { getUsers } from './db'
 import { enqueueJob, startBatch } from './jobs'
 import { getScheduleConfig, saveScheduleConfig } from './db'
 import { ScheduleConfig, DEFAULT_SCHEDULE } from './scheduleConfig'
+import { isPausedForDate } from './schedulerPause'
 
 let scheduledTask: cron.ScheduledTask | null = null
 
@@ -30,7 +31,17 @@ export async function startScheduler(): Promise<void> {
   const nextRun = await getNextRunTime()
 
   scheduledTask = cron.schedule(cronExpression, async () => {
-    console.log(`[Scheduler] ✅ Triggered daily run at ${String(config.hour).padStart(2, '0')}:${String(config.minute).padStart(2, '0')} ${config.timezone}`)
+    const now = new Date()
+    console.log(`[Scheduler] ⏰ Triggered daily run at ${String(config.hour).padStart(2, '0')}:${String(config.minute).padStart(2, '0')} ${config.timezone}`)
+    
+    // Check if scheduler is paused for this date
+    const isPaused = await isPausedForDate(now)
+    if (isPaused) {
+      console.log(`[Scheduler] ⏸️ Skipping run - scheduler is paused for ${now.toISOString().split('T')[0]}`)
+      return
+    }
+
+    console.log(`[Scheduler] ✅ Running scheduled job at ${String(config.hour).padStart(2, '0')}:${String(config.minute).padStart(2, '0')} ${config.timezone}`)
     try {
       const users = await getUsers()
       const activeUsers = users.filter(u => u.active)
