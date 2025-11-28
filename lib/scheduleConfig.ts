@@ -6,7 +6,7 @@ export type ScheduleConfig = {
 
 export const DEFAULT_SCHEDULE: ScheduleConfig = {
   hour: 8,
-  minute: 30,
+  minute: 31,
   timezone: 'Asia/Kolkata',
 }
 

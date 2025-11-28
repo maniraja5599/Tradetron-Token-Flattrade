@@ -12,7 +12,17 @@ export async function startScheduler(): Promise<void> {
     stopScheduler()
   }
 
-  const config = await getScheduleConfig()
+  // Ensure schedule is set to 08:31 (default)
+  let config = await getScheduleConfig()
+  if (config.hour !== DEFAULT_SCHEDULE.hour || config.minute !== DEFAULT_SCHEDULE.minute) {
+    console.log(`[Scheduler] Updating schedule to default: ${String(DEFAULT_SCHEDULE.hour).padStart(2, '0')}:${String(DEFAULT_SCHEDULE.minute).padStart(2, '0')}`)
+    config = {
+      hour: DEFAULT_SCHEDULE.hour,
+      minute: DEFAULT_SCHEDULE.minute,
+      timezone: DEFAULT_SCHEDULE.timezone,
+    }
+    await saveScheduleConfig(config)
+  }
   const cronExpression = `${config.minute} ${config.hour} * * *`
 
   // Calculate next run time for logging using the correct timezone conversion

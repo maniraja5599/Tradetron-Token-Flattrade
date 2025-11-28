@@ -15,16 +15,12 @@ export default function Dashboard() {
   const [runs, setRuns] = useState<RunLog[]>([])
   const [health, setHealth] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [editingSchedule, setEditingSchedule] = useState(false)
-  const [scheduleTime, setScheduleTime] = useState({ hour: 8, minute: 30 })
-  const editingScheduleRef = useRef(false)
   const [resultFilter, setResultFilter] = useState<'all' | 'success' | 'fail'>('all')
   const [showSyncModal, setShowSyncModal] = useState(false)
   const [syncLoading, setSyncLoading] = useState(false)
   const [sheetUrl, setSheetUrl] = useState('https://docs.google.com/spreadsheets/d/1W7i5AQ77-pklRv0BkDRkFILSkjq4bkvN5vTCQU7YrLA/edit?gid=0#gid=0')
   const [sheetRange, setSheetRange] = useState('Users!A:Z')
   const [updateExisting, setUpdateExisting] = useState(true)
-  const [timeRemaining, setTimeRemaining] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const [currentBatchId, setCurrentBatchId] = useState<string | null>(null)
   const batchRefreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -85,39 +81,6 @@ export default function Dashboard() {
     }
   }, [currentBatchId, health?.queue?.progress, health?.queue?.batches])
 
-  // Calculate and update remaining time every second
-  useEffect(() => {
-    const updateTimeRemaining = () => {
-      if (health?.scheduler?.nextRun) {
-        const nextRun = new Date(health.scheduler.nextRun)
-        const now = new Date()
-        const diff = nextRun.getTime() - now.getTime()
-
-        if (diff <= 0) {
-          setTimeRemaining('Due now')
-          return
-        }
-
-        const hours = Math.floor(diff / (1000 * 60 * 60))
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000)
-
-        if (hours > 0) {
-          setTimeRemaining(`${hours}h ${minutes}m ${seconds}s`)
-        } else if (minutes > 0) {
-          setTimeRemaining(`${minutes}m ${seconds}s`)
-        } else {
-          setTimeRemaining(`${seconds}s`)
-        }
-      } else {
-        setTimeRemaining('')
-      }
-    }
-
-    updateTimeRemaining()
-    const interval = setInterval(updateTimeRemaining, 1000)
-    return () => clearInterval(interval)
-  }, [health?.scheduler?.nextRun])
 
   const loadData = async () => {
     try {
@@ -214,13 +177,6 @@ export default function Dashboard() {
                   }
                 }
                 setHealth(healthData)
-                // Set schedule time from health data only when NOT editing
-                if (healthData.scheduler?.schedule && !editingScheduleRef.current) {
-                  setScheduleTime({
-                    hour: healthData.scheduler.schedule?.hour || 8,
-                    minute: healthData.scheduler.schedule?.minute || 30,
-                  })
-                }
                 break
             }
           }
@@ -358,88 +314,6 @@ export default function Dashboard() {
     loadData()
   }
 
-  const handleUpdateSchedule = async () => {
-    try {
-      const res = await fetch('/api/schedule', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          hour: scheduleTime.hour,
-          minute: scheduleTime.minute,
-        }),
-      })
-      if (res.ok) {
-        const data = await res.json()
-        editingScheduleRef.current = false
-        setEditingSchedule(false)
-
-        // Update local state immediately with the response
-        if (data.schedule) {
-          setScheduleTime({
-            hour: data.schedule.hour,
-            minute: data.schedule.minute,
-          })
-
-          // Update health state immediately to reflect the change in UI
-          if (health) {
-            setHealth({
-              ...health,
-              scheduler: {
-                ...health.scheduler,
-                schedule: {
-                  ...health.scheduler?.schedule,
-                  hour: data.schedule.hour,
-                  minute: data.schedule.minute,
-                  timeString: data.schedule.timeString,
-                },
-              },
-            })
-          }
-        }
-
-        // Also fetch schedule endpoint to ensure we have latest data
-        try {
-          const scheduleRes = await fetch('/api/schedule')
-          if (scheduleRes.ok) {
-            const scheduleData = await scheduleRes.json()
-            // Update health state with latest schedule from schedule endpoint
-            if (health) {
-              setHealth({
-                ...health,
-                scheduler: {
-                  ...health.scheduler,
-                  schedule: {
-                    hour: scheduleData.hour,
-                    minute: scheduleData.minute,
-                    timezone: scheduleData.timezone,
-                    timeString: scheduleData.timeString,
-                  },
-                },
-              })
-            }
-            setScheduleTime({
-              hour: scheduleData.hour,
-              minute: scheduleData.minute,
-            })
-          }
-        } catch (e) {
-          console.error('Failed to fetch updated schedule:', e)
-        }
-
-        // Wait a moment for scheduler to restart, then refresh to get updated nextRun time
-        setTimeout(() => {
-          loadData()
-        }, 1000)
-
-        alert('Schedule updated successfully!')
-      } else {
-        const error = await res.json()
-        alert(`Error: ${error.error}`)
-      }
-    } catch (error) {
-      alert('Failed to update schedule')
-    }
-  }
 
   const handleSyncFromSheet = async () => {
     if (!sheetUrl.trim()) {
@@ -764,100 +638,19 @@ export default function Dashboard() {
                 </div>
                 {health?.scheduler?.schedule ? (
                   <>
-                    {editingSchedule ? (
-                      <div className="mt-3 space-y-3">
-                        <div className="flex flex-col gap-3 items-center">
-                          <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-lg px-4 py-3 border-2 border-purple-400/50 shadow-md">
-                            <input
-                              type="number"
-                              min="0"
-                              max="23"
-                              value={scheduleTime.hour}
-                              onChange={(e) => setScheduleTime({ ...scheduleTime, hour: parseInt(e.target.value) || 0 })}
-                              className="w-16 px-3 py-2 border-0 text-center text-xl font-bold text-white bg-white/10 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded"
-                              placeholder="HH"
-                            />
-                            <span className="text-white/80 text-2xl font-bold">:</span>
-                            <input
-                              type="number"
-                              min="0"
-                              max="59"
-                              value={scheduleTime.minute}
-                              onChange={(e) => setScheduleTime({ ...scheduleTime, minute: parseInt(e.target.value) || 0 })}
-                              className="w-16 px-3 py-2 border-0 text-center text-xl font-bold text-white bg-white/10 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded"
-                              placeholder="MM"
-                            />
-                          </div>
-                          <div className="flex gap-2 w-full justify-center">
-                            <button
-                              onClick={handleUpdateSchedule}
-                              className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-semibold text-sm flex items-center gap-1.5 min-w-[100px] justify-center"
-                              title="Save schedule"
-                            >
-                              <span>✓</span>
-                              <span>Save</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                editingScheduleRef.current = false
-                                setEditingSchedule(false)
-                              }}
-                              className="bg-red-500 text-white px-5 py-2 rounded-lg hover:bg-red-600 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-semibold text-sm flex items-center gap-1.5 min-w-[100px] justify-center"
-                              title="Cancel editing"
-                            >
-                              <span>✗</span>
-                              <span>Cancel</span>
-                            </button>
-                          </div>
-                        </div>
-                        <div className="text-xs text-center text-white/70 italic">Editing schedule time</div>
+                    <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-purple-200 mb-1 drop-shadow-lg">
+                      {health.scheduler?.schedule?.timeString}
+                    </div>
+                    {health.scheduler?.nextRunIST && (
+                      <div className="text-xs font-medium text-white/70 mb-1">
+                        {new Date(health.scheduler.nextRun).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric',
+                          timeZone: health.scheduler.schedule?.timezone || 'Asia/Kolkata'
+                        })}
                       </div>
-                    ) : (
-                      <>
-                        <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-purple-200 mb-1 drop-shadow-lg cursor-pointer hover:opacity-80 transition-opacity" onClick={() => {
-                          if (health.scheduler?.schedule) {
-                            setScheduleTime({
-                              hour: health.scheduler.schedule?.hour || 8,
-                              minute: health.scheduler.schedule?.minute || 30,
-                            })
-                          }
-                          editingScheduleRef.current = true
-                          setEditingSchedule(true)
-                        }}>
-                          {health.scheduler?.schedule?.timeString}
-                        </div>
-                        {health.scheduler?.nextRunIST && (
-                          <div className="text-xs font-medium text-white/70 mb-1">
-                            {new Date(health.scheduler.nextRun).toLocaleDateString('en-US', { 
-                              month: 'short', 
-                              day: 'numeric',
-                              timeZone: health.scheduler.schedule?.timezone || 'Asia/Kolkata'
-                            })}
-                          </div>
-                        )}
-                        <div className="text-xs font-medium text-white/80 mb-1">{health.scheduler?.running ? 'Running' : 'Scheduled'}</div>
-                        {timeRemaining && (
-                          <div className="text-xs text-purple-200 font-semibold mb-1 bg-purple-500/25 px-2 py-1 rounded-lg inline-block backdrop-blur-sm">
-                            ⏱️ {timeRemaining}
-                          </div>
-                        )}
-                        <button
-                          onClick={() => {
-                            if (health.scheduler?.schedule) {
-                              setScheduleTime({
-                                hour: health.scheduler.schedule?.hour || 8,
-                                minute: health.scheduler.schedule?.minute || 30,
-                              })
-                            }
-                            editingScheduleRef.current = true
-                            setEditingSchedule(true)
-                          }}
-                          className="text-xs bg-purple-500/30 hover:bg-purple-500/50 text-purple-100 px-3 py-1.5 rounded-lg mt-1 transition-all font-medium shadow-md hover:shadow-purple-500/30"
-                        >
-                          Edit
-                        </button>
-                      </>
                     )}
+                    <div className="text-xs font-medium text-white/80 mb-1">{health.scheduler?.running ? 'Running' : 'Scheduled'}</div>
                   </>
                 ) : (
                   <div className="text-xs font-medium text-white/80">Not scheduled</div>
