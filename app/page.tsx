@@ -1268,10 +1268,10 @@ export default function Dashboard() {
                         setPauseType('today')
                         setSelectedPauseDate('')
                       }}
-                      className={`w-full px-4 py-2 rounded-lg text-left transition-all ${
+                      className={`w-full px-4 py-2 rounded-lg text-left transition-all text-gray-800 font-medium ${
                         pauseType === 'today'
-                          ? 'bg-yellow-100 border-2 border-yellow-500'
-                          : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
+                          ? 'bg-yellow-100 border-2 border-yellow-500 text-yellow-900'
+                          : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100 text-gray-800'
                       }`}
                     >
                       📅 Today
@@ -1281,10 +1281,10 @@ export default function Dashboard() {
                         setPauseType('tomorrow')
                         setSelectedPauseDate('')
                       }}
-                      className={`w-full px-4 py-2 rounded-lg text-left transition-all ${
+                      className={`w-full px-4 py-2 rounded-lg text-left transition-all text-gray-800 font-medium ${
                         pauseType === 'tomorrow'
-                          ? 'bg-yellow-100 border-2 border-yellow-500'
-                          : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
+                          ? 'bg-yellow-100 border-2 border-yellow-500 text-yellow-900'
+                          : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100 text-gray-800'
                       }`}
                     >
                       📅 Tomorrow
@@ -1293,10 +1293,10 @@ export default function Dashboard() {
                       onClick={() => {
                         setPauseType('date')
                       }}
-                      className={`w-full px-4 py-2 rounded-lg text-left transition-all ${
+                      className={`w-full px-4 py-2 rounded-lg text-left transition-all text-gray-800 font-medium ${
                         pauseType === 'date'
-                          ? 'bg-yellow-100 border-2 border-yellow-500'
-                          : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
+                          ? 'bg-yellow-100 border-2 border-yellow-500 text-yellow-900'
+                          : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100 text-gray-800'
                       }`}
                     >
                       📅 Select Date
@@ -1306,10 +1306,10 @@ export default function Dashboard() {
                         setPauseType('indefinite')
                         setSelectedPauseDate('')
                       }}
-                      className={`w-full px-4 py-2 rounded-lg text-left transition-all ${
+                      className={`w-full px-4 py-2 rounded-lg text-left transition-all text-gray-800 font-medium ${
                         pauseType === 'indefinite'
-                          ? 'bg-yellow-100 border-2 border-yellow-500'
-                          : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
+                          ? 'bg-yellow-100 border-2 border-yellow-500 text-yellow-900'
+                          : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100 text-gray-800'
                       }`}
                     >
                       ⏸️ Indefinitely
