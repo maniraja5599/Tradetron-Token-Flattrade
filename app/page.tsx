@@ -826,6 +826,15 @@ export default function Dashboard() {
                         }}>
                           {health.scheduler?.schedule?.timeString}
                         </div>
+                        {health.scheduler?.nextRunIST && (
+                          <div className="text-xs font-medium text-white/70 mb-1">
+                            {new Date(health.scheduler.nextRun).toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric',
+                              timeZone: health.scheduler.schedule?.timezone || 'Asia/Kolkata'
+                            })}
+                          </div>
+                        )}
                         <div className="text-xs font-medium text-white/80 mb-1">{health.scheduler?.running ? 'Running' : 'Scheduled'}</div>
                         {timeRemaining && (
                           <div className="text-xs text-purple-200 font-semibold mb-1 bg-purple-500/25 px-2 py-1 rounded-lg inline-block backdrop-blur-sm">

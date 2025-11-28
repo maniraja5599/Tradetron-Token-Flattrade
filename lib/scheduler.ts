@@ -94,56 +94,71 @@ export async function getNextRunTime(): Promise<Date> {
   // Get current time in target timezone
   const tzNow = getTZTime(now)
 
-  // Create a Date object for "Today" at the scheduled time in the target timezone
-  // We construct a string ISO format that Date.parse can handle, or use a library.
-  // Since we want to avoid heavy libraries, we'll use a robust iterative approach.
+  // Calculate if scheduled time has passed today
+  const currentMinutes = tzNow.hour * 60 + tzNow.minute
+  const scheduledMinutes = config.hour * 60 + config.minute
+  const hasPassedToday = currentMinutes >= scheduledMinutes
 
-  // Start with 'now' and adjust to match scheduled time
+  // Determine target day: today or tomorrow
+  const targetDayOffset = hasPassedToday ? 1 : 0
+  
+  // Start with the target day at the current time
   let candidate = new Date(now)
+  if (targetDayOffset > 0) {
+    // Add days to get to target day
+    candidate = new Date(candidate.getTime() + targetDayOffset * 24 * 60 * 60 * 1000)
+  }
 
-  // Brute force alignment:
-  // 1. Adjust candidate to match target hour/minute in target timezone
-  // We do this by checking the difference and adding/subtracting
-
+  // Now align candidate to the scheduled time in the target timezone
+  // We'll iterate to find the exact time
   let attempts = 0
-  while (attempts < 5) {
-    const currentTZ = getTZTime(candidate)
-
-    // Check if we match the target time
-    if (currentTZ.hour === config.hour && currentTZ.minute === config.minute) {
-      break
+  const maxAttempts = 20
+  
+  while (attempts < maxAttempts) {
+    const candidateTZ = getTZTime(candidate)
+    const candidateMinutes = candidateTZ.hour * 60 + candidateTZ.minute
+    
+    // Check if we've reached the target time
+    if (candidateTZ.hour === config.hour && candidateTZ.minute === config.minute) {
+      // Verify it's in the future
+      if (candidate.getTime() > now.getTime()) {
+        return candidate
+      } else {
+        // If it's still in the past, add a day and continue
+        candidate = new Date(candidate.getTime() + 24 * 60 * 60 * 1000)
+        attempts++
+        continue
+      }
     }
-
-    // Calculate difference in minutes
-    const currentMinutes = currentTZ.hour * 60 + currentTZ.minute
-    const targetMinutes = config.hour * 60 + config.minute
-    let diffMinutes = targetMinutes - currentMinutes
-
-    // Apply difference
+    
+    // Calculate how many minutes to adjust
+    let diffMinutes = scheduledMinutes - candidateMinutes
+    
+    // If we need to go backwards in time (negative diff), it means we're on the target day
+    // but later than scheduled time. Since we've already determined the target day,
+    // we should just subtract to get to the scheduled time on that same day.
+    if (diffMinutes < 0) {
+      // We're on the target day but later than scheduled time
+      // Subtract the difference to get to scheduled time on the same day
+      candidate = new Date(candidate.getTime() + diffMinutes * 60 * 1000)
+      attempts++
+      continue
+    }
+    
+    // Positive diffMinutes means we need to add time to reach scheduled time
     candidate = new Date(candidate.getTime() + diffMinutes * 60 * 1000)
     attempts++
   }
 
-  // Now 'candidate' is roughly today at the scheduled time. 
-  // Check if it's in the past relative to 'now'
+  // Fallback: ensure we return a future date even if alignment failed
+  // Add one more day to be safe
   if (candidate.getTime() <= now.getTime()) {
-    // If today's scheduled time has passed, add 24 hours
     candidate = new Date(candidate.getTime() + 24 * 60 * 60 * 1000)
-
-    // Re-verify alignment after adding a day (DST shifts might cause 1 hour off)
-    attempts = 0
-    while (attempts < 3) {
-      const currentTZ = getTZTime(candidate)
-      if (currentTZ.hour === config.hour && currentTZ.minute === config.minute) break
-
-      const currentMinutes = currentTZ.hour * 60 + currentTZ.minute
-      const targetMinutes = config.hour * 60 + config.minute
-      let diffMinutes = targetMinutes - currentMinutes
-
-      candidate = new Date(candidate.getTime() + diffMinutes * 60 * 1000)
-      attempts++
-    }
   }
+
+  // Log for debugging
+  const finalTZ = getTZTime(candidate)
+  console.log(`[Scheduler] Next run calculated: ${candidate.toISOString()} (${finalTZ.year}-${String(finalTZ.month).padStart(2, '0')}-${String(finalTZ.day).padStart(2, '0')} ${String(finalTZ.hour).padStart(2, '0')}:${String(finalTZ.minute).padStart(2, '0')} ${config.timezone})`)
 
   return candidate
 }
