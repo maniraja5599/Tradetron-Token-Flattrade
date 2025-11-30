@@ -246,8 +246,15 @@ export async function updateSchedule(hour: number, minute: number): Promise<void
   console.log(`[Scheduler] 🔄 Updating schedule to ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')} ${config.timezone} (will run ${when})`)
 
   // Send instant notification for schedule change
-  const timeString = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
-  await sendTelegramNotification(`🔄 <b>Schedule Updated</b>\n\nNew Run Time: <b>${timeString} IST</b>\nEffective: ${when === 'today' ? 'Today' : 'Tomorrow'}`)
+  try {
+    const timeString = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
+    const message = `🔄 <b>Schedule Updated</b>\n\nNew Run Time: <b>${timeString} IST</b>\nEffective: ${when === 'today' ? 'Today' : 'Tomorrow'}`
+    console.log('[Scheduler] Sending update notification:', message)
+    const sent = await sendTelegramNotification(message)
+    console.log('[Scheduler] Notification sent result:', sent)
+  } catch (error) {
+    console.error('[Scheduler] Failed to send update notification:', error)
+  }
 
   // If the scheduled time is today and within 5 minutes, set up an immediate trigger
   // This handles cases where cron might miss very close schedule changes

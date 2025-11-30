@@ -179,9 +179,11 @@ export async function sendRunNotification(runLog: RunLog): Promise<boolean> {
  */
 export async function sendTelegramNotification(message: string): Promise<boolean> {
   try {
+    console.log('[Telegram] Sending notification:', message.split('\n')[0])
     const config = await getTelegramConfig()
 
     if (!config.enabled || !config.botToken || !config.chatId) {
+      console.log('[Telegram] Notification skipped - disabled or missing config')
       return false
     }
 
