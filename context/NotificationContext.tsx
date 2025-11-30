@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
 import { Notification } from '@/lib/notifications'
+import { CheckCircle, XCircle, AlertTriangle, Info, Smartphone, Unlock, Package, Bell } from 'lucide-react'
 
 interface NotificationContextType {
     notifications: Notification[]
@@ -50,22 +51,37 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                     newNotifications.forEach(n => {
                         if (!toastedIdsRef.current.has(n.id)) {
                             // Determine icon based on content
-                            let icon = n.type === 'warning' ? '⚠️' : 'ℹ️'
-                            if (n.title.toLowerCase().includes('telegram')) icon = '✈️'
-                            else if (n.title.toLowerCase().includes('login') && n.type === 'success') icon = '🔐'
-                            else if (n.title.toLowerCase().includes('login') && n.type === 'error') icon = '❌'
-                            else if (n.title.toLowerCase().includes('batch')) icon = '🚀'
-                            else if (n.type === 'success') icon = '✅'
-                            else if (n.type === 'error') icon = '❌'
+                            let icon
+                            if (n.title.toLowerCase().includes('telegram')) icon = <Smartphone className="w-5 h-5 text-blue-400" />
+                            else if (n.title.toLowerCase().includes('login') && n.type === 'success') icon = <Unlock className="w-5 h-5 text-green-400" />
+                            else if (n.title.toLowerCase().includes('login') && n.type === 'error') icon = <XCircle className="w-5 h-5 text-red-400" />
+                            else if (n.title.toLowerCase().includes('batch')) icon = <Package className="w-5 h-5 text-purple-400" />
+                            else if (n.type === 'success') icon = <CheckCircle className="w-5 h-5 text-green-400" />
+                            else if (n.type === 'error') icon = <XCircle className="w-5 h-5 text-red-400" />
+                            else if (n.type === 'warning') icon = <AlertTriangle className="w-5 h-5 text-yellow-400" />
+                            else icon = <Info className="w-5 h-5 text-blue-400" />
+
+                            // Parse message for bold text
+                            const messageParts = n.message.split(/(\*\*.*?\*\*)/g).map((part, i) => {
+                                if (part.startsWith('**') && part.endsWith('**')) {
+                                    return <span key={i} className="font-bold text-white">{part.slice(2, -2)}</span>
+                                }
+                                return part
+                            })
 
                             // Show toast
-                            toast(n.message, {
+                            toast(<div>{messageParts}</div>, {
                                 icon,
                                 duration: 4000,
                                 style: {
-                                    borderRadius: '10px',
-                                    background: '#333',
-                                    color: '#fff',
+                                    borderRadius: '16px',
+                                    background: 'rgba(17, 24, 39, 0.85)',
+                                    backdropFilter: 'blur(12px)',
+                                    color: '#e5e7eb',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+                                    padding: '12px 16px',
+                                    fontSize: '0.9rem',
                                 },
                             })
                             toastedIdsRef.current.add(n.id)
@@ -156,22 +172,37 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         link?: string
     ) => {
         // Determine icon based on content
-        let icon = type === 'warning' ? '⚠️' : 'ℹ️'
-        if (title.toLowerCase().includes('telegram')) icon = '✈️'
-        else if (title.toLowerCase().includes('login') && type === 'success') icon = '🔐'
-        else if (title.toLowerCase().includes('login') && type === 'error') icon = '❌'
-        else if (title.toLowerCase().includes('batch')) icon = '🚀'
-        else if (type === 'success') icon = '✅'
-        else if (type === 'error') icon = '❌'
+        let icon
+        if (title.toLowerCase().includes('telegram')) icon = <Smartphone className="w-5 h-5 text-blue-400" />
+        else if (title.toLowerCase().includes('login') && type === 'success') icon = <Unlock className="w-5 h-5 text-green-400" />
+        else if (title.toLowerCase().includes('login') && type === 'error') icon = <XCircle className="w-5 h-5 text-red-400" />
+        else if (title.toLowerCase().includes('batch')) icon = <Package className="w-5 h-5 text-purple-400" />
+        else if (type === 'success') icon = <CheckCircle className="w-5 h-5 text-green-400" />
+        else if (type === 'error') icon = <XCircle className="w-5 h-5 text-red-400" />
+        else if (type === 'warning') icon = <AlertTriangle className="w-5 h-5 text-yellow-400" />
+        else icon = <Info className="w-5 h-5 text-blue-400" />
+
+        // Parse message for bold text
+        const messageParts = message.split(/(\*\*.*?\*\*)/g).map((part, i) => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+                return <span key={i} className="font-bold text-white">{part.slice(2, -2)}</span>
+            }
+            return part
+        })
 
         // Show toast immediately
-        toast(message, {
+        toast(<div>{messageParts}</div>, {
             icon,
             duration: 4000,
             style: {
-                borderRadius: '10px',
-                background: '#333',
-                color: '#fff',
+                borderRadius: '16px',
+                background: 'rgba(17, 24, 39, 0.85)',
+                backdropFilter: 'blur(12px)',
+                color: '#e5e7eb',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+                padding: '12px 16px',
+                fontSize: '0.9rem',
             },
         })
 

@@ -5,6 +5,7 @@
 
 import { readJsonFile, writeJsonFile } from './db'
 import path from 'path'
+import { sendTelegramNotification } from './telegram'
 
 const PAUSE_CONFIG_FILE = path.join(process.cwd(), 'data', 'scheduler-pause.json')
 
@@ -29,7 +30,7 @@ export async function savePauseConfig(config: PauseConfig): Promise<void> {
 
 export async function isPausedForDate(date: Date): Promise<boolean> {
   const pauseConfig = await getPauseConfig()
-  
+
   if (!pauseConfig.paused) {
     return false
   }
@@ -55,7 +56,7 @@ export async function isPausedForDate(date: Date): Promise<boolean> {
     const checkDate = new Date(date)
     checkDate.setHours(0, 0, 0, 0)
     pausedUntilDate.setHours(0, 0, 0, 0)
-    
+
     // If current date is on or before the pausedUntil date, it's paused
     if (checkDate <= pausedUntilDate) {
       return true
@@ -72,6 +73,14 @@ export async function pauseScheduler(untilDate?: Date | null): Promise<void> {
     pausedDates: [],
   }
   await savePauseConfig(config)
+
+  // Send notification
+  if (untilDate) {
+    const until = untilDate.toLocaleDateString('en-IN')
+    await sendTelegramNotification(`⏸️ <b>Scheduler Paused</b>\n\nAutomation is paused until <b>${until}</b>.`)
+  } else {
+    await sendTelegramNotification(`⚠️ <b>Scheduler Stopped</b>\n\nAutomation is stopped indefinitely.`)
+  }
 }
 
 export async function pauseForDates(dates: Date[]): Promise<void> {
@@ -81,7 +90,7 @@ export async function pauseForDates(dates: Date[]): Promise<void> {
     date.setHours(0, 0, 0, 0)
     return date.toISOString().split('T')[0] // YYYY-MM-DD
   })
-  
+
   pauseConfig.pausedDates = [...new Set([...(pauseConfig.pausedDates || []), ...dateStrings])]
   await savePauseConfig(pauseConfig)
 }
@@ -92,6 +101,7 @@ export async function resumeScheduler(): Promise<void> {
     pausedDates: [],
   }
   await savePauseConfig(config)
+  await sendTelegramNotification(`▶️ <b>Scheduler Resumed</b>\n\nAutomation is back online and will run as scheduled.`)
 }
 
 export async function stopScheduler(): Promise<void> {
@@ -101,5 +111,6 @@ export async function stopScheduler(): Promise<void> {
     pausedDates: [],
   }
   await savePauseConfig(config)
+  await sendTelegramNotification(`⏹️ <b>Scheduler Stopped</b>\n\nAutomation has been stopped indefinitely.`)
 }
 

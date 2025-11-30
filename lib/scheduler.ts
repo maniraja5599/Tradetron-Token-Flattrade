@@ -3,14 +3,21 @@ import { getUsers } from './db'
 import { enqueueJob, startBatch } from './jobs'
 import { getScheduleConfig, saveScheduleConfig } from './db'
 import { ScheduleConfig, DEFAULT_SCHEDULE } from './scheduleConfig'
-import { isPausedForDate } from './schedulerPause'
+import { isPausedForDate, getPauseConfig } from './schedulerPause'
+import { sendTelegramNotification } from './telegram'
 
 let scheduledTask: cron.ScheduledTask | null = null
+let statusCheckTask: cron.ScheduledTask | null = null
 
 export async function startScheduler(): Promise<void> {
   if (scheduledTask) {
     console.log('[Scheduler] Already running, restarting...')
     stopScheduler()
+  }
+
+  if (statusCheckTask) {
+    statusCheckTask.stop()
+    statusCheckTask = null
   }
 
   // Force schedule to 08:31 (default) - always update to ensure correct time
@@ -23,7 +30,7 @@ export async function startScheduler(): Promise<void> {
   scheduledTask = cron.schedule(cronExpression, async () => {
     const now = new Date()
     console.log(`[Scheduler] ⏰ Triggered daily run at ${String(config.hour).padStart(2, '0')}:${String(config.minute).padStart(2, '0')} ${config.timezone}`)
-    
+
     // Check if scheduler is paused for this date
     const isPaused = await isPausedForDate(now)
     if (isPaused) {
@@ -51,7 +58,36 @@ export async function startScheduler(): Promise<void> {
       console.error('[Scheduler] Error during scheduled run:', error)
     }
   }, {
-    timezone: config.timezone,
+    scheduled: true,
+  })
+
+  // Schedule daily status check at 08:20 AM
+  statusCheckTask = cron.schedule('20 8 * * *', async () => {
+    console.log(`[Scheduler] ⏰ Running daily status check at 08:20 AM`)
+    try {
+      const pauseConfig = await getPauseConfig()
+      const currentSchedule = await getScheduleConfig()
+      const timeString = `${String(currentSchedule.hour).padStart(2, '0')}:${String(currentSchedule.minute).padStart(2, '0')}`
+
+      let message = ''
+
+      if (pauseConfig.paused) {
+        if (!pauseConfig.pausedUntil) {
+          message = `⚠️ <b>Warning: Scheduler is STOPPED</b>\n\nThe automation is currently stopped indefinitely and will NOT run today.\n\nUse /resume to restart.`
+        } else {
+          const until = new Date(pauseConfig.pausedUntil).toLocaleDateString('en-IN')
+          message = `⚠️ <b>Warning: Scheduler is PAUSED</b>\n\nThe automation is paused until ${until}.\n\nUse /resume to restart.`
+        }
+      } else {
+        message = `📅 <b>Daily Schedule Status</b>\n\n✅ Scheduler is RUNNING\n⏰ Next Run: <b>${timeString} IST</b>\n\nEverything is set for today's trade.`
+      }
+
+      await sendTelegramNotification(message)
+    } catch (error) {
+      console.error('[Scheduler] Error sending status notification:', error)
+    }
+  }, {
+    timezone: 'Asia/Kolkata',
     scheduled: true,
   })
 
@@ -72,6 +108,10 @@ export function stopScheduler(): void {
   if (scheduledTask) {
     scheduledTask.stop()
     scheduledTask = null
+    if (statusCheckTask) {
+      statusCheckTask.stop()
+      statusCheckTask = null
+    }
     console.log('[Scheduler] Stopped')
   }
 }
@@ -113,7 +153,7 @@ export async function getNextRunTime(): Promise<Date> {
 
   // Determine target day: today or tomorrow
   const targetDayOffset = hasPassedToday ? 1 : 0
-  
+
   // Start with the target day at the current time
   let candidate = new Date(now)
   if (targetDayOffset > 0) {
@@ -125,11 +165,11 @@ export async function getNextRunTime(): Promise<Date> {
   // We'll iterate to find the exact time
   let attempts = 0
   const maxAttempts = 20
-  
+
   while (attempts < maxAttempts) {
     const candidateTZ = getTZTime(candidate)
     const candidateMinutes = candidateTZ.hour * 60 + candidateTZ.minute
-    
+
     // Check if we've reached the target time
     if (candidateTZ.hour === config.hour && candidateTZ.minute === config.minute) {
       // Verify it's in the future
@@ -142,10 +182,10 @@ export async function getNextRunTime(): Promise<Date> {
         continue
       }
     }
-    
+
     // Calculate how many minutes to adjust
     let diffMinutes = scheduledMinutes - candidateMinutes
-    
+
     // If we need to go backwards in time (negative diff), it means we're on the target day
     // but later than scheduled time. Since we've already determined the target day,
     // we should just subtract to get to the scheduled time on that same day.
@@ -156,7 +196,7 @@ export async function getNextRunTime(): Promise<Date> {
       attempts++
       continue
     }
-    
+
     // Positive diffMinutes means we need to add time to reach scheduled time
     candidate = new Date(candidate.getTime() + diffMinutes * 60 * 1000)
     attempts++
@@ -204,6 +244,10 @@ export async function updateSchedule(hour: number, minute: number): Promise<void
   const minutesUntilScheduled = Math.floor(msUntilScheduled / 60000)
 
   console.log(`[Scheduler] 🔄 Updating schedule to ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')} ${config.timezone} (will run ${when})`)
+
+  // Send instant notification for schedule change
+  const timeString = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
+  await sendTelegramNotification(`🔄 <b>Schedule Updated</b>\n\nNew Run Time: <b>${timeString} IST</b>\nEffective: ${when === 'today' ? 'Today' : 'Tomorrow'}`)
 
   // If the scheduled time is today and within 5 minutes, set up an immediate trigger
   // This handles cases where cron might miss very close schedule changes

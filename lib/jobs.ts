@@ -211,14 +211,14 @@ class JobQueue {
       if (status === 'success') {
         await addNotification({
           title: 'Login Successful',
-          message: `Successfully generated token for ${user.name}.`,
+          message: `Successfully generated token for **${user.name}**.`,
           type: 'success',
           link: '/runs'
         })
       } else {
         await addNotification({
           title: 'Login Failed',
-          message: `Login failed for ${user.name}: ${message}`,
+          message: `Login failed for **${user.name}**: ${message}`,
           type: 'error',
           link: '/runs'
         })
@@ -288,7 +288,7 @@ class JobQueue {
     const batch = this.activeBatches.get(batchId)
     if (!batch) return null
 
-    const percentage = batch.expectedCount > 0 
+    const percentage = batch.expectedCount > 0
       ? Math.round((batch.runLogs.length / batch.expectedCount) * 100)
       : 0
 
@@ -305,9 +305,9 @@ class JobQueue {
    */
   getAllBatchProgress(): Array<{ batchId: string; completed: number; total: number; percentage: number }> {
     const batches: Array<{ batchId: string; completed: number; total: number; percentage: number }> = []
-    
+
     for (const [batchId, batch] of this.activeBatches.entries()) {
-      const percentage = batch.expectedCount > 0 
+      const percentage = batch.expectedCount > 0
         ? Math.round((batch.runLogs.length / batch.expectedCount) * 100)
         : 0
 

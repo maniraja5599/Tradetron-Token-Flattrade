@@ -3,7 +3,7 @@
 import { Suspense, useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Bell, Send, Lock, AlertCircle, CheckCircle, Info, LayoutDashboard, Users, Activity, Settings } from 'lucide-react'
+import { Bell, Send, Lock, AlertCircle, CheckCircle, Info, LayoutDashboard, Users, Activity, Settings, Smartphone, Unlock, Package, XCircle, AlertTriangle } from 'lucide-react'
 import { useNotifications } from '@/context/NotificationContext'
 import { format } from 'date-fns'
 
@@ -72,18 +72,26 @@ function NotificationBell() {
                         notification.type === 'error' ? 'bg-red-100 text-red-600' :
                           notification.type === 'warning' ? 'bg-yellow-100 text-yellow-600' : 'bg-blue-100 text-blue-600'
                         }`}>
-                        {notification.title.toLowerCase().includes('telegram') ? <Send className="w-4 h-4" /> :
-                          notification.title.toLowerCase().includes('login') ? <Lock className="w-4 h-4" /> :
-                            notification.type === 'success' ? <CheckCircle className="w-4 h-4" /> :
-                              notification.type === 'error' ? <AlertCircle className="w-4 h-4" /> :
-                                <Info className="w-4 h-4" />}
+                        {notification.title.toLowerCase().includes('telegram') ? <Smartphone className="w-4 h-4" /> :
+                          notification.title.toLowerCase().includes('login') && notification.type === 'success' ? <Unlock className="w-4 h-4" /> :
+                            notification.title.toLowerCase().includes('login') && notification.type === 'error' ? <XCircle className="w-4 h-4" /> :
+                              notification.title.toLowerCase().includes('batch') ? <Package className="w-4 h-4" /> :
+                                notification.type === 'success' ? <CheckCircle className="w-4 h-4" /> :
+                                  notification.type === 'error' ? <XCircle className="w-4 h-4" /> :
+                                    notification.type === 'warning' ? <AlertTriangle className="w-4 h-4" /> :
+                                      <Info className="w-4 h-4" />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm font-medium ${!notification.read ? 'text-gray-900' : 'text-gray-700'}`}>
                           {notification.title}
                         </p>
                         <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
-                          {notification.message}
+                          {notification.message.split(/(\*\*.*?\*\*)/g).map((part, i) => {
+                            if (part.startsWith('**') && part.endsWith('**')) {
+                              return <span key={i} className="font-bold text-gray-700">{part.slice(2, -2)}</span>
+                            }
+                            return part
+                          })}
                         </p>
                         <p className="text-[10px] text-gray-400 mt-1.5">
                           {format(new Date(notification.createdAt), 'MMM d, h:mm a')}
