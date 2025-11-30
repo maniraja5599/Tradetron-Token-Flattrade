@@ -36,6 +36,9 @@ export default function Dashboard() {
   })
   const [loadingProgress, setLoadingProgress] = useState(0)
   const { notify } = useNotifications()
+  const [showScheduleModal, setShowScheduleModal] = useState(false)
+  const [newScheduleTime, setNewScheduleTime] = useState('08:31')
+  const [scheduleLoading, setScheduleLoading] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -89,13 +92,13 @@ export default function Dashboard() {
   const loadData = async () => {
     try {
       setError(null)
-      
+
       // Reset loading steps for initial load
       if (loading) {
         setLoadingSteps({ users: false, runs: false, health: false, schedule: false })
         setLoadingProgress(0)
       }
-      
+
       // Add timeout to prevent indefinite loading on cold starts
       const controller = new AbortController()
       const timeoutId = setTimeout(() => {
@@ -106,13 +109,13 @@ export default function Dashboard() {
         // Load data with progress tracking
         let completedSteps = 0
         const totalSteps = 4
-        
+
         const updateProgress = () => {
           completedSteps++
           const progress = Math.round((completedSteps / totalSteps) * 100)
           setLoadingProgress(progress)
         }
-        
+
         const promises = [
           fetch('/api/users', { signal: controller.signal }).then(async (res) => {
             if (res.ok) {
@@ -231,18 +234,18 @@ export default function Dashboard() {
       }
       // Force immediate refresh
       loadData()
-      
+
       // Refresh more frequently during batch runs (every 2 seconds instead of 5)
       if (data.batchId) {
         // Clear any existing batch refresh interval
         if (batchRefreshIntervalRef.current) {
           clearInterval(batchRefreshIntervalRef.current)
         }
-        
+
         batchRefreshIntervalRef.current = setInterval(() => {
           loadData()
         }, 2000)
-        
+
         // Clean up after 10 minutes max (should be enough for any batch)
         setTimeout(() => {
           if (batchRefreshIntervalRef.current) {
@@ -422,6 +425,34 @@ export default function Dashboard() {
     }
   }
 
+  const handleUpdateSchedule = async () => {
+    if (!newScheduleTime) return
+
+    setScheduleLoading(true)
+    try {
+      const [hour, minute] = newScheduleTime.split(':').map(Number)
+      const res = await fetch('/api/schedule', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hour, minute }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        notify('Schedule updated', `Schedule set to ${data.schedule.timeString}`, 'success')
+        setShowScheduleModal(false)
+        loadData()
+      } else {
+        notify('Failed to update schedule', data.error || 'Unknown error', 'error')
+      }
+    } catch (error: any) {
+      notify('Error', error.message || 'Failed to update schedule', 'error')
+    } finally {
+      setScheduleLoading(false)
+    }
+  }
+
   const getLastRun = (userId: string) => {
     const userRuns = runs.filter(r => r.userId === userId)
     if (userRuns.length === 0) return null
@@ -433,7 +464,7 @@ export default function Dashboard() {
 
     // Get current time
     const now = new Date().getTime()
-    
+
     // Check for runs from last 48 hours (more lenient to catch all recent runs)
     // This avoids timezone issues and ensures we catch runs that might be slightly older
     const last48Hours = now - (48 * 60 * 60 * 1000)
@@ -495,12 +526,12 @@ export default function Dashboard() {
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto mb-4"></div>
             <div className="text-2xl font-bold text-gray-800 mb-2">Loading Dashboard</div>
             <div className="text-sm text-gray-600 mb-4">
-              {loadingProgress < 100 
+              {loadingProgress < 100
                 ? `Initializing... ${loadingProgress}%`
                 : 'Almost ready...'}
             </div>
           </div>
-          
+
           {/* Progress Bar */}
           <div className="w-full bg-gray-200 rounded-full h-3 mb-6 overflow-hidden">
             <div
@@ -523,7 +554,7 @@ export default function Dashboard() {
               </div>
               <span className="text-sm font-medium">Loading users...</span>
             </div>
-            
+
             <div className={`flex items-center gap-3 p-2 rounded-lg transition-all ${loadingSteps.runs ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-500'}`}>
               <div className={`w-5 h-5 rounded-full flex items-center justify-center ${loadingSteps.runs ? 'bg-green-500' : 'bg-gray-300'}`}>
                 {loadingSteps.runs ? (
@@ -536,7 +567,7 @@ export default function Dashboard() {
               </div>
               <span className="text-sm font-medium">Loading run history...</span>
             </div>
-            
+
             <div className={`flex items-center gap-3 p-2 rounded-lg transition-all ${loadingSteps.health ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-500'}`}>
               <div className={`w-5 h-5 rounded-full flex items-center justify-center ${loadingSteps.health ? 'bg-green-500' : 'bg-gray-300'}`}>
                 {loadingSteps.health ? (
@@ -549,7 +580,7 @@ export default function Dashboard() {
               </div>
               <span className="text-sm font-medium">Checking server health...</span>
             </div>
-            
+
             <div className={`flex items-center gap-3 p-2 rounded-lg transition-all ${loadingSteps.schedule ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-500'}`}>
               <div className={`w-5 h-5 rounded-full flex items-center justify-center ${loadingSteps.schedule ? 'bg-green-500' : 'bg-gray-300'}`}>
                 {loadingSteps.schedule ? (
@@ -566,11 +597,11 @@ export default function Dashboard() {
 
           <div className="mt-6 text-center">
             <div className="text-xs text-gray-500">
-              {loadingProgress < 50 
+              {loadingProgress < 50
                 ? '⏳ Server may be starting up (Railway free tier takes ~30-60 seconds)'
                 : loadingProgress < 100
-                ? '📡 Connecting to server...'
-                : '✅ Almost ready!'}
+                  ? '📡 Connecting to server...'
+                  : '✅ Almost ready!'}
             </div>
           </div>
         </div>
@@ -712,8 +743,8 @@ export default function Dashboard() {
                     </div>
                     {health.scheduler?.nextRunIST && (
                       <div className="text-xs font-medium text-white/70 mb-1">
-                        {new Date(health.scheduler.nextRun).toLocaleDateString('en-US', { 
-                          month: 'short', 
+                        {new Date(health.scheduler.nextRun).toLocaleDateString('en-US', {
+                          month: 'short',
                           day: 'numeric',
                           timeZone: health.scheduler.schedule?.timezone || 'Asia/Kolkata'
                         })}
@@ -737,6 +768,17 @@ export default function Dashboard() {
                         </button>
                       ) : (
                         <>
+                          <button
+                            onClick={() => {
+                              if (health?.scheduler?.schedule?.timeString) {
+                                setNewScheduleTime(health.scheduler.schedule.timeString)
+                              }
+                              setShowScheduleModal(true)
+                            }}
+                            className="text-xs bg-purple-500/30 hover:bg-purple-500/50 text-purple-100 px-3 py-1.5 rounded-lg transition-all font-medium shadow-md hover:shadow-purple-500/30"
+                          >
+                            ✏️ Edit
+                          </button>
                           <button
                             onClick={() => setShowPauseModal(true)}
                             className="text-xs bg-yellow-500/30 hover:bg-yellow-500/50 text-yellow-100 px-3 py-1.5 rounded-lg transition-all font-medium shadow-md hover:shadow-yellow-500/30"
@@ -1268,11 +1310,10 @@ export default function Dashboard() {
                         setPauseType('today')
                         setSelectedPauseDate('')
                       }}
-                      className={`w-full px-4 py-2 rounded-lg text-left transition-all text-gray-800 font-medium ${
-                        pauseType === 'today'
+                      className={`w-full px-4 py-2 rounded-lg text-left transition-all text-gray-800 font-medium ${pauseType === 'today'
                           ? 'bg-yellow-100 border-2 border-yellow-500 text-yellow-900'
                           : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100 text-gray-800'
-                      }`}
+                        }`}
                     >
                       📅 Today
                     </button>
@@ -1281,11 +1322,10 @@ export default function Dashboard() {
                         setPauseType('tomorrow')
                         setSelectedPauseDate('')
                       }}
-                      className={`w-full px-4 py-2 rounded-lg text-left transition-all text-gray-800 font-medium ${
-                        pauseType === 'tomorrow'
+                      className={`w-full px-4 py-2 rounded-lg text-left transition-all text-gray-800 font-medium ${pauseType === 'tomorrow'
                           ? 'bg-yellow-100 border-2 border-yellow-500 text-yellow-900'
                           : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100 text-gray-800'
-                      }`}
+                        }`}
                     >
                       📅 Tomorrow
                     </button>
@@ -1293,11 +1333,10 @@ export default function Dashboard() {
                       onClick={() => {
                         setPauseType('date')
                       }}
-                      className={`w-full px-4 py-2 rounded-lg text-left transition-all text-gray-800 font-medium ${
-                        pauseType === 'date'
+                      className={`w-full px-4 py-2 rounded-lg text-left transition-all text-gray-800 font-medium ${pauseType === 'date'
                           ? 'bg-yellow-100 border-2 border-yellow-500 text-yellow-900'
                           : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100 text-gray-800'
-                      }`}
+                        }`}
                     >
                       📅 Select Date
                     </button>
@@ -1306,11 +1345,10 @@ export default function Dashboard() {
                         setPauseType('indefinite')
                         setSelectedPauseDate('')
                       }}
-                      className={`w-full px-4 py-2 rounded-lg text-left transition-all text-gray-800 font-medium ${
-                        pauseType === 'indefinite'
+                      className={`w-full px-4 py-2 rounded-lg text-left transition-all text-gray-800 font-medium ${pauseType === 'indefinite'
                           ? 'bg-yellow-100 border-2 border-yellow-500 text-yellow-900'
                           : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100 text-gray-800'
-                      }`}
+                        }`}
                     >
                       ⏸️ Indefinitely
                     </button>
@@ -1362,6 +1400,49 @@ export default function Dashboard() {
                       setSelectedPauseDate('')
                     }}
                     disabled={pauseLoading}
+                    className="flex-1 bg-gray-300 text-gray-700 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:bg-gray-400 font-semibold text-sm sm:text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Schedule Modal */}
+        {showScheduleModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl p-4 sm:p-6 max-w-md w-full">
+              <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800">Edit Schedule</h2>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Daily Run Time (IST)
+                  </label>
+                  <input
+                    type="time"
+                    value={newScheduleTime}
+                    onChange={(e) => setNewScheduleTime(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900 text-lg"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    The automation will run daily at this time.
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 mt-6">
+                  <button
+                    onClick={handleUpdateSchedule}
+                    disabled={scheduleLoading}
+                    className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:from-purple-700 hover:to-purple-800 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  >
+                    {scheduleLoading ? 'Updating...' : 'Save Schedule'}
+                  </button>
+                  <button
+                    onClick={() => setShowScheduleModal(false)}
+                    disabled={scheduleLoading}
                     className="flex-1 bg-gray-300 text-gray-700 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:bg-gray-400 font-semibold text-sm sm:text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancel
