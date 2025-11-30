@@ -5,6 +5,7 @@ import { getScheduleConfig, saveScheduleConfig } from './db'
 import { ScheduleConfig, DEFAULT_SCHEDULE } from './scheduleConfig'
 import { isPausedForDate, getPauseConfig } from './schedulerPause'
 import { sendTelegramNotification } from './telegram'
+import { addNotification } from './notifications'
 
 let scheduledTask: cron.ScheduledTask | null = null
 let statusCheckTask: cron.ScheduledTask | null = null
@@ -49,10 +50,19 @@ export async function startScheduler(): Promise<void> {
         const batchId = `scheduled-batch-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
         startBatch(batchId, activeUsers.length)
 
+        // Notify that batch has started
+        await addNotification({
+          title: 'Scheduled Run Started',
+          message: `🚀 Starting automated login for **${activeUsers.length}** active users.`,
+          type: 'info',
+        })
+
         // Enqueue all jobs with batch ID
         for (const user of activeUsers) {
           enqueueJob({ userId: user.id, batchId })
         }
+      } else {
+        console.log('[Scheduler] No active users found to run jobs.')
       }
     } catch (error) {
       console.error('[Scheduler] Error during scheduled run:', error)

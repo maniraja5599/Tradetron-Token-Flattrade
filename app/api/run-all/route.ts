@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getUsers } from '@/lib/db'
 import { enqueueJob, startBatch } from '@/lib/jobs'
 import { isWithinTimeWindow, getTimeWindowStatus } from '@/lib/timeWindow'
+import { addNotification } from '@/lib/notifications'
 
 export async function POST(request: NextRequest) {
   // Check time window restriction
@@ -33,6 +34,13 @@ export async function POST(request: NextRequest) {
     // Generate batch ID and start batch tracking
     const batchId = `batch-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     startBatch(batchId, activeUsers.length)
+
+    // Notify that batch has started
+    await addNotification({
+      title: 'Manual Run Started',
+      message: `🚀 Starting manual login for **${activeUsers.length}** active users.`,
+      type: 'info',
+    })
 
     // Enqueue all jobs with batch ID
     for (const user of activeUsers) {
