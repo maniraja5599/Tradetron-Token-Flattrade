@@ -3,6 +3,8 @@ import { getUsers, saveUser, deleteAllUsers } from '@/lib/db'
 import { encrypt, maskSecret } from '@/lib/crypto'
 import { v4 as uuidv4 } from 'uuid'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const users = await getUsers()

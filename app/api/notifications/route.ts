@@ -1,12 +1,15 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import {
     getNotifications,
     addNotification,
-    clearAllNotifications,
-    markAllNotificationsAsRead
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
+    clearAllNotifications
 } from '@/lib/notifications'
 
-export async function GET(request: Request) {
+export const dynamic = 'force-dynamic'
+
+export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url)
         const limit = parseInt(searchParams.get('limit') || '50')

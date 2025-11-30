@@ -4,6 +4,8 @@ import { isSchedulerRunning, getNextRunTime, getCurrentSchedule } from '@/lib/sc
 import { isWithinTimeWindow, getTimeWindowStatus, getTimeWindow, isTimeWindowEnabledSync } from '@/lib/timeWindow'
 import { getPauseConfig } from '@/lib/schedulerPause'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   const queue = getJobQueue()
   const stats = queue.getStats()

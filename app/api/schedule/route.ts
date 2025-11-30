@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { updateSchedule, getCurrentSchedule } from '@/lib/scheduler'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const schedule = await getCurrentSchedule()
