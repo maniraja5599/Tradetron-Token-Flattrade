@@ -69,6 +69,7 @@ export async function startScheduler(): Promise<void> {
     }
   }, {
     scheduled: true,
+    timezone: config.timezone,
   })
 
   // Schedule daily status check at 08:20 AM
@@ -110,7 +111,8 @@ export async function startScheduler(): Promise<void> {
     year: 'numeric'
   })
 
-  console.log(`[Scheduler] ✅ Started - will run daily at ${String(config.hour).padStart(2, '0')}:${String(config.minute).padStart(2, '0')} ${config.timezone}`)
+  const instanceId = Math.random().toString(36).substring(7)
+  console.log(`[Scheduler] ✅ Started (PID: ${process.pid}, Instance: ${instanceId}) - will run daily at ${String(config.hour).padStart(2, '0')}:${String(config.minute).padStart(2, '0')} ${config.timezone}`)
   console.log(`[Scheduler] 📅 Next run scheduled for: ${nextRunStr} ${config.timezone}`)
 }
 
