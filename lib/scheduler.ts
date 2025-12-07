@@ -6,13 +6,26 @@ import { ScheduleConfig, DEFAULT_SCHEDULE } from './scheduleConfig'
 import { isPausedForDate, getPauseConfig } from './schedulerPause'
 import { sendTelegramNotification } from './telegram'
 import { addNotification } from './notifications'
+import { syncFromGoogleSheets } from '@/lib/googleSheets'
 
-let scheduledTask: cron.ScheduledTask | null = null
-let statusCheckTask: cron.ScheduledTask | null = null
+// Use global singleton to prevent duplicate schedules on hot reload
+const globalAny: any = global
+
+let scheduledTask: cron.ScheduledTask | null = globalAny.scheduledTask || null
+let statusCheckTask: cron.ScheduledTask | null = globalAny.statusCheckTask || null
 
 export async function startScheduler(): Promise<void> {
+  // Always try to stop existing tasks first (whether from local var or global)
+  if (globalAny.scheduledTask) {
+    console.log('[Scheduler] Found global scheduled task, stopping...')
+    globalAny.scheduledTask.stop()
+  }
+  if (globalAny.statusCheckTask) {
+    globalAny.statusCheckTask.stop()
+  }
+
   if (scheduledTask) {
-    console.log('[Scheduler] Already running, restarting...')
+    console.log('[Scheduler] Already running (local), restarting...')
     stopScheduler()
   }
 
@@ -41,6 +54,10 @@ export async function startScheduler(): Promise<void> {
 
     console.log(`[Scheduler] ✅ Running scheduled job at ${String(config.hour).padStart(2, '0')}:${String(config.minute).padStart(2, '0')} ${config.timezone}`)
     try {
+      // Sync users from Google Sheets before processing
+      console.log('[Scheduler] 🔄 Syncing from Google Sheets before daily run...')
+      await syncFromGoogleSheets(true)
+
       const users = await getUsers()
       const activeUsers = users.filter(u => u.active)
       console.log(`[Scheduler] Enqueuing ${activeUsers.length} active users`)
@@ -102,6 +119,10 @@ export async function startScheduler(): Promise<void> {
     scheduled: true,
   })
 
+  // Save to global scope for hot reload persistence
+  globalAny.scheduledTask = scheduledTask
+  globalAny.statusCheckTask = statusCheckTask
+
   const nextRunStr = nextRun.toLocaleString('en-US', {
     timeZone: config.timezone,
     hour: '2-digit',
@@ -120,12 +141,17 @@ export function stopScheduler(): void {
   if (scheduledTask) {
     scheduledTask.stop()
     scheduledTask = null
-    if (statusCheckTask) {
-      statusCheckTask.stop()
-      statusCheckTask = null
-    }
-    console.log('[Scheduler] Stopped')
   }
+  if (statusCheckTask) {
+    statusCheckTask.stop()
+    statusCheckTask = null
+  }
+
+  // Clear global refs
+  globalAny.scheduledTask = null
+  globalAny.statusCheckTask = null
+
+  console.log('[Scheduler] Stopped')
 }
 
 export async function getNextRunTime(): Promise<Date> {
@@ -309,4 +335,3 @@ export async function updateSchedule(hour: number, minute: number): Promise<void
 export async function getCurrentSchedule(): Promise<ScheduleConfig> {
   return await getScheduleConfig()
 }
-
