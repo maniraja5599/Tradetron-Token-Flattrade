@@ -81,6 +81,17 @@ async function sendTelegramMessage(botToken: string, chatId: string, message: st
 }
 
 /**
+ * Escape HTML special characters for Telegram
+ */
+function escapeHtml(text: string): string {
+  if (!text) return ''
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+/**
  * Format run result for Telegram notification
  */
 function formatRunNotification(runLog: RunLog): string {
@@ -105,7 +116,7 @@ function formatRunNotification(runLog: RunLog): string {
   }
 
   if (runLog.message) {
-    const messageText = runLog.message.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    const messageText = escapeHtml(runLog.message)
     message += `\n<b>Message:</b>\n<code>${messageText}</code>\n`
   }
 
@@ -245,7 +256,7 @@ function formatBatchNotification(runLogs: RunLog[], inactiveUsers: string[] = []
       const duration = (run.ms / 1000).toFixed(1)
       message += `${run.userName} - ${time} (${duration}s)\n`
       if (run.message) {
-        const errorMessage = run.message.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        const errorMessage = escapeHtml(run.message)
         message += `Error: ${errorMessage}\n`
       }
     }
