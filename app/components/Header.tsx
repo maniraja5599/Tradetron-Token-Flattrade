@@ -3,7 +3,8 @@
 import { Suspense, useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Bell, Send, Lock, AlertCircle, CheckCircle, Info, LayoutDashboard, Users, Activity, Settings, Smartphone, Unlock, Package, XCircle, AlertTriangle } from 'lucide-react'
+import { Bell, Send, Lock, AlertCircle, CheckCircle, Info, LayoutDashboard, Users, Activity, Settings, Smartphone, Unlock, Package, XCircle, AlertTriangle, LogOut } from 'lucide-react'
+import { logout } from '@/app/actions/auth'
 import { useNotifications } from '@/context/NotificationContext'
 import { format } from 'date-fns'
 
@@ -205,6 +206,13 @@ function HeaderContent() {
               <Settings className="w-4 h-4" />
               Settings
             </Link>
+            <button
+              onClick={() => logout()}
+              className="px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap transform hover:scale-105 flex items-center gap-2 hover:text-white hover:bg-white/20 backdrop-blur-sm text-red-200 hover:text-red-100 hover:bg-red-500/20"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </button>
           </nav>
 
           {/* Notification Bell */}
@@ -289,9 +297,17 @@ function HeaderContent() {
                   }`}
                 style={!isActive('/settings') ? { color: '#D0D0D0' } : undefined}
               >
-                <Settings className="w-5 h-5" />
-                Settings
               </Link>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  logout()
+                }}
+                className="px-4 py-3 rounded-xl text-base font-bold transition-all duration-300 flex items-center gap-3 hover:text-white hover:bg-white/20 backdrop-blur-sm text-red-200"
+              >
+                <LogOut className="w-5 h-5" />
+                Logout
+              </button>
             </nav>
           </div>
         )}

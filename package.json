@@ -14,6 +14,7 @@
     "setup:google-sheets": "tsx scripts/setup-google-sheets-config.ts",
     "check:google-sheets": "tsx scripts/check-google-sheets-setup.ts",
     "test:telegram": "tsx scripts/test-telegram.ts",
+    "test:forgot-password": "tsx scripts/test-forgot-password.ts",
     "get-group-chat-id": "tsx scripts/get-group-chat-id.ts",
     "run-all": "tsx scripts/run-all-users.ts",
     "check-results": "tsx scripts/check-results.ts"
