@@ -91,6 +91,7 @@ function escapeHtml(text: string): string {
     .replace(/>/g, '&gt;')
 }
 
+
 /**
  * Format run result for Telegram notification
  */
@@ -106,7 +107,7 @@ function formatRunNotification(runLog: RunLog): string {
   })
 
   let message = `<b>${status} Login ${statusText}</b>\n\n`
-  message += `<b>User:</b> ${runLog.userName}\n`
+  message += `<b>User:</b> ${escapeHtml(runLog.userName)}\n`
   message += `<b>Status:</b> ${statusText}\n`
   message += `<b>Time:</b> ${time} IST\n`
   message += `<b>Duration:</b> ${duration}s\n`
@@ -121,7 +122,7 @@ function formatRunNotification(runLog: RunLog): string {
   }
 
   if (runLog.finalUrl) {
-    message += `\n<b>Final URL:</b> ${runLog.finalUrl}\n`
+    message += `\n<b>Final URL:</b> ${escapeHtml(runLog.finalUrl)}\n`
   }
 
   if (runLog.status === 'fail' && runLog.artifactDir) {
@@ -236,7 +237,7 @@ function formatBatchNotification(runLogs: RunLog[], inactiveUsers: string[] = []
       }).toLowerCase()
       const duration = (run.ms / 1000).toFixed(1)
       const tokenText = run.tokenGenerated ? ' ✅ Token' : ''
-      message += `${run.userName} - ${time} (${duration}s)${tokenText}\n`
+      message += `${escapeHtml(run.userName)} - ${time} (${duration}s)${tokenText}\n`
     }
     message += `\n`
   }
@@ -254,7 +255,7 @@ function formatBatchNotification(runLogs: RunLog[], inactiveUsers: string[] = []
         hour12: true,
       }).toLowerCase()
       const duration = (run.ms / 1000).toFixed(1)
-      message += `${run.userName} - ${time} (${duration}s)\n`
+      message += `${escapeHtml(run.userName)} - ${time} (${duration}s)\n`
       if (run.message) {
         const errorMessage = escapeHtml(run.message)
         message += `Error: ${errorMessage}\n`
@@ -267,7 +268,7 @@ function formatBatchNotification(runLogs: RunLog[], inactiveUsers: string[] = []
   // Add inactive users section if any
   if (inactiveUsers.length > 0) {
     message += `\n<b>⏸️ Inactive Users (Skipped)</b>\n`
-    message += inactiveUsers.join(', ')
+    message += inactiveUsers.map(u => escapeHtml(u)).join(', ')
     message += `\n`
   }
 
