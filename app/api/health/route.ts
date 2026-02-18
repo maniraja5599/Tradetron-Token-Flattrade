@@ -7,6 +7,7 @@ import { getPauseConfig } from '@/lib/schedulerPause'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
+  console.log('[Health] Checking health status via API...')
   const queue = getJobQueue()
   const stats = queue.getStats()
   const nextRun = await getNextRunTime()

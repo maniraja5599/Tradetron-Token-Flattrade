@@ -133,6 +133,7 @@ class JobQueue {
   }
 
   private async runJob(job: Job): Promise<void> {
+    console.log(`[Job] Entering runJob for user ID: ${job.userId}`)
     const user = await getUserById(job.userId)
     if (!user || !user.active) {
       console.log(`[Queue] User ${job.userId} not found or inactive`)

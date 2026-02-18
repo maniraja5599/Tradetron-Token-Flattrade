@@ -22,15 +22,15 @@ export async function readJsonFile<T>(filePath: string, defaultValue: T): Promis
     const content = await fs.readFile(filePath, 'utf-8')
     // Remove BOM (Byte Order Mark) if present
     let cleanContent = content.replace(/^\uFEFF/, '')
-    
+
     // Try to fix common JSON corruption issues
     // Remove trailing commas before closing brackets/braces
     cleanContent = cleanContent.replace(/,(\s*[}\]])/g, '$1')
-    
+
     // Try to fix duplicate closing brackets (like ]}])
     cleanContent = cleanContent.replace(/\]\s*\}\s*\]\s*$/, ']')
     cleanContent = cleanContent.replace(/\}\s*\]\s*\}\s*$/, '}]')
-    
+
     // Remove any trailing characters after valid JSON
     try {
       // Try to find the last valid JSON structure
@@ -49,7 +49,7 @@ export async function readJsonFile<T>(filePath: string, defaultValue: T): Promis
     } catch {
       // If that fails, try the original content
     }
-    
+
     return JSON.parse(cleanContent) as T
   } catch (error: any) {
     if (error.code === 'ENOENT') {
@@ -57,7 +57,7 @@ export async function readJsonFile<T>(filePath: string, defaultValue: T): Promis
       await fs.writeFile(filePath, JSON.stringify(defaultValue, null, 2), 'utf-8')
       return defaultValue
     }
-    
+
     // If JSON parsing failed, try to recover by backing up and recreating
     console.error(`[DB] Failed to parse JSON file ${filePath}:`, error.message)
     try {
@@ -65,7 +65,7 @@ export async function readJsonFile<T>(filePath: string, defaultValue: T): Promis
       const backupPath = `${filePath}.backup.${Date.now()}`
       await fs.copyFile(filePath, backupPath)
       console.log(`[DB] Backed up corrupted file to ${backupPath}`)
-      
+
       // Try to extract valid entries from the corrupted file
       const content = await fs.readFile(filePath, 'utf-8')
       // Try to extract array entries using regex (last resort)
@@ -83,7 +83,7 @@ export async function readJsonFile<T>(filePath: string, defaultValue: T): Promis
     } catch (recoveryError) {
       console.error(`[DB] Recovery attempt failed:`, recoveryError)
     }
-    
+
     // If all else fails, recreate with default value
     console.log(`[DB] Recreating ${filePath} with default value`)
     await ensureDataDir()
@@ -134,18 +134,20 @@ export async function deleteAllUsers(): Promise<void> {
 export async function getRuns(limit: number = 100): Promise<RunLog[]> {
   const runs = await readJsonFile<RunLog[]>(RUNS_FILE, [])
   // Sort by startedAt descending (most recent first), then take limit
-  const sorted = runs.sort((a, b) => 
+  const sorted = runs.sort((a, b) =>
     new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
   )
   return sorted.slice(0, limit)
 }
 
 export async function saveRun(run: RunLog): Promise<void> {
+  console.log(`[DB] Saving run ${run.id} for user ${run.userName}`)
   const runs = await readJsonFile<RunLog[]>(RUNS_FILE, [])
   runs.push(run)
   // Keep only last 10000 runs
   const limited = runs.slice(-10000)
   await writeJsonFile(RUNS_FILE, limited)
+  console.log(`[DB] Saved run ${run.id}`)
 }
 
 export async function getRunById(id: string): Promise<RunLog | null> {
@@ -178,10 +180,10 @@ export async function getGoogleSheetsConfig(): Promise<GoogleSheetsConfig> {
   const config = await readJsonFile<any>(CONFIG_FILE, {})
   // Check if updateEnabled is explicitly set, otherwise default to true if sheetUrlOrId exists
   const hasSheetUrl = !!(config.googleSheets?.sheetUrlOrId || process.env.GOOGLE_SHEETS_URL)
-  const updateEnabled = config.googleSheets?.updateEnabled !== undefined 
-    ? config.googleSheets.updateEnabled 
+  const updateEnabled = config.googleSheets?.updateEnabled !== undefined
+    ? config.googleSheets.updateEnabled
     : (process.env.GOOGLE_SHEETS_UPDATE_ENABLED === 'true' || (process.env.GOOGLE_SHEETS_UPDATE_ENABLED === undefined && hasSheetUrl))
-  
+
   return {
     sheetUrlOrId: config.googleSheets?.sheetUrlOrId || process.env.GOOGLE_SHEETS_URL || '',
     range: config.googleSheets?.range || process.env.GOOGLE_SHEETS_RANGE || 'Users!A:Z',

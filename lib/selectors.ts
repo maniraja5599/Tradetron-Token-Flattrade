@@ -36,14 +36,17 @@ export const defaultSelectors = {
     "xpath=//input[@type='password']",
   ],
   totp: [
-    // Flatrade specific - TOTP field (second password field)
+    // Placeholder based - most reliable for Flatrade
+    "input[placeholder*='OTP']",
+    "input[placeholder*='TOTP']",
+    // Generic variations
+    "input[placeholder*='TOTP/OTP']",
+    "input[placeholder*='DOB']",
+    "input[placeholder*='Date of Birth']",
+    // Flatrade specific - fallback
     "input#pan",
     "input[id='pan']",
     "input[type='password']:last-of-type",
-    // Generic fallbacks
-    "input[placeholder*='TOTP/OTP']",
-    "input[placeholder*='OTP']",
-    "input[placeholder*='TOTP']",
     "input[name='otp']",
     "input[name='totp']",
     "input[name='2fa']",
@@ -56,8 +59,9 @@ export const defaultSelectors = {
     // Flatrade specific - Login button
     "button#sbmt",
     "button[id='sbmt']",
-    // Generic fallbacks
+    "button:has-text('Log In')",
     "button:has-text('Login')",
+    // Generic fallbacks
     "button:has-text('Sign in')",
     "button:has-text('Sign In')",
     "button[type='submit']",
@@ -65,10 +69,11 @@ export const defaultSelectors = {
     "button.btn-primary",
     "button.primary",
     "button[class*='login']",
+    "text=Log In",
     "text=Login",
     "text=Sign in",
     "text=Sign In",
-    "xpath=//button[contains(text(),'Login') or contains(text(),'Sign') or contains(text(),'login')]",
+    "xpath=//button[contains(text(),'Login') or contains(text(),'Log In') or contains(text(),'Sign') or contains(text(),'login')]",
     "xpath=//input[@type='submit']",
     "xpath=//button[@type='submit']",
   ],

@@ -60,8 +60,9 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
         totpValue = decrypted
         console.log(`[LoginFlow] Using DOB: ${totpValue}`)
       } else {
-        // Generate TOTP from base32 secret
-        totpValue = authenticator.generate(decrypted)
+        // Generate TOTP from base32 secret - ensure no spaces!
+        const sanitizedSecret = decrypted.replace(/\s/g, '')
+        totpValue = authenticator.generate(sanitizedSecret)
         console.log(`[LoginFlow] Generated TOTP: ${totpValue}`)
       }
     } catch (error) {
@@ -276,10 +277,33 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
     }
 
     // Navigate to Tradetron Auth URL (will redirect to Flatrade)
-    console.log(`[LoginFlow] Navigating to ${loginUrl}`)
+    // Navigate to login page with retry logic
+    let navSuccess = false
+    let navError
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        console.log(`[LoginFlow] Navigating to ${loginUrl} (Attempt ${attempt}/3)`)
+        await page.goto(loginUrl, { waitUntil: 'domcontentloaded', timeout: 90000 })
+        navSuccess = true
+        break
+      } catch (error: any) {
+        navError = error
+        console.log(`[LoginFlow] Navigation attempt ${attempt} failed: ${error.message}`)
+        if (attempt < 3) {
+          console.log(`[LoginFlow] Retrying navigation in 5 seconds...`)
+          await page.waitForTimeout(5000)
+        }
+      }
+    }
+
+    if (!navSuccess) {
+      throw new Error(`Navigation failed after 3 attempts: ${navError?.message}`)
+    }
+    console.log(`[LoginFlow] ✅ Page navigation completed`)
+    // The original catch block should follow this
     try {
-      await page.goto(loginUrl, { waitUntil: 'networkidle', timeout: 30000 })
-      console.log(`[LoginFlow] ✅ Page navigation completed`)
+      // This try block is empty because the retry logic handles the navigation.
+      // The original `page.goto` call was moved into the retry loop.
     } catch (navError: any) {
       console.error(`[LoginFlow] ❌ Navigation failed:`, navError)
       console.error(`[LoginFlow] Navigation error details:`, {
@@ -295,8 +319,8 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
 
     // Wait for page to be ready - try multiple strategies
     try {
-      // Strategy 1: Wait for network idle
-      await page.waitForLoadState('networkidle', { timeout: 10000 })
+      // Strategy 1: Wait for domcontentloaded
+      await page.waitForLoadState('domcontentloaded', { timeout: 10000 })
     } catch (error) {
       // Continue even if networkidle doesn't complete
     }
@@ -470,19 +494,20 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
           const xpath = selector.replace('xpath=', '')
           const element = await page.locator(`xpath=${xpath}`).first()
           if (await element.count() > 0) {
-            await element.click()
+            console.log(`[LoginFlow] Clicking submit with selector: ${selector}`)
+            await element.click({ timeout: 5000, force: true })
             submitted = true
             console.log(`[LoginFlow] Submitted using: ${selector}`)
             break
           }
         } else if (selector.startsWith('text=')) {
           const text = selector.replace('text=', '')
-          await page.click(`text=${text}`)
+          await page.click(`text=${text}`, { timeout: 5000, force: true })
           submitted = true
           console.log(`[LoginFlow] Submitted using: ${selector}`)
           break
         } else {
-          await page.click(selector)
+          await page.click(selector, { timeout: 5000, force: true })
           submitted = true
           console.log(`[LoginFlow] Submitted using: ${selector}`)
           break
@@ -507,15 +532,19 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
           if (selector.startsWith('xpath=')) {
             const xpath = selector.replace('xpath=', '')
             const element = await page.locator(`xpath=${xpath}`).first()
-            if (await element.count() > 0) {
+            if (await element.count() > 0 && await element.isVisible()) {
               totpNeeded = true
               break
+            } else {
+              continue
             }
           } else {
             const element = await page.locator(selector).first()
             if (await element.count() > 0 && await element.isVisible()) {
               totpNeeded = true
               break
+            } else {
+              continue
             }
           }
         } catch (error) {
@@ -525,48 +554,119 @@ export async function loginFlow(params: LoginFlowParams): Promise<LoginFlowResul
 
       if (totpNeeded) {
         // Generate fresh TOTP for second step (or use DOB again)
-        if (!isDOB) {
-          // Regenerate TOTP if using TOTP secret
-          const decrypted = decrypt(encryptedTotpSecret)
-          totpValue = authenticator.generate(decrypted)
-          console.log(`[LoginFlow] Regenerated TOTP for second step`)
+        let stepTotpValue = ''
+        let isDOB2 = false
+
+        if (encryptedTotpSecret) {
+          try {
+            const decrypted = decrypt(encryptedTotpSecret)
+            // Heuristic: TOTP secret > 10 chars and not just digits
+            if (decrypted.length > 10 && !/^\d+$/.test(decrypted) && !decrypted.includes('/')) {
+              stepTotpValue = authenticator.generate(decrypted)
+              console.log(`[LoginFlow] Regenerated TOTP for second step. Code length: ${stepTotpValue.length}`)
+            } else {
+              stepTotpValue = decrypted
+              isDOB2 = true
+              console.log(`[LoginFlow] Treating decrypted value as DOB/PIN for second step`)
+            }
+          } catch (e) {
+            console.log(`[LoginFlow] Decryption failed, using raw value`)
+            stepTotpValue = encryptedTotpSecret
+          }
         }
-        console.log(`[LoginFlow] TOTP/DOB field appeared after submit, filling with ${isDOB ? 'DOB' : 'fresh TOTP'}`)
-        await fillTotp(page, selectors.totp, totpValue)
+
+        console.log(`[LoginFlow] TOTP/DOB field appeared after submit, filling with ${isDOB2 ? 'DOB' : 'fresh TOTP'}`)
+        await fillTotp(page, selectors.totp, stepTotpValue)
         await page.waitForTimeout(500)
 
-        // Submit again
-        for (const selector of selectors.submit) {
+        // Attempt submission via Enter key explicitly
+        console.log(`[LoginFlow] Attempting submission by pressing Enter on TOTP field...`)
+        for (const selector of selectors.totp) {
           try {
-            if (selector.startsWith('xpath=')) {
-              const xpath = selector.replace('xpath=', '')
-              const element = await page.locator(`xpath=${xpath}`).first()
-              if (await element.count() > 0) {
-                await element.click()
-                break
-              }
-            } else if (selector.startsWith('text=')) {
-              const text = selector.replace('text=', '')
-              await page.click(`text=${text}`)
-              break
-            } else {
-              await page.click(selector)
+            const el = page.locator(selector).first()
+            if (await el.isVisible()) {
+              await el.focus()
+              await page.waitForTimeout(200)
+              await page.keyboard.press('Enter')
               break
             }
-          } catch (error) {
-            continue
+          } catch (e) { }
+        }
+        await page.waitForTimeout(3000)
+
+        // Submit loop (Fallback)
+        let submitSuccess = false
+        for (let subAttempt = 1; subAttempt <= 3; subAttempt++) {
+          // Submit actions
+          let clicked = false
+          for (const selector of selectors.submit) {
+            // ... (existing click logic) ...
+            try {
+              if (selector.startsWith('xpath=')) {
+                // ...
+                const xpath = selector.replace('xpath=', '')
+                const element = await page.locator(`xpath=${xpath}`).first()
+                if (await element.count() > 0) {
+                  console.log(`[LoginFlow] Clicking submit with selector: ${selector}`)
+                  await element.click({ timeout: 5000, force: true })
+                  clicked = true
+                  break
+                }
+              } else if (selector.startsWith('text=')) {
+                const text = selector.replace('text=', '')
+                console.log(`[LoginFlow] Clicking submit with selector: ${selector}`)
+                await page.click(`text=${text}`, { timeout: 5000, force: true })
+                clicked = true
+                break
+              } else {
+                console.log(`[LoginFlow] Clicking submit with selector: ${selector}`)
+                await page.click(selector, { timeout: 5000, force: true })
+                clicked = true
+                break
+              }
+            } catch (e) { continue }
+          }
+
+          if (!clicked) {
+            console.log(`[LoginFlow] Could not click submit button (Attempt ${subAttempt})`)
+          }
+
+          // Wait for potential navigation or error
+          try {
+            // Wait to see if error appears or nav starts
+            await page.waitForTimeout(4000)
+
+            // If navigating, we are good
+            if (page.url() !== loginUrl) {
+              submitSuccess = true
+              break
+            }
+
+            // Check for TOTP/OTP validation error specifically
+            const content = await page.content()
+            if (content.includes('TOTP/OTP is required') || content.includes('Invalid TOTP') || content.includes('is required')) {
+              console.log(`[LoginFlow] validation error detected: TOTP Required. Retrying fill... (Attempt ${subAttempt})`)
+              await fillTotp(page, selectors.totp, totpValue)
+              continue // Retry loop
+            }
+
+            console.log(`[LoginFlow] verification failed (no nav, no specific error detected). Retrying submit... (Attempt ${subAttempt})`)
+            // Continue loop to click submit again
+          } catch (e: any) {
+            console.log(`[LoginFlow] Error in submit verification: ${e.message}`)
+            // Continue loop
           }
         }
       }
     }
 
     // Wait for navigation to complete and redirect back to Tradetron
-    await page.waitForLoadState('networkidle', { timeout: 20000 })
+    await page.waitForLoadState('domcontentloaded', { timeout: 20000 })
     await page.waitForTimeout(3000) // Wait for Tradetron redirect
 
     // Check if there's another redirect (some pages redirect again after showing error)
     try {
-      await page.waitForLoadState('networkidle', { timeout: 5000 })
+      await page.waitForLoadState('domcontentloaded', { timeout: 5000 })
       await page.waitForTimeout(2000) // Wait a bit more for any final redirects
     } catch (e) {
       // Timeout is okay, page might be stable
@@ -940,12 +1040,77 @@ async function fillTotp(page: Page, selectors: readonly string[], totp: string):
       if (selector.startsWith('xpath=')) {
         const xpath = selector.replace('xpath=', '')
         const element = await page.locator(`xpath=${xpath}`).first()
-        if (await element.count() > 0) {
+        if (await element.count() > 0 && await element.isVisible()) {
           await element.fill(totp)
           return
         }
       } else {
-        await page.fill(selector, totp)
+        // Check availability first
+        const element = await page.locator(selector).first()
+        if (await element.count() === 0 || !(await element.isVisible())) {
+          continue
+        }
+
+        console.log(`[LoginFlow] Attempting to fill TOTP with selector: ${selector} using keyboard simulation`)
+        await page.click(selector)
+        await page.waitForTimeout(500)
+
+        // Clear using keyboard to ensure events are triggered
+        await page.keyboard.press('Control+A')
+        await page.keyboard.press('Backspace')
+        await page.waitForTimeout(200)
+
+        // Type character by character with a delay to trigger all framework event listeners
+        await page.keyboard.type(totp, { delay: 150 })
+        await page.waitForTimeout(500)
+
+        // Dispatch events as backup with composed: true for Shadow DOM support
+        await page.evaluate(({ sel }) => {
+          const el = document.querySelector(sel) as HTMLInputElement
+          if (el) {
+            el.dispatchEvent(new Event('input', { bubbles: true, composed: true }))
+            el.dispatchEvent(new Event('change', { bubbles: true, composed: true }))
+          }
+        }, { sel: selector })
+
+        await page.waitForTimeout(500)
+        await page.keyboard.press('Tab')
+        await page.waitForTimeout(500)
+        await page.click('body', { force: true }) // Force blur
+
+        // Check if error is visible and wait for it to disappear
+        try {
+          // If error is currently visible, wait for it to go away
+          const errorVisible = await page.isVisible("text=TOTP/OTP is required")
+          if (errorVisible) {
+            console.log(`[LoginFlow] Error is visible after fill. Waiting for it to disappear...`)
+            // Try to locate the specific error for this input if possible, or generic
+            const gone = await page.waitForSelector("text=TOTP/OTP is required", { state: 'hidden', timeout: 2000 }).then(() => true).catch(() => false)
+            if (!gone) {
+              console.log(`[LoginFlow] WARNING: TOTP Error did NOT disappear after filling.`)
+            } else {
+              console.log(`[LoginFlow] TOTP Error disappeared.`)
+            }
+          }
+        } catch (e) { }
+
+        // Final verification
+        const filledValue = await page.inputValue(selector)
+        if (filledValue !== totp) {
+          console.log(`[LoginFlow] Mismatch! Expected ${totp}, got ${filledValue}.`)
+          // Last resort: fill with force but this might trigger the error again if validation is key-based
+          await page.fill(selector, totp, { force: true })
+          await page.waitForTimeout(500)
+        } else {
+          console.log(`[LoginFlow] Filled and verified TOTP with value: ${totp.substring(0, 2)}****`)
+        }
+
+        // Trigger additional events to clear "Required" state
+        await page.focus(selector)
+        await page.keyboard.press('End')
+        await page.keyboard.press(' ')
+        await page.keyboard.press('Backspace')
+        await page.waitForTimeout(500)
         return
       }
     } catch (error) {
